@@ -10,11 +10,13 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// QueueDepthSnapshot holds the count of pending messages per priority stream.
+// QueueDepthSnapshot holds the count of pending messages per priority (summed across pools)
+// and per pool (summed across priorities).
 type QueueDepthSnapshot struct {
-	High   int `json:"high"`
-	Normal int `json:"normal"`
-	Low    int `json:"low"`
+	High   int            `json:"high"`
+	Normal int            `json:"normal"`
+	Low    int            `json:"low"`
+	ByPool map[string]int `json:"by_pool"`
 }
 
 // SystemSnapshot is what gets sent to the dashboard every second.

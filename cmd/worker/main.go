@@ -430,19 +430,23 @@ func main() {
 	mux.HandleFunc("/health", w.handleHealth)
 	mux.Handle("/metrics", promhttp.Handler())
 
+	// Puerto de diagnóstico (/health, /metrics). Es opcional: el trabajo llega por el canal
+	// saliente. Si el puerto está ocupado (p. ej. dos workers en la misma máquina), se sigue sin él.
+	diagAddr := getEnv("WORKER_DIAG_ADDR", ":8090")
 	srv := &http.Server{
-		Addr:         ":8090",
+		Addr:         diagAddr,
 		Handler:      mux,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
 	go func() {
-		log.Println("[http] diagnóstico (/health, /metrics) en :8090 — opcional, no se usa para recibir trabajo")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("[http] error fatal: %v", err)
+			log.Printf("[http] diagnóstico deshabilitado (%s ocupado): %v", diagAddr, err)
+			return
 		}
 	}()
+	log.Printf("[http] diagnóstico (/health, /metrics) en %s — opcional, no se usa para recibir trabajo", diagAddr)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

@@ -11,21 +11,55 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// Cola de sub-tareas sobre Redis Streams.
+//
+// Hay un stream por (pool, prioridad): jobs:video:high, jobs:audio:normal, ... Es literalmente
+// "encolar cada sub-tarea en el mecanismo de distribución adecuado" (consigna §3): el scheduler
+// solo saca de la cola de un pool cuando hay un worker de ese pool con capacidad. Dentro de
+// cada pool, high se atiende antes que normal y normal antes que low.
+
 // ErrNoMessages is returned when the queue is empty.
 var ErrNoMessages = errors.New("no messages available")
 
-// StreamForPriority is the exported version so the scheduler can call Ack.
-func StreamForPriority(p int) string {
-	return streamForPriority(p)
-}
+// Pools conocidos (deben coincidir con internal/cases.PoolFor y cmd/worker.RoleCapabilities).
+var Pools = []string{"video", "audio", "metadata"}
 
 const (
-	StreamHigh   = "jobs:high"
-	StreamNormal = "jobs:normal"
-	StreamLow    = "jobs:low"
-	GroupName    = "workers"
-	DLQ          = "jobs:failed"
+	GroupName = "workers"
+	DLQ       = "jobs:failed"
+
+	// Cuánto bloquea una lectura vacía. Corto, porque el scheduler recorre los 3 pools en serie.
+	readBlock = 500 * time.Millisecond
 )
+
+var priorityNames = []string{"high", "normal", "low"}
+
+// StreamFor devuelve el stream de un pool y una prioridad numérica (1-10).
+func StreamFor(pool string, priority int) string {
+	return "jobs:" + pool + ":" + priorityName(priority)
+}
+
+func priorityName(p int) string {
+	switch {
+	case p >= 8:
+		return "high"
+	case p >= 4:
+		return "normal"
+	default:
+		return "low"
+	}
+}
+
+// AllStreams lista los 9 streams (3 pools × 3 prioridades).
+func AllStreams() []string {
+	out := make([]string, 0, len(Pools)*len(priorityNames))
+	for _, p := range Pools {
+		for _, n := range priorityNames {
+			out = append(out, "jobs:"+p+":"+n)
+		}
+	}
+	return out
+}
 
 type Queue struct {
 	client *redis.Client
@@ -45,35 +79,66 @@ func (q *Queue) Ping(ctx context.Context) error {
 }
 
 // StreamLen returns the number of messages in a stream (pending + unread).
-// Used by the coordinator to report queue depth to the dashboard.
 func (q *Queue) StreamLen(ctx context.Context, stream string) (int64, error) {
 	return q.client.XLen(ctx, stream).Result()
 }
 
-// Enqueue adds a job to the appropriate priority stream
+// Depth resume la profundidad de las colas: por pool y por prioridad (sumando pools).
+type Depth struct {
+	ByPool     map[string]int64
+	ByPriority map[string]int64 // "high" | "normal" | "low"
+	Total      int64
+}
+
+func (q *Queue) Depth(ctx context.Context) Depth {
+	d := Depth{ByPool: map[string]int64{}, ByPriority: map[string]int64{}}
+	for _, p := range Pools {
+		for _, n := range priorityNames {
+			l, err := q.client.XLen(ctx, "jobs:"+p+":"+n).Result()
+			if err != nil {
+				continue
+			}
+			d.ByPool[p] += l
+			d.ByPriority[n] += l
+			d.Total += l
+		}
+	}
+	return d
+}
+
+// Enqueue adds a job to the stream of its pool and priority.
 func (q *Queue) Enqueue(ctx context.Context, job *models.Job) error {
+	if job.Pool == "" {
+		return fmt.Errorf("job %s sin pool: el routing debe correr antes de encolar", job.ID)
+	}
 	data, err := json.Marshal(job)
 	if err != nil {
 		return fmt.Errorf("marshal job: %w", err)
 	}
-	stream := streamForPriority(job.Priority)
 	return q.client.XAdd(ctx, &redis.XAddArgs{
-		Stream: stream,
+		Stream: StreamFor(job.Pool, job.Priority),
 		Values: map[string]any{"payload": string(data)},
 	}).Err()
 }
 
-// Dequeue blocks and reads the next job for a given consumer
-func (q *Queue) Dequeue(ctx context.Context, consumerID string) (*models.Job, string, error) {
-	streams := []string{StreamHigh, StreamNormal, StreamLow, ">", ">", ">"}
+// Dequeue lee la siguiente sub-tarea del pool (high → normal → low). Devuelve (nil, "", nil)
+// si no hay nada en ese pool tras readBlock.
+func (q *Queue) Dequeue(ctx context.Context, consumerID, pool string) (*models.Job, string, error) {
+	streams := []string{
+		"jobs:" + pool + ":high", "jobs:" + pool + ":normal", "jobs:" + pool + ":low",
+		">", ">", ">",
+	}
 	res, err := q.client.XReadGroup(ctx, &redis.XReadGroupArgs{
 		Group:    GroupName,
 		Consumer: consumerID,
 		Streams:  streams,
 		Count:    1,
-		Block:    5 * time.Second,
+		Block:    readBlock,
 	}).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, "", nil
+		}
 		return nil, "", err
 	}
 	for _, s := range res {
@@ -92,23 +157,14 @@ func (q *Queue) Dequeue(ctx context.Context, consumerID string) (*models.Job, st
 	return nil, "", nil
 }
 
-// Ack acknowledges a processed message
+// Ack acknowledges a processed message.
 func (q *Queue) Ack(ctx context.Context, stream, msgID string) error {
 	return q.client.XAck(ctx, stream, GroupName, msgID).Err()
 }
 
-// EnsureGroups creates consumer groups if they don't exist
+// EnsureGroups creates the consumer group on every stream if it doesn't exist.
 func (q *Queue) EnsureGroups(ctx context.Context) {
-	for _, stream := range []string{StreamHigh, StreamNormal, StreamLow} {
+	for _, stream := range AllStreams() {
 		q.client.XGroupCreateMkStream(ctx, stream, GroupName, "0")
 	}
-}
-
-func streamForPriority(p int) string {
-	if p >= 8 {
-		return StreamHigh
-	} else if p >= 4 {
-		return StreamNormal
-	}
-	return StreamLow
 }

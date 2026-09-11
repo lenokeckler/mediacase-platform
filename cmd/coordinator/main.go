@@ -87,19 +87,21 @@ func main() {
 		jobs, _ := db.ListJobs(database, "")
 		stats, _ := db.GetStats(database)
 
-		// Fetch live queue depths from Redis
-		high, _ := q.StreamLen(ctx, queue.StreamHigh)
-		normal, _ := q.StreamLen(ctx, queue.StreamNormal)
-		low, _ := q.StreamLen(ctx, queue.StreamLow)
-
+		// Profundidad de colas en vivo: por prioridad (para el dashboard actual) y por pool.
+		d := q.Depth(ctx)
+		byPool := make(map[string]int, len(d.ByPool))
+		for p, n := range d.ByPool {
+			byPool[p] = int(n)
+		}
 		return coordinator.SystemSnapshot{
 			Workers: registry.All(),
 			Jobs:    jobs,
 			Stats:   stats,
 			QueueDepth: coordinator.QueueDepthSnapshot{
-				High:   int(high),
-				Normal: int(normal),
-				Low:    int(low),
+				High:   int(d.ByPriority["high"]),
+				Normal: int(d.ByPriority["normal"]),
+				Low:    int(d.ByPriority["low"]),
+				ByPool: byPool,
 			},
 		}
 	})

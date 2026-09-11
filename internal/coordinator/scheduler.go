@@ -53,75 +53,90 @@ func (s *Scheduler) Run(ctx context.Context) {
 			s.reclaimStuckJobs(ctx)
 
 		default:
-			// Try to dispatch a job.
+			// Try to dispatch one job per pool.
 			if err := s.dispatch(ctx); err != nil {
-				if err != queue.ErrNoMessages {
+				if err != queue.ErrNoMessages && err != errNoWorkers {
 					log.Printf("[scheduler] dispatch error: %v", err)
 				}
-				// Small pause when there are no jobs to avoid high CPU usage.
+				// Sin trabajo o sin workers: pausa corta para no quemar CPU.
 				time.Sleep(200 * time.Millisecond)
 			}
 		}
 	}
 }
 
-// dispatch takes a job from the queue and assigns it to the best available worker.
+// dispatch recorre los pools: para cada uno, si hay un worker de ese pool con canal abierto,
+// saca UNA sub-tarea de su cola y se la asigna (least-loaded dentro del pool). Si un pool no
+// tiene workers, sus sub-tareas esperan en la cola — visible en el dashboard como by_pool.
 func (s *Scheduler) dispatch(ctx context.Context) error {
-	worker := s.registry.LeastLoaded()
-	if worker == nil || !s.workerHub.IsConnected(worker.ID) {
-		// Sin worker vivo con canal abierto: las sub-tareas esperan en la cola.
-		return fmt.Errorf("no workers available")
+	dispatched := false
+	anyWorker := false
+	for _, pool := range queue.Pools {
+		worker := s.registry.LeastLoadedFor(pool)
+		if worker == nil || !s.workerHub.IsConnected(worker.ID) {
+			continue // sin worker vivo para este pool
+		}
+		anyWorker = true
+		job, msgID, err := s.queue.Dequeue(ctx, "coordinator", pool)
+		if err != nil {
+			log.Printf("[scheduler] dequeue %s: %v", pool, err)
+			continue
+		}
+		if job == nil {
+			continue // cola de este pool vacía
+		}
+		dispatched = true
+		s.assign(ctx, worker, job, msgID)
 	}
+	if !anyWorker {
+		return errNoWorkers
+	}
+	if !dispatched {
+		return queue.ErrNoMessages
+	}
+	return nil
+}
 
-	job, msgID, err := s.queue.Dequeue(ctx, "coordinator")
-	if err != nil {
-		return queue.ErrNoMessages
-	}
-	if job == nil {
-		return queue.ErrNoMessages
-	}
+var errNoWorkers = fmt.Errorf("no workers available")
+
+// assign entrega una sub-tarea ya sacada de la cola al worker elegido.
+func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *models.Job, msgID string) {
+	stream := queue.StreamFor(job.Pool, job.Priority)
 
 	// Si el caso se canceló mientras la sub-tarea esperaba en cola, no se ejecuta.
 	var st string
 	s.db.QueryRow(`SELECT status FROM jobs WHERE id=$1`, job.ID).Scan(&st)
 	if st == string(models.StatusCancelled) {
-		s.queue.Ack(ctx, queue.StreamForPriority(job.Priority), msgID)
-		return nil
+		s.queue.Ack(ctx, stream, msgID)
+		return
 	}
 
-	log.Printf("[scheduler] assigning job %s (op: %s) to worker %s", job.ID, job.Operation, worker.ID)
+	log.Printf("[scheduler] assigning job %s (%s/%s) to worker %s", job.ID, job.Pool, job.Operation, worker.ID)
 
-	// Update the DB state to ASSIGNED.
 	if err := s.updateJobStatus(job.ID, models.StatusAssigned, worker.ID); err != nil {
-		// If the DB update fails, return the job to the queue with Ack+Requeue.
 		log.Printf("[scheduler] db update failed, skipping job %s: %v", job.ID, err)
-		return err
+		return // el mensaje queda pendiente en el stream; se reintenta
 	}
 
-	// Send the job to the worker over HTTP.
 	if err := s.sendToWorker(ctx, worker, job); err != nil {
 		if errors.Is(err, ErrWorkerBusy) {
 			log.Printf("[scheduler] worker %s is full, re-queueing job %s without incrementing retries", worker.ID, job.ID)
-			// Re-enqueue without incrementing retries
 			if err := s.queue.Enqueue(ctx, job); err != nil {
 				log.Printf("[scheduler] re-enqueue failed for job %s: %v", job.ID, err)
 			}
 			s.updateJobStatus(job.ID, models.StatusPending, "")
-			// Sleep a bit to allow workers to clear up
-			time.Sleep(500 * time.Millisecond)
-			return nil
+			s.queue.Ack(ctx, stream, msgID)
+			time.Sleep(500 * time.Millisecond) // dar aire al worker
+			return
 		}
-
 		log.Printf("[scheduler] failed to send job %s to worker %s: %v", job.ID, worker.ID, err)
-		// Re-enqueue so another worker can take it (this increments retries).
-		s.requeueJob(ctx, job)
+		s.requeueJob(ctx, job) // otro worker del pool la tomará (cuenta reintento)
 		s.updateJobStatus(job.ID, models.StatusPending, "")
-		return nil
+		s.queue.Ack(ctx, stream, msgID)
+		return
 	}
 
-	// Confirm that the message was processed.
-	s.queue.Ack(ctx, queue.StreamForPriority(job.Priority), msgID)
-	return nil
+	s.queue.Ack(ctx, stream, msgID)
 }
 
 // sendToWorker entrega la sub-tarea por el canal que el propio worker abrió.
