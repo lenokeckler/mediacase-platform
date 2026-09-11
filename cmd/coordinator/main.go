@@ -78,7 +78,7 @@ func main() {
 	barrier.SetOnClose(buildReport)
 
 	scheduler := coordinator.NewScheduler(q, registry, workerHub, database, barrier)
-	api := coordinator.NewAPI(q, registry, hub, workerHub, database, barrier)
+	api := coordinator.NewAPI(q, registry, hub, workerHub, database, barrier, minioClient)
 	api.SetOnWorkerRestart(scheduler.ReclaimWorkerJobs) // proceso nuevo con ID conocido → re-encolar lo suyo
 	api.SetOnCaseClosed(buildReport)                    // al cancelar también hay reporte
 
@@ -117,7 +117,7 @@ func main() {
 	}
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      api.Router(),
+		Handler:      api.Handler(dashboardDir()),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -139,4 +139,12 @@ func main() {
 	defer shutCancel()
 	srv.Shutdown(shutCtx)
 	log.Println("[coordinator] stopped")
+}
+
+// dashboardDir es la carpeta del dashboard compilado que sirve el coordinador.
+func dashboardDir() string {
+	if v := os.Getenv("DASHBOARD_DIR"); v != "" {
+		return v
+	}
+	return filepath.Join("dashboard", "dist")
 }

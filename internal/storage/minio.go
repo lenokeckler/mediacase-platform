@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -127,6 +128,35 @@ func (m *MinIOClient) Download(ctx context.Context, bucket, objectKey, destDir s
 		return "", fmt.Errorf("get object %s/%s: %w", bucket, objectKey, err)
 	}
 	return local, nil
+}
+
+// ObjectInfo resume un objeto del bucket.
+type ObjectInfo struct {
+	Key          string
+	Size         int64
+	LastModified time.Time
+}
+
+// ListObjects lista (recursivamente) los objetos de un bucket bajo un prefijo.
+func (m *MinIOClient) ListObjects(ctx context.Context, bucket, prefix string) ([]ObjectInfo, error) {
+	exists, err := m.client.BucketExists(ctx, bucket)
+	if err != nil {
+		return nil, fmt.Errorf("bucket check: %w", err)
+	}
+	if !exists {
+		return []ObjectInfo{}, nil
+	}
+	var out []ObjectInfo
+	for o := range m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Prefix: prefix, Recursive: true}) {
+		if o.Err != nil {
+			return nil, o.Err
+		}
+		out = append(out, ObjectInfo{Key: o.Key, Size: o.Size, LastModified: o.LastModified})
+	}
+	if out == nil {
+		out = []ObjectInfo{}
+	}
+	return out, nil
 }
 
 // Upload sube un resultado al bucket de resultados y retorna su URL pública.
