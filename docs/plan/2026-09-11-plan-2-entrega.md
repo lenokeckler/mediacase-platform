@@ -356,7 +356,9 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 ---
 
-# FASE 7 — Despliegue final
+# FASE 7 — Despliegue final  ⏳ preparada 2026-09-11; 7.1-7.4 requieren a Leno (instalar Vagrant/cloudflared, VM Arch, compañeros)
+
+> **Hecho sin Leno:** `scripts/tunnel.ps1` (7.2), decisión de firma documentada en el manual (7.5), `docs/checklist-rubrica.md` (7.6), regla de firewall ya creada en node-1 (`MediaCase node-1`, TCP 8080/9000, perfil Any), binarios `bin/worker-linux-amd64` y `bin/worker-windows-amd64.exe` recompilados con los arreglos de la Fase 5. Vagrant y cloudflared **no están instalados** (`winget list`): son MSI y la regla es que Leno los instale. La VM "Arch Linux" existe (NAT, 9 GB, apagada): con NAT el worker llega al coordinador en `http://10.0.2.2:8080` y puede bajar el ZIP de `/connect` desde adentro, sin tocar la configuración de la VM.
 
 **Hito:** el sistema corre con ≥ 3 nodos worker en máquinas distintas, es accesible desde otra red por el túnel, y las 3 laptops del equipo lo ejecutaron con evidencia.
 
@@ -373,10 +375,10 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 ### Task 7.4: Las 3 laptops físicas
 - Sesión con Jennifer y Jonathan (mismo WiFi o túnel): cada uno baja el ZIP de Linux, `bash start-worker.sh`; correr `pools_scenario.sh` con roles asignados (`WORKER_ROLE` en el `.env` de cada uno: uno audio, uno metadata; Leno video); capturas del dashboard con 3 hostnames/IPs distintas; `measure_times.sh`; todo al informe.
 
-### Task 7.5: Firma del ejecutable (decisión)
+### Task 7.5: Firma del ejecutable (decisión)  ✅ documentada en `docs/manual-usuario.md` §5
 - Documentar en el manual que el `.exe` no está firmado y qué implica (SmartScreen, Smart App Control). Si el equipo quiere evitarlo: certificado de firma (~$70-300/año) — fuera del alcance; decisión registrada.
 
-### Task 7.6: Cierre
+### Task 7.6: Cierre  ✅ checklist en `docs/checklist-rubrica.md` · ⏳ push y colaboradores (decisión de Leno)
 - Checklist de la rúbrica (los 8 rubros, qué evidencia hay de cada uno, dónde está). `CLAUDE.md` §15 actualizado. Decidir con Leno el `git push` (primer push de todo el trabajo) y agregar a Jennifer y Jonathan como colaboradores.
 
 ---
