@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -236,6 +237,18 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 
 	w.reportProgress(job.JobID, 0, string(models.StatusRunning), "", "")
 
+	// FilePath es la clave del objeto en el bucket de entradas. Se baja a un directorio
+	// temporal propio del job (así dos jobs sobre el mismo archivo no se pisan) y se borra al final.
+	inDir := filepath.Join(os.TempDir(), "mediacase-in", job.JobID)
+	defer os.RemoveAll(inDir) // también si la descarga falla a medias
+	localInput, dlErr := w.storage.Download(ctx, storage.DatasetBucket, job.FilePath, inDir)
+	if dlErr != nil {
+		log.Printf("[job %s] descarga FALLÓ: %v", job.JobID, dlErr)
+		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
+		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", "descarga de entrada: "+dlErr.Error())
+		return
+	}
+
 	var resultPath string
 	var opErr error
 
@@ -245,13 +258,13 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 
 	switch job.Operation {
 	case string(models.OpConvert):
-		resultPath, opErr = multimedia.Convert(ctx, job.FilePath, progressCB)
+		resultPath, opErr = multimedia.Convert(ctx, localInput, progressCB)
 	case string(models.OpExtractAudio):
-		resultPath, opErr = multimedia.ExtractAudio(ctx, job.FilePath, progressCB)
+		resultPath, opErr = multimedia.ExtractAudio(ctx, localInput, progressCB)
 	case string(models.OpThumbnail):
-		resultPath, opErr = multimedia.Thumbnail(ctx, job.FilePath, progressCB)
+		resultPath, opErr = multimedia.Thumbnail(ctx, localInput, progressCB)
 	case string(models.OpConvertAudio):
-		resultPath, opErr = multimedia.ConvertAudio(ctx, job.FilePath, progressCB)
+		resultPath, opErr = multimedia.ConvertAudio(ctx, localInput, progressCB)
 	default:
 		opErr = fmt.Errorf("operación desconocida: %s", job.Operation)
 	}

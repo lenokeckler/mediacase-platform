@@ -91,7 +91,6 @@ services:
     environment:
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
-      DATABASE_URL: postgres://media:media@postgres:5432/mediacase?sslmode=disable
       WORKER_ID: worker-1
       WORKER_POOL_SIZE: "4"
       COORDINATOR_URL: http://coordinator:8080
@@ -100,8 +99,6 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: results
-    volumes:
-      - ./dataset:/app/dataset:ro
     depends_on:
       - coordinator
 
@@ -112,7 +109,6 @@ services:
     environment:
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
-      DATABASE_URL: postgres://media:media@postgres:5432/mediacase?sslmode=disable
       WORKER_ID: worker-2
       WORKER_POOL_SIZE: "4"
       COORDINATOR_URL: http://coordinator:8080
@@ -121,8 +117,6 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: results
-    volumes:
-      - ./dataset:/app/dataset:ro
     depends_on:
       - coordinator
 
@@ -133,7 +127,6 @@ services:
     environment:
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
-      DATABASE_URL: postgres://media:media@postgres:5432/mediacase?sslmode=disable
       WORKER_ID: worker-3
       WORKER_POOL_SIZE: "4"
       COORDINATOR_URL: http://coordinator:8080
@@ -142,8 +135,6 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: results
-    volumes:
-      - ./dataset:/app/dataset:ro
     depends_on:
       - coordinator
 
