@@ -144,6 +144,7 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 		return
 	}
 	defer rows.Close()
+	affected := map[string]bool{}
 	for rows.Next() {
 		job := &models.Job{}
 		if err := rows.Scan(&job.ID, &job.FilePath, &job.Operation, &job.Priority, &job.Retries, &job.MaxRetries,
@@ -154,6 +155,15 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 		if err := s.queue.Enqueue(ctx, job); err != nil {
 			log.Printf("[scheduler] re-enqueue failed for reclaimed job %s: %v", job.ID, err)
 		}
+		if job.CaseID != "" {
+			affected[job.CaseID] = true
+		}
+	}
+	// Los casos afectados pasan a 'retrying' hasta que alguna sub-tarea vuelva a correr
+	// (jobProgress los regresa a 'processing').
+	for caseID := range affected {
+		s.db.ExecContext(ctx, `UPDATE cases SET status='retrying' WHERE id=$1 AND status='processing'`, caseID)
+		log.Printf("[scheduler] caso %s → retrying (sub-tareas re-encoladas)", caseID)
 	}
 }
 
