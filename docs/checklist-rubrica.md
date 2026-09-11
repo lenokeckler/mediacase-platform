@@ -23,13 +23,13 @@ Qué evidencia hay de cada rubro de la consigna v2.0 y dónde está. Escala 0-5 
 | Dataset 400-600 archivos, audio + video, formatos y tamaños variados, metadatos | ✅ | 492 archivos, 13 formatos, 3 niveles medidos, `manifest.json` v2; `docs/dataset.md` |
 | Estados por sub-tarea (6) y por caso (7); `completed` ⟺ todas OK; `partially_completed` ⟺ alguna falló | ✅ | `internal/models`, `internal/cases/barrier.go`, `docs/architecture.md` §4 |
 | Reporte consolidado con los 6 elementos mínimos | ✅ | `docs/api.md` |
-| Mínimo 3 nodos worker en entidades separadas, comunicación por red | ✅ en procesos separados; **⏳ en máquinas separadas** (Vagrant + laptops, Fase 7) | `docs/informe-pruebas.md` §1, §7 |
+| Mínimo 3 nodos worker en entidades separadas, comunicación por red | ✅ tres máquinas con IP propia: host + 2 VMs Vagrant, `HITO OK` 2026-09-11; ⏳ laptops físicas del equipo (7.4) | `docs/informe-pruebas.md` §7 |
 | Cliente: envío, consulta por caso y sub-tarea, resultados y reportes, casos concurrentes | ✅ | `cmd/client`, `cmd/ingest load`, dashboard |
 | Seis entregables | ✅ arquitectura · repo · sistema · dashboard · docs + manual · informe | este repositorio |
 
 ## Pendiente para cerrar (Fase 7)
 
-- [ ] 7.1 `vagrant up` (node2 audio, node3 metadata) + `tests/pools_scenario.sh` con node1 host → 3 máquinas.
+- [x] 7.1 `vagrant up` (node2 audio, node3 metadata) + `tests/pools_scenario.sh` con node1 host → 3 máquinas. `HITO OK` 2026-09-11.
 - [ ] 7.2 Túnel Cloudflare y un worker desde otra red.
 - [ ] 7.3 Binario en la VM Arch.
 - [ ] 7.4 Laptops de Jennifer y Jonathan con `tests/pools_scenario.sh` y captura del dashboard con 3 hostnames; agregar a `docs/informe-pruebas.md` §7.

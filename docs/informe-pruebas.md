@@ -211,9 +211,41 @@ pruebas de caída de §5.2. También se reconectó sola tras un reinicio del coo
 para el manual: Smart App Control bloquea el `.exe` sin firma, y "Desbloquear" en las propiedades
 del ZIP evita el aviso de archivo de internet.
 
-**Laptops del equipo (Jennifer y Jonathan) y VMs de Vagrant**: pendiente, Fase 7 del plan. Se
-anotará aquí el resultado de `tests/pools_scenario.sh` con los roles repartidos entre las tres
-máquinas y la captura del dashboard con tres hostnames distintos.
+**2026-09-11, 17:52 — tres máquinas con IP propia (Vagrant + VirtualBox 7.2.8)**: `vagrant up`
+en `infra/vagrant` creó `node2` (Ubuntu 24.04, 2 vCPU, 1.5 GB, `192.168.56.101`, rol **audio**) y
+`node3` (1 vCPU, 1 GB, `192.168.56.102`, rol **metadata**), ambas sin Docker: `ffmpeg 6.1.1` de apt,
+`bin/worker-linux-amd64` copiado por la carpeta compartida y el servicio `mediacase-worker` bajo
+systemd (`Restart=always`). El coordinador y el worker `node1` (**video**) corren en el host
+(`192.168.56.1`). Los tres nodos se comunican solo por la red host-only de VirtualBox (registro
+HTTP + canal WebSocket hacia el 8080; entradas y resultados por S3 al 9000).
+
+`tests/pools_scenario.sh` con esa topología:
+
+```
+→ workers y sus pools:
+   node3        rol=metadata  pools=metadata
+   node2        rol=audio     pools=audio
+   node1        rol=video     pools=video
+→ caso b805ce11-4553-472d-834f-c74af76494b8
+   [  2s] processing
+   [  4s] completed
+   resumen: de 4 archivos — 1 audio convertido, 1 miniatura generada, 1 video convertido, 1 audio extraído
+   OK  pool_video.mp4     video  convert        corrió en node1      (esperado node1)
+   OK  pool_audio.wav     audio  convert_audio  corrió en node2      (esperado node2)
+   OK  pool_imagen.png    image  thumbnail      corrió en node3      (esperado node3)
+   OK  pool_video.mp4     video  extract_audio  corrió en node1      (esperado node1)
+HITO OK — cada sub-tarea corrió en el nodo de su pool
+```
+
+![Monitor con tres nodos: node3 (metadata), node2 (audio) y Leno/node1 (video)](img/monitor-3-nodos-vagrant.png)
+
+Observaciones del despliegue: con Hyper-V activo en el host (Docker Desktop / WSL) VirtualBox arranca
+Ubuntu en ~6 min, más que el `boot_timeout` de 300 s de Vagrant; se subió a 900 s en el `Vagrantfile`.
+Y dos comandos `vagrant` en paralelo en Windows fallan con `powershell_error`: hay que levantar los
+nodos de uno en uno.
+
+**Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
+con los roles repartidos entre las tres laptops físicas.
 
 ## 8. Throughput
 

@@ -62,3 +62,6 @@ infra/env/*.env
 # Binarios y paquetes generados
 bin/
 /dist/
+
+# estado local de Vagrant (ids de las VMs, llaves ssh)
+infra/vagrant/.vagrant/

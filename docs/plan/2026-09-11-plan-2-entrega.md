@@ -356,13 +356,13 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 ---
 
-# FASE 7 — Despliegue final  ⏳ preparada 2026-09-11; 7.1-7.4 requieren a Leno (instalar Vagrant/cloudflared, VM Arch, compañeros)
+# FASE 7 — Despliegue final  ⏳ 7.1 ✅ 2026-09-11 · Vagrant 2.4.9 y cloudflared 2026.9.1 instalados · 7.2-7.4 pendientes
 
 > **Hecho sin Leno:** `scripts/tunnel.ps1` (7.2), decisión de firma documentada en el manual (7.5), `docs/checklist-rubrica.md` (7.6), regla de firewall ya creada en node-1 (`MediaCase node-1`, TCP 8080/9000, perfil Any), binarios `bin/worker-linux-amd64` y `bin/worker-windows-amd64.exe` recompilados con los arreglos de la Fase 5. Vagrant y cloudflared **no están instalados** (`winget list`): son MSI y la regla es que Leno los instale. La VM "Arch Linux" existe (NAT, 9 GB, apagada): con NAT el worker llega al coordinador en `http://10.0.2.2:8080` y puede bajar el ZIP de `/connect` desde adentro, sin tocar la configuración de la VM.
 
 **Hito:** el sistema corre con ≥ 3 nodos worker en máquinas distintas, es accesible desde otra red por el túnel, y las 3 laptops del equipo lo ejecutaron con evidencia.
 
-### Task 7.1: Vagrant (Task 0.6 pendiente del Plan 1)
+### Task 7.1: Vagrant (Task 0.6 pendiente del Plan 1)  ✅ `HITO OK` 2026-09-11 17:52 (boot_timeout 900 s; nodos de uno en uno)
 - Leno instala Vagrant (`! winget install --id Hashicorp.Vagrant ...`); `vagrant up` en `infra/vagrant`; `bash redeploy.sh` tras compilar; `tests/pools_scenario.sh` con node1 (host, video) + node2 (audio) + node3 (metadata) → `HITO OK`. Esto da el "mínimo 3 nodos" sin depender de nadie.
 
 ### Task 7.2: Cloudflare quick tunnel
