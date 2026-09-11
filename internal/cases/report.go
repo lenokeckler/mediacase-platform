@@ -1,0 +1,172 @@
+package cases
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/lenokeckler/mediacase-platform/internal/models"
+)
+
+// Reporte consolidado por caso (consigna §7). Se genera al cerrar el caso e incluye:
+// identificador y momentos de creación/cierre, archivos agrupados por tipo y operación,
+// resultado individual de cada sub-tarea con detalle del error, tiempos de inicio y fin
+// del caso y de cada sub-tarea, worker responsable de cada una, y un resumen agregado.
+
+type SubTaskResult struct {
+	JobID           string           `json:"job_id"`
+	File            string           `json:"file"`
+	FileType        models.FileType  `json:"file_type"`
+	Operation       models.Operation `json:"operation"`
+	Status          models.JobStatus `json:"status"`
+	WorkerID        string           `json:"worker_id,omitempty"`
+	StartedAt       *time.Time       `json:"started_at,omitempty"`
+	CompletedAt     *time.Time       `json:"completed_at,omitempty"`
+	DurationSeconds float64          `json:"duration_seconds"`
+	ResultURL       string           `json:"result_url,omitempty"`
+	Error           string           `json:"error,omitempty"`
+}
+
+type GroupCount struct {
+	FileType  models.FileType  `json:"file_type"`
+	Operation models.Operation `json:"operation"`
+	Completed int              `json:"completed"`
+	Failed    int              `json:"failed"`
+	Cancelled int              `json:"cancelled"`
+}
+
+type Totals struct {
+	Total     int `json:"total"`
+	Completed int `json:"completed"`
+	Failed    int `json:"failed"`
+	Cancelled int `json:"cancelled"`
+}
+
+type Report struct {
+	CaseID             string            `json:"case_id"`
+	Name               string            `json:"name"`
+	Status             models.CaseStatus `json:"status"`
+	CreatedAt          time.Time         `json:"created_at"`
+	StartedAt          *time.Time        `json:"started_at,omitempty"`
+	CompletedAt        *time.Time        `json:"completed_at,omitempty"`
+	DurationSeconds    float64           `json:"duration_seconds"`
+	Totals             Totals            `json:"totals"`
+	ByTypeAndOperation []GroupCount      `json:"by_type_and_operation"`
+	SubTasks           []SubTaskResult   `json:"sub_tasks"`
+	Summary            string            `json:"summary"`
+}
+
+// Etiquetas para el resumen: singular y plural por operación.
+var opLabels = map[models.Operation][2]string{
+	models.OpConvert:      {"video convertido", "videos convertidos"},
+	models.OpConvertAudio: {"audio convertido", "audios convertidos"},
+	models.OpExtractAudio: {"audio extraído", "audios extraídos"},
+	models.OpThumbnail:    {"miniatura generada", "miniaturas generadas"},
+}
+
+// BuildReport arma el reporte a partir del caso y sus sub-tareas. Es una función pura.
+func BuildReport(c *models.Case, jobs []*models.Job) *Report {
+	r := &Report{
+		CaseID: c.ID, Name: c.Name, Status: c.Status,
+		CreatedAt: c.CreatedAt, StartedAt: c.StartedAt, CompletedAt: c.CompletedAt,
+		SubTasks: make([]SubTaskResult, 0, len(jobs)),
+	}
+	if c.StartedAt != nil && c.CompletedAt != nil {
+		r.DurationSeconds = c.CompletedAt.Sub(*c.StartedAt).Seconds()
+	}
+
+	groups := map[string]*GroupCount{}
+	for _, j := range jobs {
+		st := SubTaskResult{
+			JobID: j.ID, File: j.FilePath, FileType: j.FileType, Operation: j.Operation,
+			Status: j.Status, WorkerID: j.WorkerID, StartedAt: j.StartedAt, CompletedAt: j.CompletedAt,
+			ResultURL: j.ResultURL, Error: j.ErrorMsg,
+		}
+		if j.StartedAt != nil && j.CompletedAt != nil {
+			st.DurationSeconds = j.CompletedAt.Sub(*j.StartedAt).Seconds()
+		}
+		r.SubTasks = append(r.SubTasks, st)
+		r.Totals.Total++
+
+		key := string(j.FileType) + "/" + string(j.Operation)
+		g, ok := groups[key]
+		if !ok {
+			g = &GroupCount{FileType: j.FileType, Operation: j.Operation}
+			groups[key] = g
+		}
+		switch j.Status {
+		case models.StatusCompleted:
+			r.Totals.Completed++
+			g.Completed++
+		case models.StatusFailed:
+			r.Totals.Failed++
+			g.Failed++
+		case models.StatusCancelled:
+			r.Totals.Cancelled++
+			g.Cancelled++
+		}
+	}
+
+	r.ByTypeAndOperation = make([]GroupCount, 0, len(groups))
+	for _, g := range groups {
+		r.ByTypeAndOperation = append(r.ByTypeAndOperation, *g)
+	}
+	// Los grupos más numerosos primero (lee natural en el resumen); empate → por tipo y operación.
+	sort.Slice(r.ByTypeAndOperation, func(i, k int) bool {
+		a, b := r.ByTypeAndOperation[i], r.ByTypeAndOperation[k]
+		if a.Completed != b.Completed {
+			return a.Completed > b.Completed
+		}
+		if a.FileType != b.FileType {
+			return a.FileType < b.FileType
+		}
+		return a.Operation < b.Operation
+	})
+	r.Summary = Summary(r)
+	return r
+}
+
+// Summary produce la línea agregada, p. ej.
+// "de 45 archivos — 30 videos convertidos, 10 audios extraídos, 4 miniaturas generadas, 1 fallido (formato no soportado)".
+func Summary(r *Report) string {
+	parts := make([]string, 0, len(r.ByTypeAndOperation)+2)
+	for _, g := range r.ByTypeAndOperation {
+		if g.Completed == 0 {
+			continue
+		}
+		lbl, ok := opLabels[g.Operation]
+		if !ok {
+			lbl = [2]string{string(g.Operation), string(g.Operation)}
+		}
+		parts = append(parts, plural(g.Completed, lbl[0], lbl[1]))
+	}
+	if r.Totals.Failed > 0 {
+		reason := ""
+		for _, s := range r.SubTasks {
+			if s.Status == models.StatusFailed && s.Error != "" {
+				reason = " (" + firstLine(s.Error) + ")"
+				break
+			}
+		}
+		parts = append(parts, plural(r.Totals.Failed, "fallido", "fallidos")+reason)
+	}
+	if r.Totals.Cancelled > 0 {
+		parts = append(parts, plural(r.Totals.Cancelled, "cancelado", "cancelados"))
+	}
+	return fmt.Sprintf("de %s — %s", plural(r.Totals.Total, "archivo", "archivos"), strings.Join(parts, ", "))
+}
+
+func plural(n int, singular, pluralForm string) string {
+	if n == 1 {
+		return "1 " + singular
+	}
+	return fmt.Sprintf("%d %s", n, pluralForm)
+}
+
+func firstLine(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		return strings.TrimSpace(s[:i])
+	}
+	return strings.TrimSpace(s)
+}
