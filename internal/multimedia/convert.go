@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -95,12 +96,17 @@ func probeHasStream(ctx context.Context, inputPath, streamType string) bool {
 	return strings.TrimSpace(string(out)) != ""
 }
 
-// outputPath crea una ruta de salida única en /tmp con la extensión dada.
+// outputSeq garantiza unicidad aunque dos llamadas caigan en el mismo tick del reloj
+// (en Windows la resolución de time.Now es ~15 ms).
+var outputSeq atomic.Uint64
+
+// outputPath crea una ruta de salida única en el directorio temporal con la extensión dada.
 func outputPath(inputPath, ext string) string {
 	dir := os.TempDir()
 	base := strings.TrimSuffix(filepath.Base(inputPath), filepath.Ext(inputPath))
 	ts := strconv.FormatInt(time.Now().UnixNano(), 36)
-	return filepath.Join(dir, fmt.Sprintf("%s_%s%s", base, ts, ext))
+	seq := strconv.FormatUint(outputSeq.Add(1), 36)
+	return filepath.Join(dir, fmt.Sprintf("%s_%s_%s%s", base, ts, seq, ext))
 }
 
 // Convert convierte inputPath a MP4 usando H.264 + AAC.
