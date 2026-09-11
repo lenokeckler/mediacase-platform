@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# Dos nodos worker en la red host-only 192.168.56.0/24 de VirtualBox, sin Docker:
+# binario estatico + ffmpeg bajo systemd. Simulan las laptops de los companeros.
+#
+#   .\scripts\build-workers.ps1     # primero: el provision copia bin/worker-linux-amd64
+#   cd infra\vagrant ; vagrant up   # crea y aprovisiona node2 y node3
+#   bash redeploy.sh                # tras recompilar: copia el binario y reinicia
+#
+# El coordinador corre en el host (192.168.56.1); los workers abren ellos la conexion.
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.synced_folder "../..", "/vagrant"   # el repo completo, para el binario
+
+  nodes = {
+    "node2" => { ip: "192.168.56.101", role: "audio",    mem: 1536, cpus: 2 },
+    "node3" => { ip: "192.168.56.102", role: "metadata", mem: 1024, cpus: 1 },
+  }
+
+  nodes.each do |name, n|
+    config.vm.define name do |node|
+      node.vm.hostname = name
+      node.vm.network "private_network", ip: n[:ip]   # adaptador 2: host-only (el 1 es NAT)
+      node.vm.provider "virtualbox" do |vb|
+        vb.name   = "mediacase-#{name}"
+        vb.memory = n[:mem]
+        vb.cpus   = n[:cpus]
+      end
+      node.vm.provision "shell", path: "provision_worker.sh",
+        env: { "WORKER_ID" => name, "WORKER_ROLE" => n[:role] }
+    end
+  end
+end
