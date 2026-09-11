@@ -1,236 +1,341 @@
-# MediaCase — Architecture
+# Arquitectura de MediaCase
 
-## Overview
+Plataforma distribuida de procesamiento multimedia **por casos** (IC-6600, consigna v2.0). Este
+documento describe los componentes, los nodos, el flujo de un caso y de una sub-tarea, las colas,
+la comunicación entre procesos y las decisiones de diseño con su justificación.
 
-MediaCase is a distributed multimedia processing system. It receives audio and video files, distributes processing jobs across multiple worker nodes running in parallel, and provides real-time monitoring through a web dashboard.
+## 1. Idea central: el caso es la unidad de trabajo
 
-## Component Map
+Un **caso** es un conjunto de 1..N archivos multimedia relacionados que entra al sistema como una
+sola solicitud (`POST /cases`). El coordinador lo inspecciona, decide qué operación le toca a cada
+archivo según su tipo, lo descompone en **sub-tareas**, las reparte entre workers de distintas
+máquinas, y solo cuando **todas** resolvieron (barrier/join) cierra el caso y produce un **reporte
+consolidado**. Un caso puede ser homogéneo (todos los archivos del mismo tipo) o heterogéneo
+(video + audio + imágenes, tres operaciones distintas en tres pools distintos).
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT                               │
-│              cmd/client  ·  HTTP POST /jobs                 │
-└───────────────────────────┬─────────────────────────────────┘
-                            │  submits jobs
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     JOB QUEUE                               │
-│              Redis Streams  ·  3 priority levels            │
-│         jobs:high  ·  jobs:normal  ·  jobs:low              │
-└───────────────────────────┬─────────────────────────────────┘
-                            │  coordinator reads
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    COORDINATOR                              │
-│  Scheduler → least-loaded worker assignment                 │
-│  Registry  → heartbeat tracking, stale eviction            │
-│  HTTP API  → /jobs /workers /stats /ws                      │
-└──────────┬──────────────────┬──────────────────┬────────────┘
-           ▼                  ▼                  ▼
-    ┌────────────┐     ┌────────────┐     ┌────────────┐
-    │  WORKER 1  │     │  WORKER 2  │     │  WORKER 3  │
-    │ pool=4     │     │ pool=4     │     │ pool=4     │
-    │ FFmpeg ops │     │ FFmpeg ops │     │ FFmpeg ops │
-    │ MinIO up.  │     │ MinIO up.  │     │ MinIO up.  │
-    └─────┬──────┘     └─────┬──────┘     └─────┬──────┘
-          └─────────────────┬┘──────────────────┘
-                            │
-              ┌─────────────┴─────────────┐
-              ▼                           ▼
-    ┌──────────────────┐       ┌──────────────────┐
-    │   PostgreSQL     │       │      MinIO        │
-    │  job state       │       │  result files     │
-    └──────────────────┘       └──────────────────┘
-              │
-              ▼
-    ┌──────────────────────────┐
-    │  DASHBOARD (React)       │
-    │  WebSocket /ws           │
-    │  worker cards, job table │
-    └──────────────────────────┘
-              ▲
-    ┌─────────┴──────────┐
-    │  Prometheus/Grafana │
-    │  metrics per worker │
-    └────────────────────┘
+## 2. Componentes y nodos
+
+```mermaid
+flowchart LR
+  subgraph clientes["Clientes"]
+    UI[Dashboard React<br/>pestañas Casos · Monitor · Historial]
+    CLI[cmd/client · cmd/ingest<br/>casos, ingesta, generador de carga]
+  end
+
+  subgraph node1["node-1 — laptop de Leno (Windows)"]
+    CO[Coordinador Go :8080<br/>API REST · WebSocket · /metrics<br/>routing · scheduler · barrier · reporte]
+    PG[(PostgreSQL 16<br/>casos · sub-tareas · workers)]
+    RD[(Redis 7 Streams<br/>9 colas: pool × prioridad)]
+    MI[(MinIO<br/>dataset/ entradas · results/ salidas)]
+    W1[worker-video<br/>pool=4 · ffmpeg]
+    PR[Prometheus :9090] --> GR[Grafana :3001]
+  end
+
+  subgraph remotos["Nodos remotos (VM, laptops, otra red)"]
+    W2[worker-audio<br/>node-2]
+    W3[worker-metadata<br/>node-3]
+    WN[worker-all<br/>cualquier PC vía /connect]
+  end
+
+  UI -- HTTP + WS --> CO
+  CLI -- HTTP --> CO
+  CLI -- S3 --> MI
+  CO <--> PG
+  CO <--> RD
+  CO -- reporte --> MI
+  W1 & W2 & W3 & WN -- "WebSocket saliente (asignaciones)" --> CO
+  W1 & W2 & W3 & WN -- "HTTP: registro, heartbeat, progreso" --> CO
+  W1 & W2 & W3 & WN -- "S3: bajar entrada, subir resultado" --> MI
+  PR -- scrape --> CO
 ```
 
-## Job Lifecycle
+| Componente | Dónde corre | Qué hace |
+|---|---|---|
+| **Coordinador** (`cmd/coordinator`, `internal/coordinator`, `internal/cases`) | node-1, proceso nativo | Recibe casos, enruta por tipo, descompone y encola, asigna a workers, lleva el estado, cierra casos (barrier), genera el reporte, sirve dashboard/API/métricas |
+| **Workers** (`cmd/worker`) | cualquier máquina | Abren un canal hacia el coordinador, ejecutan sub-tareas con ffmpeg en un pool de goroutines, reportan progreso, suben resultados a MinIO |
+| **Cola** (`internal/queue`) | Redis en Docker, node-1 | 9 streams `jobs:<pool>:<prioridad>` con consumer group: lo que hay que ejecutar |
+| **Estado** (`internal/db`) | PostgreSQL en Docker, node-1 | La verdad: tablas `cases`, `jobs`, `worker_registry`, `cases.report` |
+| **Repositorio de archivos** (`internal/storage`) | MinIO en Docker, node-1 | `dataset/` entradas · `results/jobs/<id>/` salidas · `results/cases/<id>/report.json` |
+| **Dashboard** (`dashboard/`) | compilado, lo sirve el coordinador en `/` | Casos (enviar, seguir, reporte, cancelar), Monitor (workers, colas por pool, sub-tareas por caso), Historial |
+| **Monitoreo** (`infra/`) | Prometheus + Grafana en Docker | Scrapean `/metrics` del coordinador; dashboard **MediaCase** provisionado |
+| **Clientes** (`cmd/client`, `cmd/ingest`) | donde sea | Enviar casos, consultar, ingesta del dataset, generación automática de casos, generador de carga |
 
-```
-PENDING → ASSIGNED → RUNNING → COMPLETED
-                   ↘ FAILED  → PENDING (retry, up to max_retries)
-```
+## 3. Flujo de un caso
 
-| Transition | Who triggers it |
-|---|---|
-| Created → PENDING | Coordinator on job receipt |
-| PENDING → ASSIGNED | Coordinator scheduler |
-| ASSIGNED → RUNNING | Worker on job start |
-| RUNNING → COMPLETED | Worker after MinIO upload |
-| RUNNING → FAILED | Worker on FFmpeg error |
-| ASSIGNED → PENDING | Coordinator on lost heartbeat |
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Cliente (dashboard / ingest)
+  participant K as Coordinador
+  participant P as PostgreSQL
+  participant R as Redis Streams
+  participant W as Worker (pool video/audio/metadata)
+  participant M as MinIO
 
-## Ciclo de vida de un caso (consigna v2.0)
+  C->>K: POST /cases {name, priority, files[]}
+  K->>K: routing por tipo: video→convert, audio→convert_audio, image→thumbnail
+  K->>P: INSERT cases (queued, total_jobs=N) + N jobs (pending)
+  K->>R: XADD jobs:<pool>:<prio> por cada sub-tarea
+  K-->>C: 201 caso con sub-tareas
 
-La unidad de trabajo es el **caso**: un conjunto de archivos relacionados que entra como una
-sola solicitud (`POST /cases`) y se procesa como un grupo de sub-tareas distribuidas.
+  loop scheduler, por pool con worker libre
+    K->>R: XREADGROUP (high → normal → low)
+    K->>K: least-loaded dentro del pool
+    K->>W: WS assign {job}
+    W-->>K: WS accept (o reject si el pool está lleno → vuelve a la cola)
+    K->>P: job assigned (worker_id, assigned_at)
+    K->>R: XACK + XDEL
+  end
 
-```
-POST /cases {files:[a.mp4, b.mp3, c.jpg]}
-        │
-        ▼
- 1. ROUTING POR TIPO  (internal/cases/router.go)
-    el coordinador inspecciona cada archivo y decide operación y pool:
-      a.mp4 → video  → convert        → pool video
-      b.mp3 → audio  → convert_audio  → pool audio
-      c.jpg → image  → thumbnail      → pool metadata
-    el cliente puede sugerir una operación; solo se acepta si aplica a ese tipo.
-        │
-        ▼
- 2. REGISTRO Y DESCOMPOSICIÓN   cases(id, status=queued, total_jobs=3)
-                                jobs(id, case_id, file_type, pool, operation, ...)
-        │
-        ▼
- 3. ENCOLADO POR POOL Y PRIORIDAD   Redis Streams  jobs:<pool>:<high|normal|low>
-        │
-        ▼
- 4. ASIGNACIÓN   por cada pool con un worker vivo: least-loaded dentro del pool
-                 la sub-tarea viaja por el WebSocket que el worker mantiene abierto
-        │
-        ▼
- 5. EJECUCIÓN CONCURRENTE   cada worker baja la entrada de MinIO, corre ffmpeg,
-                            sube el resultado, reporta progreso por HTTP
-        │
-        ▼
- 6. BARRIER / JOIN   (internal/cases/barrier.go)
-    cada vez que una sub-tarea llega a completed/failed, el coordinador bloquea la fila
-    del caso (SELECT ... FOR UPDATE) y cuenta. Solo cuando resueltas == total:
-      todas OK           → completed
-      alguna falló       → partially_completed
-      todas fallaron     → failed
-    Mientras falte una, el caso sigue abierto aunque las demás ya estén listas.
-        │
-        ▼
- 7. REPORTE CONSOLIDADO   (internal/cases/report.go)
-    cases.report (JSONB) + MinIO results/cases/<id>/report.json
-    GET /cases/{id}/report
+  W->>K: POST /jobs/{id}/progress {running}
+  K->>P: job running · caso processing
+  W->>M: GET dataset/<key>
+  W->>W: ffmpeg
+  W->>M: PUT results/jobs/<id>/…
+  W->>K: POST /jobs/{id}/progress {completed, result_url}
+  K->>P: job completed
+  K->>P: BARRIER: SELECT cases FOR UPDATE · contar resueltas
+  alt resueltas == total
+    K->>P: caso completed | partially_completed | failed, completed_at
+    K->>K: BuildReport → cases.report (JSONB)
+    K->>M: PUT results/cases/<id>/report.json
+  else faltan sub-tareas
+    K->>P: COMMIT (el caso sigue abierto)
+  end
+  C->>K: GET /cases/{id}/report
 ```
 
-Estados del caso: `queued → processing → completed | partially_completed | failed`, más
-`retrying` (sus sub-tareas fueron re-encoladas porque el worker que las tenía murió) y
-`cancelled` (`POST /cases/{id}/cancel`: las sub-tareas no iniciadas se cancelan, las que corren
-terminan, el caso no vuelve a cambiar).
+Puntos clave:
 
-El barrier se dispara en **cuatro** puntos, y en los cuatro llega al mismo código:
-el worker reporta `completed`/`failed`; se agotan los reintentos de entrega; una sub-tarea
-excede el tiempo máximo en `running`; y (para `retrying`) el reclaim de un worker caído.
+- **Routing por tipo** (`internal/cases/router.go`): la operación no la dicta el cliente; el
+  coordinador la decide por el tipo del archivo. El cliente puede *sugerir* una operación y solo se
+  acepta si aplica a ese tipo (`video_x.mp4:extract_audio` sí; `foto.jpg:convert` no).
+- **Aceptar o rechazar entero**: se validan todos los archivos antes de tocar la base, así un caso
+  nunca queda a medio registrar y el error dice exactamente qué archivo no sirve.
+- **Barrier/join** (`internal/cases/barrier.go`): cada vez que una sub-tarea llega a `completed` o
+  `failed`, el coordinador bloquea la fila del caso (`SELECT … FOR UPDATE`), cuenta, y solo si
+  resueltas = total cambia el estado agregado. Dos sub-tareas que terminan en el mismo instante se
+  serializan; el caso cierra una sola vez. El barrier se dispara en cuatro puntos y en los cuatro
+  llega al mismo código: reporte del worker, reintentos de entrega agotados, sub-tarea vencida, y
+  reclaim de un worker caído.
+- **Reporte consolidado** (`internal/cases/report.go`): archivos agrupados por tipo y operación,
+  resultado y error de cada sub-tarea, tiempos de inicio/fin del caso y de cada sub-tarea, worker
+  responsable, y el resumen agregado (*"de 39 archivos — 20 videos convertidos, 12 audios
+  convertidos, 7 miniaturas generadas"*). Ver [`api.md`](api.md).
 
-## Modelo de asignación: pools especializados por tipo de contenido (Unidad 1)
+## 4. Ciclos de vida
 
-El sistema usa tres pools de workers — `video`, `audio` y `metadata` — y el coordinador enruta
-cada sub-tarea al pool que corresponde a su tipo de contenido. Cada worker declara su rol al
-registrarse (`WORKER_ROLE=video|audio|metadata|all`), y el scheduler solo saca una sub-tarea de
-la cola de un pool cuando hay un worker de ese pool con capacidad.
+### Caso (7 estados)
 
-**Por qué especializados y no genéricos.** La decisión sigue la lógica de heterogeneidad de
-cómputo de la Unidad 1: así como una GPU es más eficiente para procesamiento paralelo masivo y
-una NPU para inferencia, en esta plataforma las operaciones tienen perfiles de costo muy
-distintos, y conviene asignarlas al nodo que mejor las atiende:
+```mermaid
+stateDiagram-v2
+  [*] --> queued: POST /cases
+  queued --> processing: primera sub-tarea en running
+  processing --> retrying: un worker murió, sus sub-tareas se re-encolaron
+  retrying --> processing: alguna vuelve a correr
+  processing --> completed: barrier, todas OK
+  processing --> partially_completed: barrier, alguna falló
+  processing --> failed: barrier, todas fallaron
+  queued --> cancelled: POST cancel
+  processing --> cancelled: POST cancel
+  retrying --> cancelled: POST cancel
+  completed --> [*]
+  partially_completed --> [*]
+  failed --> [*]
+  cancelled --> [*]
+```
 
-| Pool | Operaciones | Perfil de cómputo | Nodo que lo atiende |
+`completed` ⟺ todas las sub-tareas exitosas; `partially_completed` ⟺ al menos una fallida; el
+estado agregado se decide **solo** con todas resueltas. Cancelar cancela las sub-tareas no
+iniciadas; las que corren terminan pero el caso ya no cambia (el reporte se genera al cancelar).
+
+### Sub-tarea (6 estados)
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending: encolada en jobs:pool:prio
+  pending --> assigned: scheduler → worker acepta
+  assigned --> pending: worker rechaza (pool lleno) · worker muere · 15 min sin noticias
+  assigned --> running: worker reporta inicio
+  running --> pending: worker muere (reclaim, caso → retrying)
+  running --> completed: resultado subido a MinIO
+  running --> failed: ffmpeg falló · subida falló · 15 min sin reporte
+  pending --> cancelled: caso cancelado
+  assigned --> cancelled: caso cancelado
+  completed --> [*]
+  failed --> [*]
+  cancelled --> [*]
+```
+
+Cada sub-tarea guarda id del caso, archivo, operación, pool, estado, worker, progreso, reintentos y
+tiempos (`created_at`, `assigned_at`, `started_at`, `completed_at`). Los reportes de estado
+**solo avanzan**: un avance rezagado nunca devuelve a `running` una sub-tarea terminada.
+
+## 5. Colas y planificación
+
+```mermaid
+flowchart LR
+  subgraph redis["Redis Streams (consumer group 'workers')"]
+    direction TB
+    VH[jobs:video:high] --- VN[jobs:video:normal] --- VL[jobs:video:low]
+    AH[jobs:audio:high] --- AN[jobs:audio:normal] --- AL[jobs:audio:low]
+    MH[jobs:metadata:high] --- MN[jobs:metadata:normal] --- ML[jobs:metadata:low]
+  end
+  S[Scheduler<br/>cada 200 ms recorre los pools] -->|solo si hay worker del pool con capacidad| redis
+  redis -->|high antes que normal antes que low| S
+  S -->|least-loaded: menos activas, luego menos CPU| W[(worker del pool)]
+```
+
+- **Nueve colas = pool × prioridad.** Prioridad 8-10 → `high`, 4-7 → `normal`, 1-3 → `low`.
+  Dentro de un pool se vacía `high` antes que `normal` antes que `low` (planificación multinivel).
+- **No se saca nada de una cola si no hay quién lo atienda**: el scheduler lee `jobs:video:*` solo
+  cuando hay un worker del pool `video` con canal abierto y capacidad. Si el pool está saturado, la
+  profundidad de esa cola crece y **eso es lo que muestra el dashboard** (`by_pool`) y Grafana.
+- **Backpressure**: el worker tiene un pool fijo de goroutines (`WORKER_POOL_SIZE`); si está lleno
+  responde `reject` y la sub-tarea vuelve a la cola sin contar como reintento.
+- **Tolerancia a fallos**: heartbeat cada 1 s; sin heartbeat por 15 s el worker se expulsa y sus
+  sub-tareas `assigned`/`running` vuelven a la cola (el caso pasa a `retrying`). Un worker que
+  vuelve como proceso nuevo (otro `instance`) provoca el mismo reclaim de inmediato; uno que se
+  apaga ordenadamente se despide (`unregister`) y no espera los 15 s. Una sub-tarea `running` sin
+  reporte 15 min se marca fallida; una `assigned` sin reporte 15 min vuelve a la cola. Redis con
+  consumer group asegura que un mensaje entregado y no confirmado no se pierde si el coordinador
+  reinicia.
+
+## 6. Pools especializados por tipo de contenido (Unidad 1)
+
+Decisión: workers **especializados** (`WORKER_ROLE=video|audio|metadata`) en vez de genéricos, con
+`all` como comodín. La justificación sigue la heterogeneidad de cómputo de la Unidad 1 — así como una
+GPU rinde en paralelo masivo y una NPU en inferencia, aquí cada operación tiene un perfil de costo
+distinto y conviene atenderla en el nodo que mejor la resuelve:
+
+| Pool | Operaciones | Perfil | Nodo |
 |---|---|---|---|
-| `video` | `convert` (transcodificación H.264), `extract_audio`, `thumbnail` de video | CPU intensivo y sostenido: minutos por archivo pesado | **node-1**, el más potente (Ryzen 7, 6 núcleos / 12 hilos) |
-| `audio` | `convert_audio` | CPU moderado, segundos | node-2 (2 vCPU) |
-| `metadata` | `thumbnail` de imágenes, asociación de metadatos | Liviano, sub-segundo | node-3 (1 vCPU), el más modesto |
+| `video` | `convert` (H.264), `extract_audio`, `thumbnail` de video | CPU intensivo y sostenido: un pesado de 250 MB tarda ~3 min | node-1, el más potente (Ryzen 7, 6C/12T) |
+| `audio` | `convert_audio` | CPU moderado: segundos a un minuto | node-2 (2 vCPU) |
+| `metadata` | `thumbnail` de imágenes, metadatos | Liviano: ~3 s | node-3 (1 vCPU) |
 
 Con workers genéricos, una sub-tarea de video podía caer en el nodo más débil y **retrasar el
-cierre de todo el caso**, porque el barrier espera a la sub-tarea más lenta. Con pools, el trabajo
-pesado va siempre al nodo que lo termina antes.
+cierre de todo el caso** (el barrier espera a la más lenta). Con pools, el trabajo pesado va siempre
+al nodo que lo termina antes. El costo aceptado: entre pools no hay robo de trabajo — si `video`
+está saturado, sus sub-tareas esperan aunque `metadata` esté ocioso. Números reales en
+[`informe-pruebas.md`](informe-pruebas.md).
 
-**Efecto sobre el balanceo de carga.** Dentro de cada pool el scheduler aplica *least-loaded*:
-elige el worker con menos sub-tareas activas y, en empate, el de menor CPU (reportada por
-heartbeat cada segundo). Entre pools **no hay robo de trabajo**: si el pool `video` está saturado,
-sus sub-tareas esperan en `jobs:video:*` aunque `metadata` esté ocioso. Se acepta ese costo a
-cambio de que un nodo débil nunca reciba trabajo pesado. La saturación es visible en el dashboard
-(`queue_depth.by_pool`), que es lo que la consigna pide poder observar.
+## 7. Comunicación entre procesos
 
-**Flexibilidad.** El rol `all` declara las tres capacidades; un worker así (por ejemplo el que
-cualquiera descarga desde `/connect`) atiende cualquier pool y actúa como comodín, lo que da un
-modelo híbrido sin cambiar el scheduler. Un worker que no declara rol se trata como genérico.
+| Canal | Tecnología | Quién → quién | Para qué |
+|---|---|---|---|
+| Asignación de sub-tareas | WebSocket **saliente** del worker (`GET /workers/{id}/stream`) | worker abre → coordinador envía | `assign` ↓, `accept`/`reject` ↑, `ping`/`pong` |
+| Registro, heartbeat, progreso, despedida | HTTP JSON | worker → coordinador | estado del nodo y de cada sub-tarea |
+| Casos y consultas | HTTP JSON (`/cases`, `/jobs`, `/stats`) | clientes → coordinador | enviar, seguir, reporte, cancelar |
+| Dashboard en vivo | WebSocket (`/ws`), snapshot cada 1 s | coordinador → navegador | workers, sub-tareas vivas, colas por pool, casos activos |
+| Archivos | S3 (MinIO) | workers y clientes ↔ MinIO | entradas y resultados |
+| Cola | Redis Streams | coordinador ↔ Redis | lo que falta ejecutar |
+| Métricas | HTTP (`/metrics`) | Prometheus → coordinador | CPU/mem/carga por worker, colas, casos |
 
-**Alternativa descartada: solo workers genéricos.** Es más simple y nunca deja pools ociosos,
-pero pierde la asignación consciente del hardware que la consigna pide justificar, y hace que la
-duración de un caso dependa del nodo más lento que haya tocado alguna de sus sub-tareas.
+**Por qué el canal es saliente.** El coordinador nunca se conecta a un worker: el worker abre la
+conexión y la mantiene viva (reconexión con espera exponencial). Así un worker no necesita puerto
+abierto, ni regla de firewall, ni IP alcanzable: corre detrás de cualquier router doméstico, y por
+un túnel (`wss://`) desde otra red. Es lo que permite el worker descargable de `/connect`.
 
-## Key Design Decisions
+## 8. Almacenamiento y repositorio de resultados
 
-**Redis Streams for the queue** — survives coordinator restarts, supports consumer groups so Redis tracks which messages are unacknowledged. If a worker dies mid-job, the message can be redelivered.
+- **PostgreSQL es la verdad**: Redis dice qué falta ejecutar; Postgres dice qué pasó. El dashboard,
+  el reporte y las métricas salen de Postgres. Sobrevive reinicios (volumen Docker).
+- **MinIO centralizado en node-1** como repositorio de entradas y resultados: los workers bajan solo
+  el objeto que les tocó y suben su salida a `results/jobs/<id>/`; el reporte de cada caso queda en
+  `results/cases/<id>/report.json` y en `cases.report` (JSONB), consultable por `GET
+  /cases/{id}/report` y descargable desde el dashboard. La consigna admite "almacenamiento local
+  compartido"; se eligió MinIO (S3) porque es el mismo protocolo desde Windows, Linux o un túnel,
+  y porque ningún nodo necesita una copia del dataset (14 GB).
+- **node-1 es punto único de fallo, aceptado y documentado**: concentra estado, cola y archivos. Todo
+  persiste en disco y nada se pierde al reiniciar; los workers se reconectan solos y reintentan la
+  entrega de resultados hasta 15 min mientras el coordinador vuelve.
 
-**Nine streams: one per (pool, priority)** — `jobs:<video|audio|metadata>:<high|normal|low>` (priority ≥ 8 → high, 4–7 → normal, < 4 → low). Within a pool the scheduler drains high before normal before low (multi-level queue scheduling); across pools it only reads a queue when a worker of that pool is available.
+## 9. Topología de despliegue
 
-**Least-loaded scheduling within the pool** — the scheduler picks, among the live workers of the sub-task's pool, the one with the fewest active jobs, breaking ties by CPU%. See "Modelo de asignación" above.
-
-**Outbound worker channel** — each worker opens a WebSocket *to* the coordinator (`GET /workers/{id}/stream`) and keeps it alive; assignments travel down that channel. The coordinator never connects to a worker, so workers need no open port, no firewall rule and no reachable IP: they run behind any home router. If the channel drops the worker reconnects with exponential backoff; if the worker comes back as a new process (a new `instance` id), its in-flight sub-tasks are re-queued immediately.
-
-**Goroutine pool** — each worker runs a fixed pool of goroutines (configurable via `WORKER_POOL_SIZE`). Jobs are sent over a buffered channel. If the channel is full the worker replies `reject` and the coordinator re-queues the sub-task without counting a retry.
-
-**PostgreSQL as source of truth** — Redis holds what needs to run, PostgreSQL holds what happened. The dashboard and client query PostgreSQL for rich historical data.
-
-**MinIO for inputs and results** — inputs live in the `dataset` bucket and workers download only the object they were assigned, so no node needs a local copy of the dataset (this is what makes the downloadable worker portable). Results go to `results/jobs/<job>/...` and each case report to `results/cases/<case>/report.json`. Storage is centralized on node-1 ("almacenamiento local compartido", one of the options the assignment allows); what is distributed is the processing. node-1 is therefore a single point of failure, accepted and documented: everything it holds persists to disk and nothing is lost on restart.
-
-## Port Reference
-
-| Service | Port | Purpose |
-|---|---|---|
-| Coordinator | 8080 | REST API + WebSocket |
-| Workers | 8090 | Job assignment + health + metrics |
-| PostgreSQL | 5432 | Job and worker state |
-| Redis | 6379 | Priority job queue |
-| MinIO API | 9000 | Object storage |
-| MinIO UI | 9001 | Browser console |
-| Prometheus | 9090 | Metrics scraping |
-| Grafana | 3001 | Metrics dashboard |
-| Dashboard | 5173 | Live UI |
-
-## Deployment
-
-### Prerequisites
-- Docker Desktop running
-- Go 1.26+
-- `make hooks` run once after cloning
-
-### Start the system
-```bash
-make up       # builds all images, starts all services
-make logs     # tail logs from all services
-make down     # stop and wipe all volumes
+```mermaid
+flowchart TB
+  subgraph lan["Red local (WiFi)"]
+    subgraph n1["node-1 · Windows 11 · 192.168.x.10"]
+      D[Docker Desktop: Postgres · Redis · MinIO · Prometheus · Grafana]
+      C[coordinador :8080 nativo]
+      V[worker-video nativo]
+    end
+    subgraph vb["VirtualBox (Vagrant) en node-1"]
+      N2[node-2 Ubuntu 24.04 · 192.168.56.101<br/>worker-audio, systemd]
+      N3[node-3 Ubuntu 24.04 · 192.168.56.102<br/>worker-metadata, systemd]
+    end
+    L1[Laptop Jennifer<br/>ZIP Linux/Windows desde /connect]
+    L2[Laptop Jonathan<br/>ZIP desde /connect]
+  end
+  T[cloudflared quick tunnel<br/>https://xxx.trycloudflare.com]
+  X[PC en otra red<br/>worker vía wss://]
+  V & N2 & N3 & L1 & L2 --> C
+  T --> C
+  X --> T
 ```
 
-### Submit a test job
-```bash
-# Single job
-go run ./cmd/client -file dataset/files/video_short_1_mp4.mp4 -op convert -watch
+Mínimo de la consigna: **3 nodos worker en entidades de ejecución separadas** con comunicación por
+red. Lo cubren node-1 (host) + node-2 y node-3 (VMs con IP propia, sin Docker, binario estático bajo
+systemd), y se amplía con las laptops del equipo y cualquier PC que abra `/connect`. Con un solo
+comando (`docker compose up`) **no** se cumple: el compose de `docker-compose.infra.yml` levanta
+solo la infraestructura de node-1, no los workers.
 
-# Batch load test (50 concurrent)
-go run ./cmd/client -batch -manifest dataset/manifest.json -concurrency 50
+### Puertos
 
-# Check stats
-go run ./cmd/client -stats
-```
-
-### Grafana dashboards
-Open http://localhost:3001 (admin / admin). The "MediaCase" dashboard is auto-provisioned and shows CPU/RAM per worker, active jobs, job throughput rates, and duration percentiles.
-
-## Prometheus Metrics Exported by Workers
-
-| Metric | Type | Description |
+| Servicio | Puerto | Quién lo usa |
 |---|---|---|
-| `worker_cpu_percent` | gauge | Process CPU usage 0–100 |
-| `worker_memory_mb` | gauge | RSS memory in MB |
-| `worker_host_mem_percent` | gauge | Host memory usage % |
-| `worker_goroutines` | gauge | Active goroutines |
-| `worker_active_jobs` | gauge | Jobs currently processing |
-| `worker_jobs_completed_total` | counter | Total successful jobs |
-| `worker_jobs_failed_total` | counter | Total failed jobs |
-| `worker_job_duration_seconds` | histogram | Processing time per operation |
+| Coordinador (dashboard + API + WS + /metrics + /connect) | 8080 | navegadores, workers, clientes, Prometheus |
+| MinIO API | 9000 | workers y clientes (S3) |
+| MinIO consola | 9001 | humanos |
+| PostgreSQL | 5432 | solo el coordinador (localhost) |
+| Redis | 6379 | solo el coordinador (localhost) |
+| Prometheus | 9090 | humanos, Grafana |
+| Grafana | 3001 | humanos (lectura sin login) |
+| Worker (diagnóstico `/health`, `/metrics`) | opcional, `WORKER_DIAG_ADDR` | nadie lo necesita para trabajar |
+
+### Variables de entorno
+
+| Variable | Proceso | Significado |
+|---|---|---|
+| `DATABASE_URL`, `REDIS_ADDR`, `REDIS_PASSWORD`, `PORT` | coordinador | conexión a la infra y puerto HTTP |
+| `MINIO_ENDPOINT` | coordinador, worker | MinIO como lo ve **este** proceso |
+| `MINIO_PUBLIC_ENDPOINT` | coordinador, worker | MinIO como lo ven los demás nodos (IP de node-1); así se escriben las URLs de resultados |
+| `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET` | ambos | credenciales y bucket de resultados |
+| `WORKER_ID` | worker | nombre estable del nodo (`node2`, `laptop-jenn`) |
+| `WORKER_ROLE` | worker | `video` · `audio` · `metadata` · `all` |
+| `WORKER_POOL_SIZE` | worker | sub-tareas simultáneas (goroutines) |
+| `COORDINATOR_URL` | worker, clientes | `http://<ip>:8080` o `https://xxx.trycloudflare.com` |
+| `WORKER_DIAG_ADDR` | worker | puerto opcional de diagnóstico (`:8090`); vacío = ninguno |
+
+Los archivos reales están en `infra/env/*.env` (no versionados; los `.example` sí). El ZIP de
+`/connect` trae un `worker.env` ya lleno.
+
+## 10. Decisiones de tecnología (justificación)
+
+| Decisión | Por qué |
+|---|---|
+| **Go** para coordinador y workers | goroutines y canales modelan directo el pool de workers y el scheduler; un binario estático por SO (`CGO_ENABLED=0`) que corre en cualquier distro sin instalar nada — clave para el worker descargable y las VMs sin Docker |
+| **Redis Streams** con consumer groups | cola persistente con entrega-y-confirmación: un mensaje entregado y no confirmado no se pierde; `XINFO GROUPS` da la profundidad real por cola |
+| **PostgreSQL** como estado | transacciones y `SELECT … FOR UPDATE` para el barrier; consultas de agregación para reporte, `/stats` y `/metrics` |
+| **MinIO** (S3) | mismo protocolo desde cualquier nodo y por túnel; URLs de resultado descargables; no obliga a replicar el dataset |
+| **ffmpeg** | cubre conversión, extracción de audio, miniaturas y formas de onda; portable (va dentro del ZIP de Windows) |
+| **React + Vite** para el dashboard | ya existía; se le agregó la vista por caso. Se compila a estático y lo sirve el coordinador: una sola URL |
+| **Prometheus + Grafana** | estándar; el coordinador re-exporta el heartbeat de los workers porque los remotos no tienen puerto que scrapear |
+| **Docker solo para la infra de node-1** | Postgres/Redis/MinIO/Prometheus/Grafana en contenedores es lo cómodo; coordinador y workers son procesos nativos porque deben correr en máquinas sin Docker |
+| **Vagrant + VirtualBox** | dos nodos Linux reales con IP propia en la laptop de Leno, reproducibles con `vagrant up` |
+| **Cloudflare quick tunnel** | exponer el 8080 sin abrir puertos: un worker desde otra red se conecta por `wss://` |
+
+## 11. Temas del curso que aparecen en el código
+
+| Tema | Dónde |
+|---|---|
+| Administración de procesos y estados | `internal/models` (6 estados de sub-tarea, 7 de caso), `internal/db` |
+| Planificación y asignación | `internal/coordinator/scheduler.go` (multinivel por prioridad, least-loaded por pool) |
+| Colas y estructuras de control | `internal/queue` (Redis Streams), `worker_hub.go` (canal por worker) |
+| Concurrencia y asincronía | pool de goroutines del worker, scheduler, broadcast del dashboard |
+| Sincronización (barrier/join) | `internal/cases/barrier.go` con `SELECT … FOR UPDATE` |
+| Comunicación entre procesos | HTTP, WebSocket saliente, S3, Redis |
+| Heterogeneidad de cómputo (Unidad 1) | pools especializados, §6 |
+| Monitoreo y balanceo | heartbeat, `/metrics`, Grafana, colas por pool, reclaim/redistribución |
+| Administración de archivos | MinIO: entradas por clave, resultados por caso y sub-tarea, reporte |

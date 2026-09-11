@@ -1,9 +1,9 @@
-# MediaCase Platform
+# MediaCase
 
 **Plataforma distribuida de procesamiento multimedia por casos y monitoreo cooperativo de recursos.**
 
-IC-6600 · Principios de Sistemas Operativos · Instituto Tecnológico de Costa Rica
-Campus San Carlos · II Semestre 2026 · Proyecto Programado I (consigna v2.0)
+IC-6600 Principios de Sistemas Operativos · Instituto Tecnológico de Costa Rica, Campus San Carlos ·
+II Semestre 2026 · Proyecto Programado I (consigna v2.0).
 
 **Equipo:** Magdaleno Gómez Díaz · Jennifer Yajaira Lopez Miranda · Jonathan Sancho Loaiza
 
@@ -11,154 +11,149 @@ Campus San Carlos · II Semestre 2026 · Proyecto Programado I (consigna v2.0)
 
 ## Qué es
 
-Un sistema distribuido que recibe **casos de procesamiento** —conjuntos de uno o varios
-archivos multimedia relacionados, enviados como una sola solicitud— los descompone en
-sub-tareas, las enruta según el tipo de cada archivo, las ejecuta concurrentemente en
-varios nodos worker, y al cerrar el caso produce un **reporte consolidado**.
+Un sistema distribuido cuya unidad de trabajo es el **caso**: un conjunto de uno o varios archivos
+multimedia relacionados que entra como **una sola solicitud**. El coordinador inspecciona cada
+archivo y decide la operación por su tipo (video → convertir, audio → convertir, imagen →
+miniatura), descompone el caso en sub-tareas, las encola por pool y prioridad, las reparte entre
+workers que corren en máquinas distintas, y cuando **todas** resolvieron (barrier/join) cierra el
+caso con un estado agregado y un **reporte consolidado**. Un caso puede ser homogéneo (un solo
+tipo de archivo) o heterogéneo (video + audio + imágenes, tres operaciones en tres pools).
 
-Un caso puede ser **homogéneo** (todos los archivos del mismo tipo, misma operación) o
-**heterogéneo** (mezcla de audio y video que requieren operaciones distintas). El
-coordinador inspecciona cada archivo, decide la operación, y aplica un mecanismo de
-sincronización **barrier/join** para determinar cuándo el caso terminó.
+Lo que importa aquí no es la interfaz sino lo del curso: procesos y estados, planificación por
+prioridad y por pool, colas, concurrencia, sincronización con barrier, comunicación por red entre
+nodos, y monitoreo con balanceo de carga.
 
-El foco del proyecto no es la reproducción multimedia ni la interfaz, sino la
-**arquitectura distribuida de procesamiento**: administración de procesos, planificación,
-colas, concurrencia, sincronización, comunicación entre nodos y monitoreo de recursos.
+## Arquitectura en diez líneas
 
-## Arquitectura
+- **node-1** (la laptop de Leno): PostgreSQL + Redis + MinIO + Prometheus + Grafana en Docker; el
+  **coordinador** (Go) y un worker de video como procesos nativos. Una sola URL,
+  `http://<ip>:8080`, sirve el dashboard, la API, el WebSocket, `/metrics` y `/connect`.
+- **Workers** (Go + ffmpeg) en cualquier otra máquina: VMs Ubuntu creadas con Vagrant, las
+  laptops del equipo, o cualquier PC que baje el ZIP de `/connect`. Cada worker declara un rol
+  (`video` · `audio` · `metadata` · `all`) y **abre él** un WebSocket hacia el coordinador: no
+  necesita puerto abierto ni IP alcanzable.
+- **Cola**: 9 streams de Redis, uno por pool × prioridad. El scheduler solo saca de la cola de un
+  pool cuando hay un worker de ese pool con capacidad; dentro del pool elige el menos cargado.
+- **Estado** en PostgreSQL (casos, sub-tareas, workers); **archivos** en MinIO (`dataset/`
+  entradas, `results/` salidas y reportes).
+- **Barrier**: cada sub-tarea que resuelve bloquea la fila del caso y cuenta; el caso cierra una
+  sola vez, como `completed`, `partially_completed` o `failed`.
 
-```
-Cliente / generador de casos
-          │
-          ▼
-   Job Queue  (Redis Streams · jobs:high · jobs:normal · jobs:low)
-          │
-          ▼
-   Coordinador
-     ├─ Registry   → registro de workers, heartbeat, evicción de nodos muertos
-     ├─ Scheduler  → dequeue por prioridad, asignación least-loaded, reclaim
-     ├─ Router     → inspecciona el archivo y determina la operación
-     ├─ Barrier    → cierra el caso cuando todas sus sub-tareas resolvieron
-     └─ API HTTP   → REST + WebSocket
-          │
-    ┌─────┼─────┬─────────┐
-    ▼     ▼     ▼         ▼
- Worker-1 Worker-2 Worker-3 ...   (pool de goroutines · FFmpeg)
-    └─────┴─────┴─────────┘
-          │
-          ├──► PostgreSQL   estado de casos, sub-tareas y workers
-          └──► MinIO        repositorio de resultados
-                    │
-                    ▼
-          Dashboard (React + WebSocket)  ·  Prometheus + Grafana
-```
+Detalle con diagramas en [`docs/architecture.md`](docs/architecture.md).
 
-Documentación detallada en [`docs/architecture.md`](docs/architecture.md).
+## Levantar node-1 (3 pasos)
 
-## Stack
+Requisitos en node-1: Docker Desktop, Go 1.26+, ffmpeg en el PATH, Node 20+ solo si se toca el
+dashboard (el compilado `dist/` está versionado).
 
-| Componente | Tecnología | Rol |
-|---|---|---|
-| Coordinador | Go 1.26 | Orquestación, routing, scheduler, API REST + WebSocket |
-| Workers | Go 1.26 + FFmpeg | Ejecución de sub-tareas multimedia, pool de goroutines |
-| Cola | Redis 7 Streams | 3 niveles de prioridad con consumer groups |
-| Estado | PostgreSQL 16 | Casos, sub-tareas, workers |
-| Resultados | MinIO | Almacenamiento de archivos procesados |
-| Observabilidad | Prometheus + Grafana | Métricas por worker |
-| Dashboard | React 18 + Vite | Monitoreo en tiempo real |
+```powershell
+# 1. Infraestructura
+docker compose -f docker-compose.infra.yml up -d
 
-## Operaciones soportadas
+# 2. Coordinador (compila a bin/ y arranca; lee infra/env/node1.env — copiar del .example y poner la IP del WiFi)
+scripts\run-coordinator.ps1
 
-| Operación | Entrada | Salida |
-|---|---|---|
-| `convert` | video | MP4 re-codificado (H.264 + AAC) |
-| `extract_audio` | video / audio | MP3 192k |
-| `convert_audio` | audio | WAV PCM 16-bit 44.1 kHz |
-| `thumbnail` | video / audio | JPEG del frame a los 5 s · PNG de forma de onda |
-
-## Puesta en marcha
-
-**Requisitos:** Docker Desktop · Go 1.26+ (solo para el cliente CLI) · FFmpeg (solo para
-generar el dataset).
-
-```bash
-# 1. Generar el dataset de prueba (400+ archivos sintéticos)
-chmod +x dataset/scripts/generate_dataset.sh
-./dataset/scripts/generate_dataset.sh
-
-# 2. Levantar el sistema completo
-make up
-make logs
+# 3. Worker local de video (otra terminal; lee infra/env/worker-host.env)
+scripts\run-worker.ps1
 ```
 
-| Servicio | URL | Credenciales |
-|---|---|---|
-| Dashboard | http://localhost:5173 | — |
-| API del coordinador | http://localhost:8080 | — |
-| MinIO Console | http://localhost:9001 | `minioadmin` / `minioadmin` |
-| Prometheus | http://localhost:9090 | — |
-| Grafana | http://localhost:3001 | `admin` / `admin` |
+Abrir `http://localhost:8080`. Una vez, como administrador: `scripts\firewall-node1.ps1` (abre
+8080 y 9000 para los demás nodos). `scripts\stop-all.ps1` para todo.
+
+| Servicio | URL |
+|---|---|
+| Dashboard + API | http://localhost:8080 |
+| Grafana (lectura sin login) | http://localhost:3001 |
+| Prometheus | http://localhost:9090 |
+| MinIO consola | http://localhost:9001 (`minioadmin` / `minioadmin`) |
+
+## Sumar un worker
+
+- **Cualquier PC de la red**: abrir `http://<ip-de-node-1>:8080/connect`, descargar el ZIP de su
+  sistema, descomprimir, doble clic en `start-worker.bat` (o `bash start-worker.sh`). Aparece en
+  el dashboard en segundos. Rol y tamaño del pool se cambian en `worker.env`.
+- **VMs node-2 y node-3** (Vagrant + VirtualBox, en node-1): `cd infra/vagrant && vagrant up`;
+  tras recompilar, `bash redeploy.sh`.
+- **Desde otra red**: `scripts\tunnel.ps1` publica el 8080 con un túnel de Cloudflare; el ZIP
+  descargado por esa URL apunta al túnel.
+
+Guía paso a paso, avisos de Windows 11 y diagnóstico en
+[`docs/manual-usuario.md`](docs/manual-usuario.md).
+
+## Enviar un caso
+
+- **Dashboard**: pestaña Casos → **+ Nuevo caso** → subir archivos o elegirlos del dataset →
+  enviar → ver sus sub-tareas avanzar → leer el reporte con enlaces de descarga.
+- **CLI**: `go run ./cmd/client -case -name demo -files "a.mp4,b.flac,c.webp" -watch`
+- **Generación automática** desde el dataset:
+  `bin/ingest cases --group-by session --limit 10` (casos homogéneos y heterogéneos por
+  construcción), y **generador de carga**:
+  `bin/ingest load --cases 20 --concurrency 5 --group-by session --wait`.
+
+## Dataset
+
+492 archivos sintéticos (250 video, 172 audio, 70 imágenes; 13 formatos; 310 livianos < 5 MB,
+140 medianos 20-50 MB, 42 pesados 150-400 MB; 14.3 GB) con metadatos de agrupación (evento,
+sesión, lote, usuario). Se genera con `bash dataset/scripts/generate_dataset.sh` (~1 h,
+reproducible) y se sube con `bin/ingest upload`. Composición y criterios en
+[`docs/dataset.md`](docs/dataset.md).
 
 ## Pruebas
 
-```bash
-./tests/measure_times.sh      # reporte de tiempos de procesamiento
-./tests/failure_scenario.sh   # tolerancia a fallos: mata un worker y verifica el reclaim
+Cada fase del desarrollo cerró con un script de hito que termina en `HITO OK`:
+
+| Script | Qué demuestra |
+|---|---|
+| `tests/distributed_smoke.sh` | un worker en otra máquina procesa una sub-tarea |
+| `tests/case_scenario.sh` | caso heterogéneo con un archivo corrupto → `partially_completed` y reporte |
+| `tests/pools_scenario.sh` | cada sub-tarea corre en un worker de su pool |
+| `tests/failure_scenario.sh` | caída de un worker → sus sub-tareas se re-encolan y las toma otro |
+| `tests/dataset_scenario.sh` | el dataset real subido y convertido automáticamente en casos que cierran |
+| `tests/monitoring_scenario.sh` | bajo 20 casos concurrentes: `/metrics`, Prometheus, Grafana, sub-tareas por caso, saturación por pool |
+| `tests/measure_times.sh` | informe de tiempos por sub-tarea, por caso, por pool y por tamaño (PostgreSQL) |
+
+Resultados con números reales y capturas en [`docs/informe-pruebas.md`](docs/informe-pruebas.md).
+Tests unitarios: `go test ./...` (routing, barrier, reporte, agrupación, registry, hub).
+
+## Estructura del repositorio
+
 ```
+cmd/coordinator         proceso coordinador (API, scheduler, barrier, reporte, dashboard estático)
+cmd/worker              proceso worker (canal saliente, pool de goroutines, ffmpeg, MinIO)
+cmd/client              cliente CLI: casos, seguimiento, sub-tareas sueltas
+cmd/ingest              ingesta del dataset, generación automática de casos, generador de carga
+internal/cases          routing por tipo, barrier/join, reporte consolidado (puro, con tests)
+internal/coordinator    API HTTP, registry de workers, scheduler, hubs WebSocket, /metrics
+internal/queue          Redis Streams: 9 colas pool × prioridad
+internal/db             esquema y consultas PostgreSQL
+internal/ingest         agrupación del manifest en casos (puro, con tests)
+internal/multimedia     operaciones ffmpeg
+internal/storage        cliente MinIO
+internal/monitoring     métricas del worker
+dashboard/              React + Vite (fuente); dist/ es el compilado que sirve el coordinador
+dataset/                generador, manifest.json y validador; files/ no se versiona
+infra/                  prometheus.yml, Grafana provisionado, Vagrantfile, plantillas .env
+scripts/                run-coordinator/run-worker/stop-all, build-dashboard/build-workers, firewall, túnel
+tests/                  scripts de hito e informe de tiempos
+docs/                   arquitectura, API, manual de usuario, dataset, informe de pruebas, plan
+```
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | componentes, nodos, flujo de caso y sub-tarea, colas, pools (Unidad 1), comunicación, despliegue, decisiones |
+| [`docs/manual-usuario.md`](docs/manual-usuario.md) | dashboard, enviar/seguir/cancelar casos, reporte, conectar una PC, diagnóstico |
+| [`docs/api.md`](docs/api.md) | todos los endpoints con ejemplos reales |
+| [`docs/dataset.md`](docs/dataset.md) | composición, criterios de agrupación, volumen, uso |
+| [`docs/informe-pruebas.md`](docs/informe-pruebas.md) | carga, distribución, casos heterogéneos, fallos, saturación y redistribución, hardware real |
+| [`docs/plan/`](docs/plan/) | los planes de implementación con cada tarea y su verificación |
 
 ## Estado del proyecto
 
-La capa de **infraestructura distribuida** está implementada y funcionando. La capa de
-**casos** (la unidad de trabajo que define la consigna v2.0) está en desarrollo.
-
-**Implementado**
-- [x] Cola Redis Streams con 3 prioridades y consumer groups
-- [x] Registro de workers con heartbeat y evicción de nodos caídos
-- [x] Scheduler con asignación *least-loaded* y re-encolado de trabajos huérfanos
-- [x] Pool de goroutines por worker con backpressure (HTTP 429)
-- [x] Reintentos con `max_retries` y detección de trabajos colgados
-- [x] Operaciones FFmpeg y subida de resultados a MinIO
-- [x] Dashboard en tiempo real por WebSocket
-- [x] Métricas Prometheus y dashboards de Grafana
-- [x] Generador de dataset sintético
-
-**En desarrollo**
-- [ ] Entidad `Case` y descomposición de casos en sub-tareas
-- [ ] Routing por tipo de archivo decidido en el coordinador
-- [ ] Sincronización barrier/join y estado agregado del caso
-- [ ] Reporte consolidado por caso
-- [ ] Pools de workers especializados por tipo de contenido
-- [ ] Generación automática de casos por agrupación de metadatos
-- [ ] Despliegue multi-máquina con distribución física real
-- [ ] Manual de usuario
-
-## Estructura
-
-```
-cmd/
-  coordinator/        punto de entrada del coordinador
-  worker/             punto de entrada del worker
-  client/             cliente CLI y generador de carga
-  generate_manifest/  construcción del manifiesto del dataset
-internal/
-  coordinator/        api · registry · scheduler · websocket hub
-  queue/              Redis Streams
-  db/                 esquema y acceso a PostgreSQL
-  models/             tipos de dominio
-  multimedia/         wrappers de FFmpeg
-  monitoring/         métricas Prometheus
-  storage/            cliente MinIO
-dashboard/            interfaz React + Vite
-dataset/              generador y manifiesto del dataset de prueba
-infra/                configuración de Prometheus y Grafana
-docs/                 arquitectura y guía de pruebas
-tests/                scripts de carga y de fallo
-```
-
-## Créditos
-
-Magdaleno Gómez Díaz · Jennifer Yajaira Lopez Miranda · Jonathan Sancho Loaiza
-IC-6600 Principios de Sistemas Operativos · TEC Campus San Carlos · II Semestre 2026
+Fases 0-5 del plan cerradas con hito verificado (distribución real, capa de casos, pools
+especializados, dashboard por caso, dataset e ingesta, monitoreo completo). En curso: documentación
+final y despliegue en las tres laptops del equipo. Ver `docs/plan/2026-09-11-plan-2-entrega.md`.
 
 ## Licencia
 
