@@ -99,10 +99,12 @@ SELECT pool, COUNT(*) AS n,
 FROM jobs WHERE started_at IS NOT NULL AND $W GROUP BY pool ORDER BY pool;"
 
 run "Throughput: sub-tareas completadas por minuto (últimos 30 minutos con actividad)" "
-SELECT to_char(DATE_TRUNC('minute', completed_at AT TIME ZONE 'America/Costa_Rica'), 'HH24:MI') AS minuto,
-       COUNT(*) AS completadas,
-       COUNT(*) FILTER (WHERE pool = 'video') AS video,
-       COUNT(*) FILTER (WHERE pool = 'audio') AS audio,
-       COUNT(*) FILTER (WHERE pool = 'metadata') AS metadata
-FROM jobs WHERE status = 'completed' AND completed_at IS NOT NULL AND $W
-GROUP BY 1 ORDER BY 1 DESC LIMIT 30;"
+SELECT minuto, completadas, video, audio, metadata FROM (
+  SELECT to_char(DATE_TRUNC('minute', completed_at AT TIME ZONE 'America/Costa_Rica'), 'HH24:MI') AS minuto,
+         MAX(DATE_TRUNC('minute', completed_at)) AS orden,
+         COUNT(*) AS completadas,
+         COUNT(*) FILTER (WHERE pool = 'video') AS video,
+         COUNT(*) FILTER (WHERE pool = 'audio') AS audio,
+         COUNT(*) FILTER (WHERE pool = 'metadata') AS metadata
+  FROM jobs WHERE status = 'completed' AND completed_at IS NOT NULL AND $W
+  GROUP BY 1) x ORDER BY orden DESC LIMIT 30;"

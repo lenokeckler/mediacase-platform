@@ -330,26 +330,28 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 ---
 
-# FASE 6 — Documentación y evidencia
+# FASE 6 — Documentación y evidencia  ✅ 6.1-6.5 hechas 2026-09-11 · ⏳ 6.6 (hito con un compañero) pendiente
+
+> **Resultado:** `README.md`, `docs/architecture.md` (Mermaid, español, 11 secciones), `docs/api.md`, `docs/manual-usuario.md` (con capturas y los avisos de Windows 11), `docs/dataset.md` (Fase 4) y `docs/informe-pruebas.md` (10 secciones con números de PostgreSQL y capturas; reemplaza a `docs/test_and_demo.md`). `tests/measure_times.sh` reescrito para casos; `tests/failure_scenario.sh` reescrito para casos (mata node1 con kill -9, levanta un worker temporal del mismo pool, verifica redistribución y relanza node1: `HITO OK`, cierre 51 s después de la caída). **6.6** necesita a Jennifer o Jonathan: queda para la sesión de la Fase 7.
 
 **Hito:** los seis entregables existen en el repo y alguien que no participó levanta el sistema siguiendo el manual.
 
-### Task 6.1: `README.md` en español, completo
+### Task 6.1: `README.md` en español, completo  ✅
 - Qué es (con el concepto de caso), arquitectura en 10 líneas, cómo levantar node-1 (3 comandos), cómo sumar un worker (`/connect` o ZIP), cómo enviar un caso (dashboard / `client -case` / `ingest`), cómo correr las pruebas, estructura del repo, estado del proyecto, equipo.
 
-### Task 6.2: `docs/manual-usuario.md`
+### Task 6.2: `docs/manual-usuario.md`  ✅
 - Con capturas (`docs/img/`): dashboard y sus pestañas, enviar un caso, leer un reporte, cancelar, conectar una PC como worker (incluye **Smart App Control** y **Desbloquear** en Windows 11, y `apt install ffmpeg` en Linux), qué hacer si el worker no conecta, cómo apagar todo.
 
-### Task 6.3: `docs/architecture.md` reescrito en español
+### Task 6.3: `docs/architecture.md` reescrito en español  ✅
 - Diagramas Mermaid: componentes y nodos; flujo caso → routing → colas → workers → barrier → reporte; secuencia de una sub-tarea; ciclo de vida del caso (7 estados) y de la sub-tarea (6); topología de despliegue (node-1 + nodos remotos + túnel). Decisiones justificadas: Go, Redis Streams por pool, PostgreSQL como verdad, MinIO centralizado (y por qué node-1 es SPOF aceptado), canal saliente, pools especializados (Unidad 1), reclaim por instancia. Tabla de puertos y variables de entorno.
 
-### Task 6.4: `docs/api.md`
+### Task 6.4: `docs/api.md`  ✅
 - Todos los endpoints con request/response de ejemplo (casos, jobs, workers, upload, dataset, connect, metrics, ws).
 
-### Task 6.5: `docs/informe-pruebas.md`
+### Task 6.5: `docs/informe-pruebas.md`  ✅ (falta agregar §7 laptops tras la Fase 7)
 - `tests/measure_times.sh` adaptado a casos (tiempos por sub-tarea y por caso, p50/p90/p99 por operación y por pool). Secciones con **números reales** y capturas: (1) carga por lotes (`ingest load`), (2) distribución (3 nodos, quién procesó qué), (3) casos heterogéneos (los 3 hitos), (4) comportamiento ante fallos (caída de worker con reinicio rápido y con expulsión; reinicio del coordinador; archivo corrupto; cancelación), (5) saturación y redistribución (Fase 5), (6) prueba en hardware real (lila) y en las 3 laptops (Fase 7). Reemplaza `docs/test_and_demo.md`.
 
-### Task 6.6: HITO
+### Task 6.6: HITO  ⏳ requiere a un compañero
 - Un compañero (Jennifer o Jonathan) clona el repo en su laptop y, **solo con el manual**, levanta un worker que aparece en el dashboard de Leno. Anotar cuánto tardó y qué tuvo que preguntar → corregir el manual.
 
 ---
