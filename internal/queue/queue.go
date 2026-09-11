@@ -111,9 +111,20 @@ func (q *Queue) waiting(ctx context.Context, stream string) int64 {
 		return 0
 	}
 	for _, g := range groups {
-		if g.Name == GroupName {
+		if g.Name != GroupName {
+			continue
+		}
+		if g.Lag >= 0 {
 			return g.Lag + g.Pending
 		}
+		// Redis pierde la cuenta del lag (lo reporta nil, go-redis -1) cuando se borran entradas
+		// del stream con XDEL, que es lo que hace Ack. Se cuenta a mano lo que sigue después del
+		// último id entregado; el backlog es de cientos de sub-tareas, no millones.
+		after, err := q.client.XRange(ctx, stream, "("+g.LastDeliveredID, "+").Result()
+		if err != nil {
+			return g.Pending
+		}
+		return int64(len(after)) + g.Pending
 	}
 	return 0
 }

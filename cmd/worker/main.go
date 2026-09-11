@@ -368,6 +368,9 @@ func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		log.Printf("[progress] coordinador respondió %d al reporte %s de job %s", resp.StatusCode, status, jobID)
+	}
 }
 
 // ── Registro y heartbeat ─────────────────────────────────────────────────────

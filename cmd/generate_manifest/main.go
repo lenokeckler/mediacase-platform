@@ -22,7 +22,7 @@ type FileEntry struct {
 }
 
 type Manifest struct {
-	Total int          `json:"total"`
+	Total int         `json:"total"`
 	Files []FileEntry `json:"files"`
 }
 

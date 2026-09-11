@@ -5,10 +5,10 @@ package monitoring
 
 import (
 	"log"
-	"runtime"
-	"time"
 	"os"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -88,7 +88,7 @@ func collectLoop() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	pid  := int32(os.Getpid())
+	pid := int32(os.Getpid())
 	proc, err := process.NewProcess(pid)
 	if err != nil {
 		log.Printf("[metrics] no se pudo adjuntar al proceso %d: %v", pid, err)

@@ -44,6 +44,12 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "demasiados archivos en un caso", http.StatusBadRequest)
 		return
 	}
+	// Un caso grande (decenas de archivos: `ingest cases` por evento o sesión) inserta y encola
+	// una sub-tarea por archivo, y con el sistema bajo carga eso supera los 10 s del
+	// WriteTimeout global: el cliente recibía EOF aunque el caso quedaba creado. Plazo propio.
+	if err := http.NewResponseController(w).SetWriteDeadline(time.Now().Add(5 * time.Minute)); err != nil {
+		log.Printf("[cases] no se pudo extender el plazo de escritura: %v", err)
+	}
 	if req.Priority == 0 {
 		req.Priority = 5
 	}

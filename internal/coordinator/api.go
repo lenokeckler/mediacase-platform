@@ -248,8 +248,12 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch payload.Status {
 	case string(models.StatusRunning):
+		// Los avances de progreso viajan en conexiones distintas a la del cierre: uno rezagado
+		// puede llegar DESPUÉS del completed/failed. Nunca devolver una sub-tarea terminada a
+		// running (dejaba el caso en processing para siempre y a los 15 min la marcaba vencida).
 		_, err = a.db.Exec(`UPDATE jobs SET status='running', progress=$1,
-			started_at=COALESCE(started_at, NOW()) WHERE id=$2`, payload.Progress, id)
+			started_at=COALESCE(started_at, NOW())
+			WHERE id=$2 AND status IN ('pending','assigned','running')`, payload.Progress, id)
 		// La primera sub-tarea que arranca mueve el caso a processing (o lo saca de retrying).
 		a.db.Exec(`UPDATE cases SET status='processing', started_at=COALESCE(started_at, NOW())
 			WHERE id=(SELECT case_id FROM jobs WHERE id=$1) AND status IN ('queued','retrying')`, id)
