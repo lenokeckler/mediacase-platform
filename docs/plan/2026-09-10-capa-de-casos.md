@@ -1006,16 +1006,16 @@ Rutas en `Router()`: `mux.HandleFunc("GET /connect", a.connectPage)` y `mux.Hand
 
 ---
 
-### Task 0.9: HITO REAL — la PC de la novia de Leno (Windows 11, mismo WiFi)
+### Task 0.9: HITO REAL — la PC de la novia de Leno (Windows 11, mismo WiFi) ✅ 2026-09-10 23:40
 
 Requiere: `docker-compose.infra.yml` arriba, coordinador nativo corriendo en la laptop de Leno, `scripts/firewall-node1.ps1` aplicado (una vez, admin), y una entrada subida a `dataset/`.
 
-- [ ] **Paso 1:** En la laptop de Leno, `ipconfig` → anotar la IPv4 del adaptador WiFi (p. ej. `192.168.1.10`). `MINIO_PUBLIC_ENDPOINT` en `infra/env/node1.env` debe ser esa IP con `:9000`.
-- [ ] **Paso 2:** En la otra PC, abrir `http://192.168.1.10:8080/connect` en el navegador. Si no carga: revisar que las dos estén en el mismo WiFi y que la regla de firewall exista (`Get-NetFirewallRule -DisplayName "MediaCase*"`).
-- [ ] **Paso 3:** Descargar Windows → descomprimir → doble clic `start-worker.bat`. Debe imprimir `canal abierto con http://192.168.1.10:8080`.
-- [ ] **Paso 4:** En la laptop de Leno, con el worker del host **apagado**: `bash tests/distributed_smoke.sh` → `HITO OK — job ... completado por <nombre-de-esa-pc>`.
-- [ ] **Paso 5:** Prueba de caída: cerrar la ventana del worker en la otra PC a mitad de un job → en ≤15 s el coordinador lo expulsa y re-encola; volver a abrir `start-worker.bat` → el job se completa. Capturas de pantalla de ambas máquinas para el informe.
-- [ ] **Paso 6:** Registrar en `CLAUDE.md` §15 que la Fase 0 cerró en hardware real, con fecha.
+- [x] **Paso 1:** En la laptop de Leno, `ipconfig` → anotar la IPv4 del adaptador WiFi (p. ej. `192.168.1.10`). `MINIO_PUBLIC_ENDPOINT` en `infra/env/node1.env` debe ser esa IP con `:9000`.
+- [x] **Paso 2:** En la otra PC, abrir `http://192.168.1.10:8080/connect` en el navegador. Si no carga: revisar que las dos estén en el mismo WiFi y que la regla de firewall exista (`Get-NetFirewallRule -DisplayName "MediaCase*"`).
+- [x] **Paso 3:** Descargar Windows → descomprimir → doble clic `start-worker.bat`. Debe imprimir `canal abierto con http://192.168.1.10:8080`.
+- [x] **Paso 4:** En la laptop de Leno, con el worker del host **apagado**: `bash tests/distributed_smoke.sh` → `HITO OK — job ... completado por <nombre-de-esa-pc>`.
+- [x] **Paso 5:** Prueba de caída: cerrar la ventana del worker en la otra PC a mitad de un job → en ≤15 s el coordinador lo expulsa y re-encola; volver a abrir `start-worker.bat` → el job se completa. Capturas de pantalla de ambas máquinas para el informe.
+- [x] **Paso 6:** Registrar en `CLAUDE.md` §15 que la Fase 0 cerró en hardware real, con fecha.
 
 ---
 
