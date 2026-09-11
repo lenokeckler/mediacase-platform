@@ -62,16 +62,16 @@ tests/ui_case_flow.md                     crear      guion manual del hito (capt
 
 ---
 
-# FASE 3 — Pestaña "Casos" en el dashboard
+# FASE 3 — Pestaña "Casos" en el dashboard  ✅ cerrada 2026-09-11 (hito `tests/ui_case_flow.md`)
 
 **Hito:** desde el navegador, en `http://<ip-de-leno>:8080`: subir 3 archivos (video, audio, imagen), enviar el caso con nombre y prioridad, ver sus sub-tareas avanzar con su worker, ver el caso cerrar y leer el reporte con enlaces de descarga; cancelar otro caso a medio camino. Todo sin abrir una terminal.
 
 ### Task 3.0: Entorno del dashboard
 
-- [ ] **Paso 1:** `cd dashboard && npm install` (Node 24 y npm 11 ya están). Esperado: `node_modules/` creado, sin errores de peer deps.
-- [ ] **Paso 2:** con el coordinador nativo corriendo (`scripts/run-coordinator.ps1`), `npm run dev` → abrir `http://localhost:5173`. Esperado: dashboard actual con los workers en vivo (el proxy de Vite manda `/api` y `/ws` al 8080).
-- [ ] **Paso 3:** `npm run build` → `dashboard/dist/` regenerado. Commit **no** incluye `dist/` si se decide servirlo desde el coordinador compilando en CI; **decisión:** `dist/` sigue versionado (ya lo está) para que quien clone no necesite Node. Se regenera con `scripts/build-dashboard.ps1` antes de cada commit que toque el dashboard.
-- [ ] **Paso 4:** `scripts/build-dashboard.ps1`:
+- [x] **Paso 1:** `cd dashboard && npm install` (Node 24 y npm 11 ya están). Esperado: `node_modules/` creado, sin errores de peer deps.
+- [x] **Paso 2:** con el coordinador nativo corriendo (`scripts/run-coordinator.ps1`), `npm run dev` → abrir `http://localhost:5173`. Esperado: dashboard actual con los workers en vivo (el proxy de Vite manda `/api` y `/ws` al 8080).
+- [x] **Paso 3:** `npm run build` → `dashboard/dist/` regenerado. Commit **no** incluye `dist/` si se decide servirlo desde el coordinador compilando en CI; **decisión:** `dist/` sigue versionado (ya lo está) para que quien clone no necesite Node. Se regenera con `scripts/build-dashboard.ps1` antes de cada commit que toque el dashboard.
+- [x] **Paso 4:** `scripts/build-dashboard.ps1`:
 
 ```powershell
 # Compila el dashboard (React/Vite) a dashboard/dist, que sirve el coordinador.
@@ -94,7 +94,7 @@ Hoy el dashboard compilado se sirve con nginx en Docker y llama a `/api/*`. En l
 - `func (a *API) Handler(staticDir string) http.Handler` — compone: `/api/` → API sin prefijo · `/ws` y `/workers/{id}/stream` → como hoy · rutas de API en `/` (compatibilidad) · todo lo demás → SPA (archivo si existe, si no `index.html`).
 - Variable de entorno `DASHBOARD_DIR` (default `dashboard/dist`); si el directorio no existe, `/` devuelve 404 y el resto sigue funcionando.
 
-- [ ] **Paso 1: `static.go`**
+- [x] **Paso 1: `static.go`**
 
 ```go
 package coordinator
@@ -130,7 +130,7 @@ func spaHandler(dir string) http.Handler {
 }
 ```
 
-- [ ] **Paso 2: `Handler()` en `api.go`** — `Router()` sigue devolviendo el mux de la API. Nuevo:
+- [x] **Paso 2: `Handler()` en `api.go`** — `Router()` sigue devolviendo el mux de la API. Nuevo:
 
 ```go
 // Handler compone la API (en / y bajo /api/), el WebSocket y el dashboard estático.
@@ -149,8 +149,8 @@ func (a *API) Handler(staticDir string) http.Handler {
 ```
 En `main.go`: `Handler: api.Handler(envOr("DASHBOARD_DIR", "dashboard/dist"))`.
 
-- [ ] **Paso 3: Verificar** — `go build ./... && go vet ./...`; con el coordinador nativo: `curl -s -o /dev/null -w "%{http_code}\n" localhost:8080/` → 200 (HTML); `curl -s localhost:8080/api/workers` y `curl -s localhost:8080/workers` → mismo JSON; `curl -s localhost:8080/connect | head -c 60` → HTML de conectar; abrir `http://172.24.83.164:8080` desde otra máquina → dashboard con workers en vivo (el WS en `/ws` sigue funcionando porque el dashboard lo abre contra `window.location.host`).
-- [ ] **Paso 4: Commit** — `feat(coordinator): sirve el dashboard compilado y la API bajo /api (una sola URL)`
+- [x] **Paso 3: Verificar** — `go build ./... && go vet ./...`; con el coordinador nativo: `curl -s -o /dev/null -w "%{http_code}\n" localhost:8080/` → 200 (HTML); `curl -s localhost:8080/api/workers` y `curl -s localhost:8080/workers` → mismo JSON; `curl -s localhost:8080/connect | head -c 60` → HTML de conectar; abrir `http://172.24.83.164:8080` desde otra máquina → dashboard con workers en vivo (el WS en `/ws` sigue funcionando porque el dashboard lo abre contra `window.location.host`).
+- [x] **Paso 4: Commit** — `feat(coordinator): sirve el dashboard compilado y la API bajo /api (una sola URL)`
 
 ---
 
@@ -166,11 +166,11 @@ Hoy `POST /upload` guarda en una carpeta local. Los workers ya solo leen de MinI
 - `GET /dataset?prefix=casos/` → `[{"key":..,"size":..,"type":"video|audio|image|other"}]`.
 - `NewAPI(..., minio *storage.MinIOClient)`; si es `nil`, `/upload` responde 503.
 
-- [ ] **Paso 1: `ListObjects`** en storage (con `m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Prefix: prefix, Recursive: true})`).
-- [ ] **Paso 2: `upload.go`** — `ParseMultipartForm(64 << 20)`; por cada `FileHeader` en `r.MultipartForm.File["file"]`: guardar a temporal, `UploadObject(ctx, storage.DatasetBucket, safeName, tmp)`, borrar temporal. Rechazar nombres sin extensión soportada usando `cases.DetectFileType` (400 con el nombre).
-- [ ] **Paso 3: `GET /dataset`** — lista con `cases.DetectFileType` para el campo `type`.
-- [ ] **Paso 4: Verificar** — `curl -F file=@C:/tmp/mediacase/prueba.mp4 -F file=@C:/tmp/mediacase/prueba.wav localhost:8080/upload` → `{"keys":["prueba.mp4","prueba.wav"]}`; `curl localhost:8080/dataset` los lista; en MinIO (`localhost:9001`) están en `dataset/`. `curl -F file=@go.mod localhost:8080/upload` → 400 `formato no soportado`.
-- [ ] **Paso 5: Commit** — `feat(coordinator): POST /upload sube al bucket dataset; GET /dataset lista las entradas`
+- [x] **Paso 1: `ListObjects`** en storage (con `m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Prefix: prefix, Recursive: true})`).
+- [x] **Paso 2: `upload.go`** — `ParseMultipartForm(64 << 20)`; por cada `FileHeader` en `r.MultipartForm.File["file"]`: guardar a temporal, `UploadObject(ctx, storage.DatasetBucket, safeName, tmp)`, borrar temporal. Rechazar nombres sin extensión soportada usando `cases.DetectFileType` (400 con el nombre).
+- [x] **Paso 3: `GET /dataset`** — lista con `cases.DetectFileType` para el campo `type`.
+- [x] **Paso 4: Verificar** — `curl -F file=@C:/tmp/mediacase/prueba.mp4 -F file=@C:/tmp/mediacase/prueba.wav localhost:8080/upload` → `{"keys":["prueba.mp4","prueba.wav"]}`; `curl localhost:8080/dataset` los lista; en MinIO (`localhost:9001`) están en `dataset/`. `curl -F file=@go.mod localhost:8080/upload` → 400 `formato no soportado`.
+- [x] **Paso 5: Commit** — `feat(coordinator): POST /upload sube al bucket dataset; GET /dataset lista las entradas`
 
 ---
 
@@ -178,7 +178,7 @@ Hoy `POST /upload` guarda en una carpeta local. Los workers ya solo leen de MinI
 
 **Files:** Modify `dashboard/src/api.js`; Create `dashboard/src/hooks/useCases.js`.
 
-- [ ] **Paso 1: `api.js`** — agregar:
+- [x] **Paso 1: `api.js`** — agregar:
 
 ```js
     // ── Casos ──
@@ -202,10 +202,10 @@ Hoy `POST /upload` guarda en una carpeta local. Los workers ya solo leen de MinI
 ```
 y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel.jsx` y `SubmitJobPanel.jsx` que los usaban: `SubmitJobPanel` pasa a usar `uploadFiles` + `submitJob` con la clave; `BatchPanel` se elimina (lo reemplaza el caso).
 
-- [ ] **Paso 2: `useCases.js`** — polling cada 2 s de `listCases()`; `openCase(id)` que hace polling de `getCase(id)` cada 1 s mientras no sea terminal y al cerrar pide `getCaseReport(id)` una vez. Devuelve `{ cases, loading, error, selected, report, openCase, closeCase, refresh }`. Detener el polling al desmontar.
+- [x] **Paso 2: `useCases.js`** — polling cada 2 s de `listCases()`; `openCase(id)` que hace polling de `getCase(id)` cada 1 s mientras no sea terminal y al cerrar pide `getCaseReport(id)` una vez. Devuelve `{ cases, loading, error, selected, report, openCase, closeCase, refresh }`. Detener el polling al desmontar.
 
-- [ ] **Paso 3: Verificar** — en la consola del navegador: `import('/src/api.js')` no aplica en Vite; verificar con la pestaña de la Task 3.4.
-- [ ] **Paso 4: Commit** con la Task 3.4.
+- [x] **Paso 3: Verificar** — en la consola del navegador: `import('/src/api.js')` no aplica en Vite; verificar con la pestaña de la Task 3.4.
+- [x] **Paso 4: Commit** con la Task 3.4.
 
 ---
 
@@ -213,10 +213,10 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 **Files:** Create `CasesPanel.jsx` + `.module.css`; Modify `app.jsx` (pestaña "Casos" como primera; `TABS = ['Casos', 'Monitor', 'Enviar', 'Historial']`).
 
-- [ ] **Paso 1:** Tabla con columnas **Nombre · Estado · Sub-tareas (resueltas/total) · Prioridad · Creado · Duración**, filtro por estado (`todos | queued | processing | retrying | completed | partially_completed | failed | cancelled`), badge de color por estado (reutilizar los colores de `JobTable`: `completed` verde, `partially_completed` ámbar `#78350f/#fcd34d`, `failed` rojo, `retrying` violeta `#3b0764/#d8b4fe`, `cancelled` gris). Clic en una fila → `openCase(id)` y se muestra `CaseDetail` debajo (Task 3.6). Arriba a la derecha el botón **"+ Nuevo caso"** que abre `SubmitCasePanel` (Task 3.5).
-- [ ] **Paso 2:** Textos en **español** (la pestaña nueva; las existentes se traducen en la Task 3.8).
-- [ ] **Paso 3: Verificar** — `npm run dev`; mandar un caso con `client -case` y verlo aparecer en ≤2 s; cambiar el filtro; el conteo de sub-tareas sube en vivo.
-- [ ] **Paso 4: Commit** — `feat(dashboard): pestaña Casos con lista, filtro y auto-refresh`
+- [x] **Paso 1:** Tabla con columnas **Nombre · Estado · Sub-tareas (resueltas/total) · Prioridad · Creado · Duración**, filtro por estado (`todos | queued | processing | retrying | completed | partially_completed | failed | cancelled`), badge de color por estado (reutilizar los colores de `JobTable`: `completed` verde, `partially_completed` ámbar `#78350f/#fcd34d`, `failed` rojo, `retrying` violeta `#3b0764/#d8b4fe`, `cancelled` gris). Clic en una fila → `openCase(id)` y se muestra `CaseDetail` debajo (Task 3.6). Arriba a la derecha el botón **"+ Nuevo caso"** que abre `SubmitCasePanel` (Task 3.5).
+- [x] **Paso 2:** Textos en **español** (la pestaña nueva; las existentes se traducen en la Task 3.8).
+- [x] **Paso 3: Verificar** — `npm run dev`; mandar un caso con `client -case` y verlo aparecer en ≤2 s; cambiar el filtro; el conteo de sub-tareas sube en vivo.
+- [x] **Paso 4: Commit** — `feat(dashboard): pestaña Casos con lista, filtro y auto-refresh`
 
 ---
 
@@ -224,9 +224,9 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 **Files:** Create `SubmitCasePanel.jsx` + `.module.css`.
 
-- [ ] **Paso 1:** Formulario: **Nombre** · **Prioridad** (1-10, default 5) · **Archivos**, con dos formas de agregarlos: (a) *Subir desde esta PC* (`<input type=file multiple>`, muestra tipo detectado por extensión y tamaño), (b) *Elegir del dataset* (lista de `listDataset()` con buscador y checkboxes). Cada archivo elegido muestra la **operación que va a decidir el coordinador** (misma tabla que `internal/cases/router.go`: video→convert, audio→convert_audio, image→thumbnail) y permite cambiarla solo entre las válidas para su tipo. Botón **Enviar caso** → si hay archivos locales, `uploadFiles` primero → `submitCase(name, priority, files)` con `{key, operation?}` → al éxito, cierra el panel y abre el caso nuevo en `CaseDetail`. Errores del servidor (400 con el archivo que no sirve) se muestran tal cual.
-- [ ] **Paso 2: Verificar** — subir video+audio+imagen desde el navegador, enviar, ver el caso en la lista con 3 sub-tareas; intentar enviar un `.txt` → mensaje `formato no soportado`.
-- [ ] **Paso 3: Commit** — `feat(dashboard): enviar casos desde el navegador (subida o dataset)`
+- [x] **Paso 1:** Formulario: **Nombre** · **Prioridad** (1-10, default 5) · **Archivos**, con dos formas de agregarlos: (a) *Subir desde esta PC* (`<input type=file multiple>`, muestra tipo detectado por extensión y tamaño), (b) *Elegir del dataset* (lista de `listDataset()` con buscador y checkboxes). Cada archivo elegido muestra la **operación que va a decidir el coordinador** (misma tabla que `internal/cases/router.go`: video→convert, audio→convert_audio, image→thumbnail) y permite cambiarla solo entre las válidas para su tipo. Botón **Enviar caso** → si hay archivos locales, `uploadFiles` primero → `submitCase(name, priority, files)` con `{key, operation?}` → al éxito, cierra el panel y abre el caso nuevo en `CaseDetail`. Errores del servidor (400 con el archivo que no sirve) se muestran tal cual.
+- [x] **Paso 2: Verificar** — subir video+audio+imagen desde el navegador, enviar, ver el caso en la lista con 3 sub-tareas; intentar enviar un `.txt` → mensaje `formato no soportado`.
+- [x] **Paso 3: Commit** — `feat(dashboard): enviar casos desde el navegador (subida o dataset)`
 
 ---
 
@@ -234,9 +234,9 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 **Files:** Create `CaseDetail.jsx` + `.module.css`.
 
-- [ ] **Paso 1:** Cabecera con nombre, estado (badge), prioridad, creado/iniciado/cerrado, duración, y botón **Cancelar** (visible solo si el estado no es terminal; pide confirmación con un segundo clic, no con `confirm()`). Tabla de sub-tareas: **Archivo · Tipo · Operación · Pool · Estado · Progreso · Worker · Duración · Error**. Cuando el caso es terminal: sección **Reporte consolidado** con el `summary` grande, la tabla `by_type_and_operation`, y en cada sub-tarea completada un enlace **Descargar** a `result_url`; enlace **Descargar reporte (JSON)** a `/api/cases/{id}/report`.
-- [ ] **Paso 2: Verificar** — abrir un caso en curso: el progreso y el worker cambian en vivo; cancelar uno con 6 archivos pesados → estado `cancelled`, las pendientes `cancelled`, la que corría termina; abrir uno cerrado → reporte con enlaces que descargan de MinIO (la `result_url` lleva la IP pública de MinIO, funciona desde otra PC).
-- [ ] **Paso 3: Commit** — `feat(dashboard): detalle del caso con sub-tareas, cancelación y reporte consolidado`
+- [x] **Paso 1:** Cabecera con nombre, estado (badge), prioridad, creado/iniciado/cerrado, duración, y botón **Cancelar** (visible solo si el estado no es terminal; pide confirmación con un segundo clic, no con `confirm()`). Tabla de sub-tareas: **Archivo · Tipo · Operación · Pool · Estado · Progreso · Worker · Duración · Error**. Cuando el caso es terminal: sección **Reporte consolidado** con el `summary` grande, la tabla `by_type_and_operation`, y en cada sub-tarea completada un enlace **Descargar** a `result_url`; enlace **Descargar reporte (JSON)** a `/api/cases/{id}/report`.
+- [x] **Paso 2: Verificar** — abrir un caso en curso: el progreso y el worker cambian en vivo; cancelar uno con 6 archivos pesados → estado `cancelled`, las pendientes `cancelled`, la que corría termina; abrir uno cerrado → reporte con enlaces que descargan de MinIO (la `result_url` lleva la IP pública de MinIO, funciona desde otra PC).
+- [x] **Paso 3: Commit** — `feat(dashboard): detalle del caso con sub-tareas, cancelación y reporte consolidado`
 
 ---
 
@@ -244,18 +244,18 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 **Files:** Modify `WorkerCard.jsx`, `QueueDepth.jsx`, `useSystemState.js` (pasar `queue_depth.by_pool`).
 
-- [ ] **Paso 1:** `WorkerCard` muestra `rol` y chips de pools (`video` `audio` `metadata`); `QueueDepth` agrega tres barras "por pool" debajo de las de prioridad, con el número en espera de cada pool — es la **saturación** que la consigna pide observar.
-- [ ] **Paso 2: Verificar** — con solo un worker de audio conectado, mandar un caso con video: la barra `video` sube y se queda; conectar uno de video: baja.
-- [ ] **Paso 3: Commit** — `feat(dashboard): rol y pools por worker; profundidad de cola por pool`
+- [x] **Paso 1:** `WorkerCard` muestra `rol` y chips de pools (`video` `audio` `metadata`); `QueueDepth` agrega tres barras "por pool" debajo de las de prioridad, con el número en espera de cada pool — es la **saturación** que la consigna pide observar.
+- [x] **Paso 2: Verificar** — con solo un worker de audio conectado, mandar un caso con video: la barra `video` sube y se queda; conectar uno de video: baja.
+- [x] **Paso 3: Commit** — `feat(dashboard): rol y pools por worker; profundidad de cola por pool`
 
 ---
 
 ### Task 3.8: Español, pestaña "Conectar", limpieza
 
-- [ ] **Paso 1:** Traducir las pestañas existentes al español (`Monitor`, `Enviar`, `Historial`), títulos y textos visibles. Agregar en la cabecera un enlace **"Conectar esta PC"** → `/connect` (abre en pestaña nueva).
-- [ ] **Paso 2:** Eliminar `BatchPanel.jsx` (+ css) y las referencias a `/batch` y `/files`; eliminar `POST /batch` y `GET /files` del coordinador (la consigna descarta explícitamente el modelo de "N jobs sueltos").
-- [ ] **Paso 3:** `scripts/build-dashboard.ps1` → `dist/` regenerado; `Dockerfile.dashboard` y `nginx.conf` quedan para el modo todo-Docker; en `docker-compose.yml` el servicio `dashboard` pasa a ser opcional (comentado) porque el coordinador ya lo sirve.
-- [ ] **Paso 4: Commit** — `feat(dashboard): interfaz en español, enlace a /connect, fuera el modo batch`
+- [x] **Paso 1:** Traducir las pestañas existentes al español (`Monitor`, `Enviar`, `Historial`), títulos y textos visibles. Agregar en la cabecera un enlace **"Conectar esta PC"** → `/connect` (abre en pestaña nueva).
+- [x] **Paso 2:** Eliminar `BatchPanel.jsx` (+ css) y las referencias a `/batch` y `/files`; eliminar `POST /batch` y `GET /files` del coordinador (la consigna descarta explícitamente el modelo de "N jobs sueltos").
+- [x] **Paso 3:** `scripts/build-dashboard.ps1` → `dist/` regenerado; `Dockerfile.dashboard` y `nginx.conf` quedan para el modo todo-Docker; en `docker-compose.yml` el servicio `dashboard` pasa a ser opcional (comentado) porque el coordinador ya lo sirve.
+- [x] **Paso 4: Commit** — `feat(dashboard): interfaz en español, enlace a /connect, fuera el modo batch`
 
 ---
 
@@ -263,9 +263,9 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 **Files:** Create `tests/ui_case_flow.md` (guion manual con casillas y espacio para capturas; es evidencia para el informe).
 
-- [ ] **Paso 1:** Guion: (1) abrir `http://<ip>:8080` desde otra PC · (2) *Conectar esta PC* → el worker aparece en Monitor con su rol · (3) *Casos → Nuevo caso* → subir video, audio e imagen desde esa PC → enviar · (4) ver las 3 sub-tareas con su pool y su worker · (5) el caso cierra `completed`, leer el reporte, descargar un resultado · (6) enviar un caso con un archivo corrupto → `partially_completed` con el error visible · (7) enviar 6 pesados, cancelar → `cancelled` · (8) capturas de cada paso en `docs/img/`.
-- [ ] **Paso 2:** Ejecutarlo con Leno en la PC de lila (o en la propia laptop). Todas las casillas marcadas.
-- [ ] **Paso 3:** Registrar en `CLAUDE.md`. Commit.
+- [x] **Paso 1:** Guion: (1) abrir `http://<ip>:8080` desde otra PC · (2) *Conectar esta PC* → el worker aparece en Monitor con su rol · (3) *Casos → Nuevo caso* → subir video, audio e imagen desde esa PC → enviar · (4) ver las 3 sub-tareas con su pool y su worker · (5) el caso cierra `completed`, leer el reporte, descargar un resultado · (6) enviar un caso con un archivo corrupto → `partially_completed` con el error visible · (7) enviar 6 pesados, cancelar → `cancelled` · (8) capturas de cada paso en `docs/img/`.
+- [x] **Paso 2:** Ejecutarlo con Leno en la PC de lila (o en la propia laptop). Todas las casillas marcadas.
+- [x] **Paso 3:** Registrar en `CLAUDE.md`. Commit.
 
 ---
 
