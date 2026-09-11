@@ -5,7 +5,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -22,7 +21,6 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/monitoring"
 	"github.com/lenokeckler/mediacase-platform/internal/multimedia"
 	"github.com/lenokeckler/mediacase-platform/internal/storage"
-	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/websocket"
 )
@@ -33,7 +31,6 @@ type workerConfig struct {
 	workerID       string
 	coordinatorURL string
 	poolSize       int
-	dbURL          string
 }
 
 func loadConfig() workerConfig {
@@ -47,7 +44,6 @@ func loadConfig() workerConfig {
 		workerID:       getEnv("WORKER_ID", "worker-1"),
 		coordinatorURL: getEnv("COORDINATOR_URL", "http://coordinator:8080"),
 		poolSize:       poolSize,
-		dbURL:          getEnv("DATABASE_URL", "postgres://media:media@postgres:5432/mediacase?sslmode=disable"),
 	}
 }
 
@@ -87,7 +83,6 @@ type progressUpdate struct {
 
 type worker struct {
 	cfg     workerConfig
-	db      *sql.DB
 	storage *storage.MinIOClient
 	jobCh   chan jobAssignment
 	wg      sync.WaitGroup
@@ -95,10 +90,9 @@ type worker struct {
 	active  int
 }
 
-func newWorker(cfg workerConfig, db *sql.DB, s *storage.MinIOClient) *worker {
+func newWorker(cfg workerConfig, s *storage.MinIOClient) *worker {
 	return &worker{
 		cfg:     cfg,
-		db:      db,
 		storage: s,
 		jobCh:   make(chan jobAssignment, cfg.poolSize*2),
 	}
@@ -240,14 +234,12 @@ func (w *worker) handleHealth(rw http.ResponseWriter, _ *http.Request) {
 func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	log.Printf("[job %s] inicio — op=%s file=%s", job.JobID, job.Operation, job.FilePath)
 
-	w.updateDBStatus(job.JobID, string(models.StatusRunning), 0, "", "")
 	w.reportProgress(job.JobID, 0, string(models.StatusRunning), "", "")
 
 	var resultPath string
 	var opErr error
 
 	progressCB := func(pct int) {
-		w.updateDBStatus(job.JobID, string(models.StatusRunning), pct, "", "")
 		w.reportProgress(job.JobID, pct, string(models.StatusRunning), "", "")
 	}
 
@@ -267,7 +259,6 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	if opErr != nil {
 		log.Printf("[job %s] FALLÓ: %v", job.JobID, opErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
-		w.updateDBStatus(job.JobID, string(models.StatusFailed), 0, "", opErr.Error())
 		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", opErr.Error())
 		return
 	}
@@ -276,7 +267,6 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	if uploadErr != nil {
 		log.Printf("[job %s] upload FALLÓ: %v", job.JobID, uploadErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
-		w.updateDBStatus(job.JobID, string(models.StatusFailed), 100, "", uploadErr.Error())
 		w.reportProgress(job.JobID, 100, string(models.StatusFailed), "", uploadErr.Error())
 		return
 	}
@@ -285,44 +275,7 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 
 	log.Printf("[job %s] COMPLETADO — resultado en %s", job.JobID, url)
 	monitoring.JobsCompleted.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
-	w.updateDBStatus(job.JobID, string(models.StatusCompleted), 100, url, "")
 	w.reportProgress(job.JobID, 100, string(models.StatusCompleted), url, "")
-}
-
-// updateDBStatus persiste en la tabla jobs el estado de la sub-tarea:
-// progreso, resultado o error, marcas de tiempo y worker responsable.
-func (w *worker) updateDBStatus(jobID, status string, progress int, resultURL, errMsg string) {
-	if w.db == nil {
-		return
-	}
-	now := time.Now()
-	var completedAt *time.Time
-	var startedAt *time.Time
-
-	if status == string(models.StatusRunning) {
-		startedAt = &now
-	}
-	if status == string(models.StatusCompleted) || status == string(models.StatusFailed) {
-		completedAt = &now
-	}
-
-	query := `
-		UPDATE jobs 
-		SET    status       = $1, 
-			   progress     = $2, 
-			   result_url   = NULLIF($3, ''), 
-			   error_msg    = NULLIF($4, ''),
-			   started_at   = COALESCE(started_at, $5),
-			   completed_at = $6,
-			   worker_id    = $7
-		WHERE  id = $8`
-
-	_, err := w.db.Exec(query,
-		status, progress, resultURL, errMsg, startedAt, completedAt, w.cfg.workerID, jobID)
-
-	if err != nil {
-		log.Printf("[db] error actualizando job %s: %v", jobID, err)
-	}
 }
 
 func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg string) {
@@ -412,24 +365,6 @@ func main() {
 	log.Printf("=== MediaCase Worker ===")
 	log.Printf("ID=%s | pool=%d | coordinator=%s", cfg.workerID, cfg.poolSize, cfg.coordinatorURL)
 
-	db, err := sql.Open("postgres", cfg.dbURL)
-	if err != nil {
-		log.Fatalf("db open: %v", err)
-	}
-	defer db.Close()
-
-	for i := 0; i < 15; i++ {
-		if err = db.Ping(); err == nil {
-			break
-		}
-		log.Printf("[db] no disponible aún, reintentando... (%d/15)", i+1)
-		time.Sleep(2 * time.Second)
-	}
-	if err != nil {
-		log.Fatalf("[db] no se pudo conectar tras reintentos: %v", err)
-	}
-	log.Println("[db] conectado a PostgreSQL")
-
 	minioClient, err := storage.NewMinIOClient()
 	if err != nil {
 		log.Fatalf("[storage] init MinIO: %v", err)
@@ -437,7 +372,7 @@ func main() {
 
 	monitoring.Init(cfg.workerID)
 
-	w := newWorker(cfg, db, minioClient)
+	w := newWorker(cfg, minioClient)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

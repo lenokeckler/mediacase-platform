@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lenokeckler/mediacase-platform/internal/db"
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
-	"github.com/google/uuid"
 )
 
 // API groups all HTTP handlers of the coordinator.
@@ -210,18 +210,34 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 		ResultURL string `json:"result_url"`
 		ErrorMsg  string `json:"error"`
 	}
-	json.NewDecoder(r.Body).Decode(&payload)
-
-	if payload.Status == string(models.StatusCompleted) {
-		a.db.Exec(`UPDATE jobs SET status='completed', progress=100, result_url=$1, completed_at=NOW() WHERE id=$2`, payload.ResultURL, id)
-	} else if payload.Status == string(models.StatusFailed) {
-		a.db.Exec(`UPDATE jobs SET status='failed', progress=$1, error_msg=$2, completed_at=NOW() WHERE id=$3`, payload.Progress, payload.ErrorMsg, id)
-	} else if payload.Status != "" {
-		a.db.Exec(`UPDATE jobs SET status=$1, progress=$2 WHERE id=$3`, payload.Status, payload.Progress, id)
-	} else {
-		a.db.Exec(`UPDATE jobs SET progress=$1 WHERE id=$2`, payload.Progress, id)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
 	}
-	
+
+	// El worker ya no escribe en la base: este handler es la única fuente de verdad
+	// del estado de una sub-tarea, incluidos started_at y completed_at.
+	var err error
+	switch payload.Status {
+	case string(models.StatusRunning):
+		_, err = a.db.Exec(`UPDATE jobs SET status='running', progress=$1,
+			started_at=COALESCE(started_at, NOW()) WHERE id=$2`, payload.Progress, id)
+	case string(models.StatusCompleted):
+		_, err = a.db.Exec(`UPDATE jobs SET status='completed', progress=100, result_url=$1,
+			completed_at=NOW() WHERE id=$2`, payload.ResultURL, id)
+	case string(models.StatusFailed):
+		_, err = a.db.Exec(`UPDATE jobs SET status='failed', progress=$1, error_msg=$2,
+			completed_at=NOW() WHERE id=$3`, payload.Progress, payload.ErrorMsg, id)
+	case "":
+		_, err = a.db.Exec(`UPDATE jobs SET progress=$1 WHERE id=$2`, payload.Progress, id)
+	default:
+		_, err = a.db.Exec(`UPDATE jobs SET status=$1, progress=$2 WHERE id=$3`, payload.Status, payload.Progress, id)
+	}
+	if err != nil {
+		log.Printf("[api] progress %s: %v", id, err)
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
