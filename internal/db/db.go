@@ -60,34 +60,55 @@ func Migrate(db *sql.DB) error {
 	CREATE INDEX IF NOT EXISTS idx_jobs_status   ON jobs(status);
 	CREATE INDEX IF NOT EXISTS idx_jobs_worker   ON jobs(worker_id);
 	CREATE INDEX IF NOT EXISTS idx_jobs_priority ON jobs(priority DESC);
+
+	-- Casos (consigna v2.0): la unidad de trabajo. Las sub-tareas cuelgan de jobs.case_id.
+	CREATE TABLE IF NOT EXISTS cases (
+		id           TEXT PRIMARY KEY,
+		name         TEXT NOT NULL DEFAULT '',
+		status       TEXT NOT NULL DEFAULT 'queued',
+		priority     INT  NOT NULL DEFAULT 5,
+		total_jobs   INT  NOT NULL DEFAULT 0,
+		report       JSONB,
+		created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		started_at   TIMESTAMPTZ,
+		completed_at TIMESTAMPTZ
+	);
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS case_id   TEXT REFERENCES cases(id);
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS file_type TEXT NOT NULL DEFAULT '';
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS pool      TEXT NOT NULL DEFAULT '';
+	CREATE INDEX IF NOT EXISTS idx_jobs_case    ON jobs(case_id);
+	CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
 	`)
 	return err
 }
 
+// jobColumns es la lista de columnas que scanJob espera, en ese orden.
+const jobColumns = `id, file_path, operation, status, priority,
+		worker_id, progress, error_msg, result_url, retries, max_retries,
+		created_at, started_at, completed_at, case_id, file_type, pool`
+
 // InsertJob stores a new job in PostgreSQL.
 func InsertJob(db *sql.DB, job *models.Job) error {
 	_, err := db.Exec(`
-		INSERT INTO jobs (id, file_id, file_path, operation, status, priority, max_retries, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		INSERT INTO jobs (id, file_id, file_path, operation, status, priority, max_retries,
+		                  created_at, case_id, file_type, pool)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, ''), $10, $11)`,
 		job.ID, job.FileID, job.FilePath, job.Operation,
 		job.Status, job.Priority, job.MaxRetries, job.CreatedAt,
+		job.CaseID, job.FileType, job.Pool,
 	)
 	return err
 }
 
 // GetJob returns a job by ID.
 func GetJob(db *sql.DB, id string) (*models.Job, error) {
-	row := db.QueryRow(`SELECT id, file_path, operation, status, priority,
-		worker_id, progress, error_msg, result_url, retries, max_retries,
-		created_at, started_at, completed_at FROM jobs WHERE id=$1`, id)
+	row := db.QueryRow(`SELECT `+jobColumns+` FROM jobs WHERE id=$1`, id)
 	return scanJob(row)
 }
 
 // ListJobs returns all jobs, optionally filtered by status.
 func ListJobs(db *sql.DB, status string) ([]*models.Job, error) {
-	query := `SELECT id, file_path, operation, status, priority,
-		worker_id, progress, error_msg, result_url, retries, max_retries,
-		created_at, started_at, completed_at FROM jobs`
+	query := `SELECT ` + jobColumns + ` FROM jobs`
 	args := []any{}
 	if status != "" {
 		query += " WHERE status=$1"
@@ -132,11 +153,12 @@ func scanJob(row interface {
 	Scan(...any) error
 }) (*models.Job, error) {
 	j := &models.Job{}
-	var workerID, errorMsg, resultURL sql.NullString
+	var workerID, errorMsg, resultURL, caseID sql.NullString
 	err := row.Scan(
 		&j.ID, &j.FilePath, &j.Operation, &j.Status, &j.Priority,
 		&workerID, &j.Progress, &errorMsg, &resultURL,
 		&j.Retries, &j.MaxRetries, &j.CreatedAt, &j.StartedAt, &j.CompletedAt,
+		&caseID, &j.FileType, &j.Pool,
 	)
 	if err != nil {
 		return nil, err
@@ -144,6 +166,6 @@ func scanJob(row interface {
 	j.WorkerID = workerID.String
 	j.ErrorMsg = errorMsg.String
 	j.ResultURL = resultURL.String
+	j.CaseID = caseID.String
 	return j, nil
 }
-

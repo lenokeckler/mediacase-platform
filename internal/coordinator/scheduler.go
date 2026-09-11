@@ -126,7 +126,7 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs SET status='pending', worker_id=NULL
 		 WHERE worker_id=$1 AND status IN ('assigned','running')
-		 RETURNING id, file_path, operation, priority, retries, max_retries`,
+		 RETURNING id, file_path, operation, priority, retries, max_retries, COALESCE(case_id,''), file_type, pool`,
 		workerID,
 	)
 	if err != nil {
@@ -136,7 +136,8 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 	defer rows.Close()
 	for rows.Next() {
 		job := &models.Job{}
-		if err := rows.Scan(&job.ID, &job.FilePath, &job.Operation, &job.Priority, &job.Retries, &job.MaxRetries); err != nil {
+		if err := rows.Scan(&job.ID, &job.FilePath, &job.Operation, &job.Priority, &job.Retries, &job.MaxRetries,
+			&job.CaseID, &job.FileType, &job.Pool); err != nil {
 			continue
 		}
 		log.Printf("[scheduler] reclaimed job %s from dead worker %s — re-enqueuing", job.ID, workerID)

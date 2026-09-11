@@ -10,6 +10,7 @@ const (
 	StatusRunning   JobStatus = "running"
 	StatusCompleted JobStatus = "completed"
 	StatusFailed    JobStatus = "failed"
+	StatusCancelled JobStatus = "cancelled" // el caso se canceló antes de que empezara
 )
 
 type Operation string
@@ -23,8 +24,11 @@ const (
 
 type Job struct {
 	ID          string     `json:"id"`
+	CaseID      string     `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
 	FileID      string     `json:"file_id"`
-	FilePath    string     `json:"file_path"`
+	FilePath    string     `json:"file_path"` // clave del objeto en el bucket de entradas
+	FileType    FileType   `json:"file_type"` // decidido por el coordinador (routing por tipo)
+	Pool        string     `json:"pool"`      // pool de workers que la ejecuta
 	Operation   Operation  `json:"operation"`
 	OutputPath  string     `json:"output_path"`
 	Status      JobStatus  `json:"status"`
