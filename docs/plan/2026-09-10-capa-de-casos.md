@@ -2165,7 +2165,7 @@ echo "HITO OK — $(echo "$REP" | python -c "import sys,json;print(json.load(sys
 
 ---
 
-# FASE 2 — Pools especializados
+# FASE 2 — Pools especializados  ✅ cerrada 2026-09-10 (hito `tests/pools_scenario.sh` → HITO OK)
 
 **Hito:** un caso heterogéneo (video + audio + imagen) se procesa con cada sub-tarea en el nodo de su pool: video en `node1` (host), audio en `node2`, imagen en `node3`. Cambiar el rol de un nodo y ver cómo cambia la asignación.
 
@@ -2178,7 +2178,7 @@ echo "HITO OK — $(echo "$REP" | python -c "import sys,json;print(json.load(sys
 - `func RoleCapabilities(role string) []string` en `cmd/worker`: `video→[video]`, `audio→[audio]`, `metadata→[metadata]`, `all` o vacío → los tres.
 - `func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo` — igual que `LeastLoaded` pero solo entre workers con esa capability. `LeastLoaded()` pasa a ser `LeastLoadedFor("")` (sin filtro).
 
-- [ ] **Paso 1: Prueba**
+- [x] **Paso 1: Prueba**
 
 ```go
 func TestRoleCapabilities(t *testing.T) {
@@ -2189,7 +2189,7 @@ func TestRoleCapabilities(t *testing.T) {
 }
 ```
 
-- [ ] **Paso 2: Implementar** — en el worker, `cfg.role = getEnv("WORKER_ROLE", "all")` y en `register()` agregar `"capabilities": RoleCapabilities(w.cfg.role)`. En `registry.go`:
+- [x] **Paso 2: Implementar** — en el worker, `cfg.role = getEnv("WORKER_ROLE", "all")` y en `register()` agregar `"capabilities": RoleCapabilities(w.cfg.role)`. En `registry.go`:
 
 ```go
 func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
@@ -2219,8 +2219,8 @@ func hasCapability(w *models.WorkerInfo, pool string) bool {
 ```
 `Register` persiste `capabilities` como texto separado por comas (`ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capabilities TEXT NOT NULL DEFAULT ''` en `Migrate`; `loadFromDB` lo vuelve a partir).
 
-- [ ] **Paso 3: Verificar** — `go test ./cmd/worker/ -v`; arrancar un worker con `WORKER_ROLE=audio` y `curl localhost:8080/workers` debe mostrar `"capabilities": ["audio"]`.
-- [ ] **Paso 4: Commit** (pedir OK) — `git commit -am "workers: capabilities por rol (video/audio/metadata/all)"`
+- [x] **Paso 3: Verificar** — `go test ./cmd/worker/ -v`; arrancar un worker con `WORKER_ROLE=audio` y `curl localhost:8080/workers` debe mostrar `"capabilities": ["audio"]`.
+- [x] **Paso 4: Commit** (pedir OK) — `git commit -am "workers: capabilities por rol (video/audio/metadata/all)"`
 
 ---
 
@@ -2242,10 +2242,10 @@ func (q *Queue) DepthByPool(ctx) (map[string]int64, error) // suma de las 3 prio
 ```
 `StreamHigh/Normal/Low` y `StreamForPriority` se eliminan; `Dequeue` usa `Block: 500 * time.Millisecond`.
 
-- [ ] **Paso 1: Implementar** (reemplaza las constantes y las 3 funciones; la lógica de XReadGroup queda igual, con `streams := []string{StreamFor(pool,8), StreamFor(pool,5), StreamFor(pool,1), ">", ">", ">"}`).
-- [ ] **Paso 2: Snapshot** — `QueueDepthSnapshot` gana `ByPool map[string]int `json:"by_pool"``; `High/Normal/Low` se calculan sumando por prioridad sobre los 9 streams para no romper el dashboard.
-- [ ] **Paso 3: Verificar** — `go build ./...`; `docker compose -f docker-compose.infra.yml exec redis redis-cli KEYS 'jobs:*'` tras un `POST /cases` heterogéneo → aparecen `jobs:video:high`, `jobs:audio:high`, `jobs:metadata:high`.
-- [ ] **Paso 4: Commit** (pedir OK) — `git commit -am "queue: un stream por pool y prioridad"`
+- [x] **Paso 1: Implementar** (reemplaza las constantes y las 3 funciones; la lógica de XReadGroup queda igual, con `streams := []string{StreamFor(pool,8), StreamFor(pool,5), StreamFor(pool,1), ">", ">", ">"}`).
+- [x] **Paso 2: Snapshot** — `QueueDepthSnapshot` gana `ByPool map[string]int `json:"by_pool"``; `High/Normal/Low` se calculan sumando por prioridad sobre los 9 streams para no romper el dashboard.
+- [x] **Paso 3: Verificar** — `go build ./...`; `docker compose -f docker-compose.infra.yml exec redis redis-cli KEYS 'jobs:*'` tras un `POST /cases` heterogéneo → aparecen `jobs:video:high`, `jobs:audio:high`, `jobs:metadata:high`.
+- [x] **Paso 4: Commit** (pedir OK) — `git commit -am "queue: un stream por pool y prioridad"`
 
 ---
 
@@ -2253,7 +2253,7 @@ func (q *Queue) DepthByPool(ctx) (map[string]int64, error) // suma de las 3 prio
 
 **Files:** Modify `internal/coordinator/scheduler.go` (`dispatch`).
 
-- [ ] **Paso 1: Implementar** — `dispatch` recorre los pools; para cada uno, si hay un worker capaz, saca **una** sub-tarea de ese pool:
+- [x] **Paso 1: Implementar** — `dispatch` recorre los pools; para cada uno, si hay un worker capaz, saca **una** sub-tarea de ese pool:
 
 ```go
 func (s *Scheduler) dispatch(ctx context.Context) error {
@@ -2278,16 +2278,16 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 ```
 `assign` es el cuerpo actual (assigned → sendToWorker → 429/requeue → Ack) extraído a una función; `Ack` usa `queue.StreamFor(job.Pool, job.Priority)`.
 
-- [ ] **Paso 2: Verificar** — con solo un worker `WORKER_ROLE=audio` conectado, un caso video+audio: la sub-tarea de audio se completa y la de video queda `pending` con `by_pool.video = 1` en `/ws`. Conectar un worker `video` → se completa.
-- [ ] **Paso 3: Commit** (pedir OK) — `git commit -am "scheduler: asignación por pool (least-loaded dentro del pool)"`
+- [x] **Paso 2: Verificar** — con solo un worker `WORKER_ROLE=audio` conectado, un caso video+audio: la sub-tarea de audio se completa y la de video queda `pending` con `by_pool.video = 1` en `/ws`. Conectar un worker `video` → se completa.
+- [x] **Paso 3: Commit** (pedir OK) — `git commit -am "scheduler: asignación por pool (least-loaded dentro del pool)"`
 
 ---
 
 ### Task 2.4: Roles en Vagrant, compose y host
 
-- [ ] **Paso 1:** `infra/vagrant/Vagrantfile` ya pasa `WORKER_ROLE` (`node2=audio`, `node3=metadata`). `infra/env/worker-host.env`: `WORKER_ROLE=video`. En `docker-compose.yml` (modo todo-local): `worker-1: WORKER_ROLE=video`, `worker-2: audio`, `worker-3: metadata`.
-- [ ] **Paso 2:** `bash infra/vagrant/redeploy.sh` tras compilar; `vagrant provision` si cambió el env.
-- [ ] **Paso 3: Commit** (pedir OK) — `git commit -am "infra: roles por nodo (video en host, audio en node2, metadata en node3)"`
+- [x] **Paso 1:** `infra/vagrant/Vagrantfile` ya pasa `WORKER_ROLE` (`node2=audio`, `node3=metadata`). `infra/env/worker-host.env`: `WORKER_ROLE=video`. En `docker-compose.yml` (modo todo-local): `worker-1: WORKER_ROLE=video`, `worker-2: audio`, `worker-3: metadata`.
+- [x] **Paso 2:** `bash infra/vagrant/redeploy.sh` tras compilar; `vagrant provision` si cambió el env.
+- [x] **Paso 3: Commit** (pedir OK) — `git commit -am "infra: roles por nodo (video en host, audio en node2, metadata en node3)"`
 
 ---
 
@@ -2303,8 +2303,8 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 >
 > **Alternativa descartada:** workers genéricos únicamente. Es más simple y nunca deja pools ociosos, pero pierde la asignación consciente del hardware que la consigna pide justificar, y hace que una sola sub-tarea de video en un nodo lento retrase todo el caso.
 
-- [ ] **Paso 1:** Añadir la sección. Actualizar también la sección *Job Lifecycle* para incluir el flujo caso → routing → sub-tareas → barrier → reporte.
-- [ ] **Paso 2: Commit** (pedir OK) — `git commit -am "docs: justificación del modelo de pools especializados (Unidad 1)"`
+- [x] **Paso 1:** Añadir la sección. Actualizar también la sección *Job Lifecycle* para incluir el flujo caso → routing → sub-tareas → barrier → reporte.
+- [x] **Paso 2: Commit** (pedir OK) — `git commit -am "docs: justificación del modelo de pools especializados (Unidad 1)"`
 
 ---
 
@@ -2312,7 +2312,7 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 
 **Files:** Create `tests/pools_scenario.sh`.
 
-- [ ] **Paso 1:** Igual que `case_scenario.sh` pero con `hito_video.mp4`, `hito_audio.mp3` y una imagen (`ffmpeg -f lavfi -i color=c=blue:s=320x240 -frames:v 1 /tmp/img.png`), y al final:
+- [x] **Paso 1:** Igual que `case_scenario.sh` pero con `hito_video.mp4`, `hito_audio.mp3` y una imagen (`ffmpeg -f lavfi -i color=c=blue:s=320x240 -frames:v 1 /tmp/img.png`), y al final:
 
 ```bash
 echo "$REP" | python -c "
@@ -2326,9 +2326,9 @@ print('cada sub-tarea corrió en el nodo de su pool')
 echo "HITO OK"
 ```
 
-- [ ] **Paso 2:** Correr con node1 (host, video) + node2 + node3 arriba → `HITO OK`.
-- [ ] **Paso 3:** Registrar en `CLAUDE.md` §15 que la Fase 2 cerró; **escribir el Plan 2**.
-- [ ] **Paso 4: Commit** (pedir OK).
+- [x] **Paso 2:** Correr con node1 (host, video) + node2 + node3 arriba → `HITO OK`.
+- [x] **Paso 3:** Registrar en `CLAUDE.md` §15 que la Fase 2 cerró; **escribir el Plan 2**.
+- [x] **Paso 4: Commit** (pedir OK).
 
 ---
 
