@@ -1,0 +1,487 @@
+{
+    "__inputs": [],
+    "__requires": [],
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 100,
+            "title": "Worker Load",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "percent",
+                    "min": 0,
+                    "max": 100
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 1
+            },
+            "id": 1,
+            "options": {
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "worker_cpu_percent",
+                    "legendFormat": "{{worker_id}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "CPU % per Worker",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "decmbytes",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 1
+            },
+            "id": 2,
+            "targets": [
+                {
+                    "expr": "worker_memory_mb",
+                    "legendFormat": "{{worker_id}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Memory MB per Worker",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "short",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 9
+            },
+            "id": 3,
+            "targets": [
+                {
+                    "expr": "worker_active_jobs",
+                    "legendFormat": "{{worker_id}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Active Jobs per Worker",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "short",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 9
+            },
+            "id": 4,
+            "targets": [
+                {
+                    "expr": "worker_goroutines",
+                    "legendFormat": "{{worker_id}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Goroutines per Worker",
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 17
+            },
+            "id": 101,
+            "title": "Job Throughput",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "ops",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 18
+            },
+            "id": 5,
+            "targets": [
+                {
+                    "expr": "rate(worker_jobs_completed_total[1m])",
+                    "legendFormat": "{{worker_id}} / {{operation}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Jobs Completed (rate/min)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10
+                    },
+                    "unit": "ops",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 18
+            },
+            "id": 6,
+            "targets": [
+                {
+                    "expr": "rate(worker_jobs_failed_total[1m])",
+                    "legendFormat": "{{worker_id}} / {{operation}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Jobs Failed (rate/min)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "s",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 26
+            },
+            "id": 7,
+            "options": {
+                "bucketSize": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none"
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, rate(worker_job_duration_seconds_bucket[5m]))",
+                    "legendFormat": "p50 {{worker_id}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.90, rate(worker_job_duration_seconds_bucket[5m]))",
+                    "legendFormat": "p90 {{worker_id}}",
+                    "refId": "B"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, rate(worker_job_duration_seconds_bucket[5m]))",
+                    "legendFormat": "p99 {{worker_id}}",
+                    "refId": "C"
+                }
+            ],
+            "title": "Job Duration Percentiles (p50 / p90 / p99)",
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 34
+            },
+            "id": 102,
+            "title": "Totals",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "short",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 0,
+                "y": 35
+            },
+            "id": 8,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "auto",
+                "textMode": "auto",
+                "colorMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "sum(worker_jobs_completed_total)",
+                    "legendFormat": "Completed",
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Jobs Completed",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "short",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 8,
+                "y": 35
+            },
+            "id": 9,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "auto",
+                "textMode": "auto",
+                "colorMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "sum(worker_jobs_failed_total)",
+                    "legendFormat": "Failed",
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Jobs Failed",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "short",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 16,
+                "y": 35
+            },
+            "id": 10,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "auto",
+                "textMode": "auto",
+                "colorMode": "value"
+            },
+            "targets": [
+                {
+                    "expr": "sum(worker_active_jobs)",
+                    "legendFormat": "Active",
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Active Jobs",
+            "type": "stat"
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "tags": [
+        "mediacase"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-30m",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "MediaCase",
+    "uid": "mediacase-main",
+    "version": 1
+}

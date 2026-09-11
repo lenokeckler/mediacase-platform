@@ -1,0 +1,52 @@
+.wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.titleGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.statusBadge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: white;
+}
+
+.total {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.progressTrack {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progressFill {
+    height: 100%;
+    transition: width 0.4s ease, background 0.4s ease;
+}

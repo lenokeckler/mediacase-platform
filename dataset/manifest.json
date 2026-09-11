@@ -1,0 +1,6257 @@
+{
+    "total": 521,
+    "files": [
+        {
+            "filename": "audio_long_1_aac.aac",
+            "path": "/app/dataset/files/audio_long_1_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 538012,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_1_flac.flac",
+            "path": "/app/dataset/files/audio_long_1_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 728167,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_1_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_1_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_1_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_1_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 121176,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_1_wav.wav",
+            "path": "/app/dataset/files/audio_long_1_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_2_aac.aac",
+            "path": "/app/dataset/files/audio_long_2_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 538012,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_2_flac.flac",
+            "path": "/app/dataset/files/audio_long_2_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 737997,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_2_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_2_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_2_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_2_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 103246,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_2_wav.wav",
+            "path": "/app/dataset/files/audio_long_2_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_3_aac.aac",
+            "path": "/app/dataset/files/audio_long_3_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 539387,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_3_flac.flac",
+            "path": "/app/dataset/files/audio_long_3_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 739322,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_3_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_3_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_3_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_3_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 121176,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_3_wav.wav",
+            "path": "/app/dataset/files/audio_long_3_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_4_aac.aac",
+            "path": "/app/dataset/files/audio_long_4_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 537615,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_4_flac.flac",
+            "path": "/app/dataset/files/audio_long_4_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 728561,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_4_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_4_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_4_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_4_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 111212,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_4_wav.wav",
+            "path": "/app/dataset/files/audio_long_4_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_5_aac.aac",
+            "path": "/app/dataset/files/audio_long_5_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 538012,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_5_flac.flac",
+            "path": "/app/dataset/files/audio_long_5_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 739322,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_5_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_5_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_5_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_5_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 110784,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_5_wav.wav",
+            "path": "/app/dataset/files/audio_long_5_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_6_aac.aac",
+            "path": "/app/dataset/files/audio_long_6_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 539387,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_6_flac.flac",
+            "path": "/app/dataset/files/audio_long_6_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 749829,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_6_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_6_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_6_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_6_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 121176,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_6_wav.wav",
+            "path": "/app/dataset/files/audio_long_6_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_7_aac.aac",
+            "path": "/app/dataset/files/audio_long_7_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 538012,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_7_flac.flac",
+            "path": "/app/dataset/files/audio_long_7_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 739322,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_7_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_7_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_7_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_7_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 104735,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_7_wav.wav",
+            "path": "/app/dataset/files/audio_long_7_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_8_aac.aac",
+            "path": "/app/dataset/files/audio_long_8_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 539387,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_8_flac.flac",
+            "path": "/app/dataset/files/audio_long_8_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 737997,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_8_mp3.mp3",
+            "path": "/app/dataset/files/audio_long_8_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 480462,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_8_ogg.ogg",
+            "path": "/app/dataset/files/audio_long_8_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 110784,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_long_8_wav.wav",
+            "path": "/app/dataset/files/audio_long_8_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 5292078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_10_aac.aac",
+            "path": "/app/dataset/files/audio_medium_10_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268962,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_10_flac.flac",
+            "path": "/app/dataset/files/audio_medium_10_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 373129,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_10_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_10_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_10_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_10_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 62377,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_10_wav.wav",
+            "path": "/app/dataset/files/audio_medium_10_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_11_aac.aac",
+            "path": "/app/dataset/files/audio_medium_11_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268962,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_11_flac.flac",
+            "path": "/app/dataset/files/audio_medium_11_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 373789,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_11_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_11_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_11_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_11_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 54162,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_11_wav.wav",
+            "path": "/app/dataset/files/audio_medium_11_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_12_aac.aac",
+            "path": "/app/dataset/files/audio_medium_12_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268988,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_12_flac.flac",
+            "path": "/app/dataset/files/audio_medium_12_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_12_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_12_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_12_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_12_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 54162,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_12_wav.wav",
+            "path": "/app/dataset/files/audio_medium_12_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_13_aac.aac",
+            "path": "/app/dataset/files/audio_medium_13_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268988,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_13_flac.flac",
+            "path": "/app/dataset/files/audio_medium_13_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 373129,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_13_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_13_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_13_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_13_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 53419,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_13_wav.wav",
+            "path": "/app/dataset/files/audio_medium_13_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_14_aac.aac",
+            "path": "/app/dataset/files/audio_medium_14_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268669,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_14_flac.flac",
+            "path": "/app/dataset/files/audio_medium_14_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 379099,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_14_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_14_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_14_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_14_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57210,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_14_wav.wav",
+            "path": "/app/dataset/files/audio_medium_14_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_15_aac.aac",
+            "path": "/app/dataset/files/audio_medium_15_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268669,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_15_flac.flac",
+            "path": "/app/dataset/files/audio_medium_15_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 379099,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_15_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_15_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_15_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_15_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57413,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_15_wav.wav",
+            "path": "/app/dataset/files/audio_medium_15_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_1_aac.aac",
+            "path": "/app/dataset/files/audio_medium_1_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268696,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_1_flac.flac",
+            "path": "/app/dataset/files/audio_medium_1_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_1_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_1_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_1_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_1_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57413,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_1_wav.wav",
+            "path": "/app/dataset/files/audio_medium_1_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_2_aac.aac",
+            "path": "/app/dataset/files/audio_medium_2_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 269353,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_2_flac.flac",
+            "path": "/app/dataset/files/audio_medium_2_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_2_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_2_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_2_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_2_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 62377,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_2_wav.wav",
+            "path": "/app/dataset/files/audio_medium_2_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_3_aac.aac",
+            "path": "/app/dataset/files/audio_medium_3_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268669,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_3_flac.flac",
+            "path": "/app/dataset/files/audio_medium_3_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 379099,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_3_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_3_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_3_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_3_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57413,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_3_wav.wav",
+            "path": "/app/dataset/files/audio_medium_3_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_4_aac.aac",
+            "path": "/app/dataset/files/audio_medium_4_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268988,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_4_flac.flac",
+            "path": "/app/dataset/files/audio_medium_4_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_4_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_4_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_4_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_4_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57413,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_4_wav.wav",
+            "path": "/app/dataset/files/audio_medium_4_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_5_aac.aac",
+            "path": "/app/dataset/files/audio_medium_5_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268696,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_5_flac.flac",
+            "path": "/app/dataset/files/audio_medium_5_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_5_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_5_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_5_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_5_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 54162,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_5_wav.wav",
+            "path": "/app/dataset/files/audio_medium_5_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_6_aac.aac",
+            "path": "/app/dataset/files/audio_medium_6_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268669,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_6_flac.flac",
+            "path": "/app/dataset/files/audio_medium_6_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368262,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_6_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_6_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_6_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_6_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 57210,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_6_wav.wav",
+            "path": "/app/dataset/files/audio_medium_6_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_7_aac.aac",
+            "path": "/app/dataset/files/audio_medium_7_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 269353,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_7_flac.flac",
+            "path": "/app/dataset/files/audio_medium_7_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 368424,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_7_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_7_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_7_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_7_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 53419,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_7_wav.wav",
+            "path": "/app/dataset/files/audio_medium_7_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_8_aac.aac",
+            "path": "/app/dataset/files/audio_medium_8_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268962,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_8_flac.flac",
+            "path": "/app/dataset/files/audio_medium_8_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 379099,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_8_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_8_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_8_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_8_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 62377,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_8_wav.wav",
+            "path": "/app/dataset/files/audio_medium_8_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_9_aac.aac",
+            "path": "/app/dataset/files/audio_medium_9_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 268669,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_9_flac.flac",
+            "path": "/app/dataset/files/audio_medium_9_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 373129,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_9_mp3.mp3",
+            "path": "/app/dataset/files/audio_medium_9_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 240553,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_9_ogg.ogg",
+            "path": "/app/dataset/files/audio_medium_9_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 62377,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_medium_9_wav.wav",
+            "path": "/app/dataset/files/audio_medium_9_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 2646078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_10_aac.aac",
+            "path": "/app/dataset/files/audio_short_10_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45139,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_10_flac.flac",
+            "path": "/app/dataset/files/audio_short_10_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_10_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_10_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_10_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_10_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_10_wav.wav",
+            "path": "/app/dataset/files/audio_short_10_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_11_aac.aac",
+            "path": "/app/dataset/files/audio_short_11_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45111,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_11_flac.flac",
+            "path": "/app/dataset/files/audio_short_11_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69158,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_11_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_11_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_11_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_11_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12492,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_11_wav.wav",
+            "path": "/app/dataset/files/audio_short_11_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_12_aac.aac",
+            "path": "/app/dataset/files/audio_short_12_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45073,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_12_flac.flac",
+            "path": "/app/dataset/files/audio_short_12_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68273,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_12_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_12_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_12_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_12_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12513,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_12_wav.wav",
+            "path": "/app/dataset/files/audio_short_12_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_13_aac.aac",
+            "path": "/app/dataset/files/audio_short_13_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45139,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_13_flac.flac",
+            "path": "/app/dataset/files/audio_short_13_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69158,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_13_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_13_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_13_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_13_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 13337,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_13_wav.wav",
+            "path": "/app/dataset/files/audio_short_13_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_14_aac.aac",
+            "path": "/app/dataset/files/audio_short_14_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45119,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_14_flac.flac",
+            "path": "/app/dataset/files/audio_short_14_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_14_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_14_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_14_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_14_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12513,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_14_wav.wav",
+            "path": "/app/dataset/files/audio_short_14_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_15_aac.aac",
+            "path": "/app/dataset/files/audio_short_15_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45119,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_15_flac.flac",
+            "path": "/app/dataset/files/audio_short_15_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 70064,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_15_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_15_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_15_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_15_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12492,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_15_wav.wav",
+            "path": "/app/dataset/files/audio_short_15_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_16_aac.aac",
+            "path": "/app/dataset/files/audio_short_16_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45119,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_16_flac.flac",
+            "path": "/app/dataset/files/audio_short_16_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68207,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_16_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_16_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_16_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_16_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12492,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_16_wav.wav",
+            "path": "/app/dataset/files/audio_short_16_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_17_aac.aac",
+            "path": "/app/dataset/files/audio_short_17_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45119,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_17_flac.flac",
+            "path": "/app/dataset/files/audio_short_17_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69158,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_17_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_17_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_17_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_17_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_17_wav.wav",
+            "path": "/app/dataset/files/audio_short_17_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_18_aac.aac",
+            "path": "/app/dataset/files/audio_short_18_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45120,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_18_flac.flac",
+            "path": "/app/dataset/files/audio_short_18_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 70064,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_18_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_18_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_18_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_18_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12513,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_18_wav.wav",
+            "path": "/app/dataset/files/audio_short_18_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_19_aac.aac",
+            "path": "/app/dataset/files/audio_short_19_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45139,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_19_flac.flac",
+            "path": "/app/dataset/files/audio_short_19_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68273,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_19_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_19_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_19_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_19_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12513,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_19_wav.wav",
+            "path": "/app/dataset/files/audio_short_19_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_1_aac.aac",
+            "path": "/app/dataset/files/audio_short_1_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45120,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_1_flac.flac",
+            "path": "/app/dataset/files/audio_short_1_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68273,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_1_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_1_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_1_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_1_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_1_wav.wav",
+            "path": "/app/dataset/files/audio_short_1_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_20_aac.aac",
+            "path": "/app/dataset/files/audio_short_20_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45139,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_20_flac.flac",
+            "path": "/app/dataset/files/audio_short_20_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_20_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_20_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_20_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_20_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 13337,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_20_wav.wav",
+            "path": "/app/dataset/files/audio_short_20_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_21_aac.aac",
+            "path": "/app/dataset/files/audio_short_21_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45111,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_21_flac.flac",
+            "path": "/app/dataset/files/audio_short_21_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_21_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_21_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_21_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_21_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 13337,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_21_wav.wav",
+            "path": "/app/dataset/files/audio_short_21_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_22_aac.aac",
+            "path": "/app/dataset/files/audio_short_22_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45073,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_22_flac.flac",
+            "path": "/app/dataset/files/audio_short_22_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 70064,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_22_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_22_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_22_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_22_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_22_wav.wav",
+            "path": "/app/dataset/files/audio_short_22_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_2_aac.aac",
+            "path": "/app/dataset/files/audio_short_2_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45111,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_2_flac.flac",
+            "path": "/app/dataset/files/audio_short_2_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68207,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_2_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_2_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_2_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_2_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12492,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_2_wav.wav",
+            "path": "/app/dataset/files/audio_short_2_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_3_aac.aac",
+            "path": "/app/dataset/files/audio_short_3_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45120,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_3_flac.flac",
+            "path": "/app/dataset/files/audio_short_3_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_3_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_3_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_3_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_3_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_3_wav.wav",
+            "path": "/app/dataset/files/audio_short_3_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_4_aac.aac",
+            "path": "/app/dataset/files/audio_short_4_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45111,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_4_flac.flac",
+            "path": "/app/dataset/files/audio_short_4_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 68273,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_4_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_4_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_4_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_4_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_4_wav.wav",
+            "path": "/app/dataset/files/audio_short_4_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_5_aac.aac",
+            "path": "/app/dataset/files/audio_short_5_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45139,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_5_flac.flac",
+            "path": "/app/dataset/files/audio_short_5_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 70064,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_5_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_5_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_5_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_5_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11948,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_5_wav.wav",
+            "path": "/app/dataset/files/audio_short_5_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_6_aac.aac",
+            "path": "/app/dataset/files/audio_short_6_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45120,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_6_flac.flac",
+            "path": "/app/dataset/files/audio_short_6_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 70064,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_6_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_6_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_6_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_6_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 13337,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_6_wav.wav",
+            "path": "/app/dataset/files/audio_short_6_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_7_aac.aac",
+            "path": "/app/dataset/files/audio_short_7_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45120,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_7_flac.flac",
+            "path": "/app/dataset/files/audio_short_7_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69158,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_7_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_7_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_7_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_7_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 13337,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_7_wav.wav",
+            "path": "/app/dataset/files/audio_short_7_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_8_aac.aac",
+            "path": "/app/dataset/files/audio_short_8_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45073,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_8_flac.flac",
+            "path": "/app/dataset/files/audio_short_8_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69075,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_8_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_8_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_8_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_8_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 12513,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_8_wav.wav",
+            "path": "/app/dataset/files/audio_short_8_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_9_aac.aac",
+            "path": "/app/dataset/files/audio_short_9_aac.aac",
+            "type": "audio",
+            "format": "aac",
+            "size_bytes": 45073,
+            "mime_type": "audio/aac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_9_flac.flac",
+            "path": "/app/dataset/files/audio_short_9_flac.flac",
+            "type": "audio",
+            "format": "flac",
+            "size_bytes": 69158,
+            "mime_type": "audio/flac",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_9_mp3.mp3",
+            "path": "/app/dataset/files/audio_short_9_mp3.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "size_bytes": 40560,
+            "mime_type": "audio/mpeg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_9_ogg.ogg",
+            "path": "/app/dataset/files/audio_short_9_ogg.ogg",
+            "type": "audio",
+            "format": "ogg",
+            "size_bytes": 11831,
+            "mime_type": "audio/ogg",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "audio_short_9_wav.wav",
+            "path": "/app/dataset/files/audio_short_9_wav.wav",
+            "type": "audio",
+            "format": "wav",
+            "size_bytes": 441078,
+            "mime_type": "audio/wav",
+            "operations": [
+                "convert",
+                "extract_audio"
+            ]
+        },
+        {
+            "filename": "video_long_10_avi.avi",
+            "path": "/app/dataset/files/video_long_10_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_10_mkv.mkv",
+            "path": "/app/dataset/files/video_long_10_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_10_mov.mov",
+            "path": "/app/dataset/files/video_long_10_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_10_mp4.mp4",
+            "path": "/app/dataset/files/video_long_10_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_11_avi.avi",
+            "path": "/app/dataset/files/video_long_11_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_11_mkv.mkv",
+            "path": "/app/dataset/files/video_long_11_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_11_mov.mov",
+            "path": "/app/dataset/files/video_long_11_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_11_mp4.mp4",
+            "path": "/app/dataset/files/video_long_11_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_12_avi.avi",
+            "path": "/app/dataset/files/video_long_12_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_12_mkv.mkv",
+            "path": "/app/dataset/files/video_long_12_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_12_mov.mov",
+            "path": "/app/dataset/files/video_long_12_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_12_mp4.mp4",
+            "path": "/app/dataset/files/video_long_12_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_13_avi.avi",
+            "path": "/app/dataset/files/video_long_13_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_13_mkv.mkv",
+            "path": "/app/dataset/files/video_long_13_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_13_mov.mov",
+            "path": "/app/dataset/files/video_long_13_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_13_mp4.mp4",
+            "path": "/app/dataset/files/video_long_13_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_14_avi.avi",
+            "path": "/app/dataset/files/video_long_14_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_14_mkv.mkv",
+            "path": "/app/dataset/files/video_long_14_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_14_mov.mov",
+            "path": "/app/dataset/files/video_long_14_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_14_mp4.mp4",
+            "path": "/app/dataset/files/video_long_14_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_15_avi.avi",
+            "path": "/app/dataset/files/video_long_15_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_15_mkv.mkv",
+            "path": "/app/dataset/files/video_long_15_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_15_mov.mov",
+            "path": "/app/dataset/files/video_long_15_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_15_mp4.mp4",
+            "path": "/app/dataset/files/video_long_15_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_1_avi.avi",
+            "path": "/app/dataset/files/video_long_1_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_1_mkv.mkv",
+            "path": "/app/dataset/files/video_long_1_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_1_mov.mov",
+            "path": "/app/dataset/files/video_long_1_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_1_mp4.mp4",
+            "path": "/app/dataset/files/video_long_1_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_2_avi.avi",
+            "path": "/app/dataset/files/video_long_2_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_2_mkv.mkv",
+            "path": "/app/dataset/files/video_long_2_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_2_mov.mov",
+            "path": "/app/dataset/files/video_long_2_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_2_mp4.mp4",
+            "path": "/app/dataset/files/video_long_2_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_3_avi.avi",
+            "path": "/app/dataset/files/video_long_3_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_3_mkv.mkv",
+            "path": "/app/dataset/files/video_long_3_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_3_mov.mov",
+            "path": "/app/dataset/files/video_long_3_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_3_mp4.mp4",
+            "path": "/app/dataset/files/video_long_3_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_4_avi.avi",
+            "path": "/app/dataset/files/video_long_4_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_4_mkv.mkv",
+            "path": "/app/dataset/files/video_long_4_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_4_mov.mov",
+            "path": "/app/dataset/files/video_long_4_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_4_mp4.mp4",
+            "path": "/app/dataset/files/video_long_4_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_5_avi.avi",
+            "path": "/app/dataset/files/video_long_5_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_5_mkv.mkv",
+            "path": "/app/dataset/files/video_long_5_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_5_mov.mov",
+            "path": "/app/dataset/files/video_long_5_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_5_mp4.mp4",
+            "path": "/app/dataset/files/video_long_5_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_6_avi.avi",
+            "path": "/app/dataset/files/video_long_6_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_6_mkv.mkv",
+            "path": "/app/dataset/files/video_long_6_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_6_mov.mov",
+            "path": "/app/dataset/files/video_long_6_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_6_mp4.mp4",
+            "path": "/app/dataset/files/video_long_6_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_7_avi.avi",
+            "path": "/app/dataset/files/video_long_7_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_7_mkv.mkv",
+            "path": "/app/dataset/files/video_long_7_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_7_mov.mov",
+            "path": "/app/dataset/files/video_long_7_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_7_mp4.mp4",
+            "path": "/app/dataset/files/video_long_7_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_8_avi.avi",
+            "path": "/app/dataset/files/video_long_8_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_8_mkv.mkv",
+            "path": "/app/dataset/files/video_long_8_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_8_mov.mov",
+            "path": "/app/dataset/files/video_long_8_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_8_mp4.mp4",
+            "path": "/app/dataset/files/video_long_8_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_9_avi.avi",
+            "path": "/app/dataset/files/video_long_9_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 627932,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_9_mkv.mkv",
+            "path": "/app/dataset/files/video_long_9_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 546599,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_9_mov.mov",
+            "path": "/app/dataset/files/video_long_9_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 558210,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_long_9_mp4.mp4",
+            "path": "/app/dataset/files/video_long_9_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 558159,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_10_avi.avi",
+            "path": "/app/dataset/files/video_medium_10_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_10_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_10_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_10_mov.mov",
+            "path": "/app/dataset/files/video_medium_10_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_10_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_10_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_11_avi.avi",
+            "path": "/app/dataset/files/video_medium_11_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_11_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_11_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_11_mov.mov",
+            "path": "/app/dataset/files/video_medium_11_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_11_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_11_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_12_avi.avi",
+            "path": "/app/dataset/files/video_medium_12_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_12_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_12_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_12_mov.mov",
+            "path": "/app/dataset/files/video_medium_12_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_12_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_12_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_13_avi.avi",
+            "path": "/app/dataset/files/video_medium_13_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_13_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_13_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_13_mov.mov",
+            "path": "/app/dataset/files/video_medium_13_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_13_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_13_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_14_avi.avi",
+            "path": "/app/dataset/files/video_medium_14_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_14_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_14_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_14_mov.mov",
+            "path": "/app/dataset/files/video_medium_14_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_14_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_14_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_15_avi.avi",
+            "path": "/app/dataset/files/video_medium_15_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_15_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_15_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_15_mov.mov",
+            "path": "/app/dataset/files/video_medium_15_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_15_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_15_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_16_avi.avi",
+            "path": "/app/dataset/files/video_medium_16_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_16_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_16_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_16_mov.mov",
+            "path": "/app/dataset/files/video_medium_16_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_16_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_16_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_17_avi.avi",
+            "path": "/app/dataset/files/video_medium_17_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_17_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_17_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_17_mov.mov",
+            "path": "/app/dataset/files/video_medium_17_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_17_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_17_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_18_avi.avi",
+            "path": "/app/dataset/files/video_medium_18_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_18_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_18_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_18_mov.mov",
+            "path": "/app/dataset/files/video_medium_18_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_18_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_18_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_19_avi.avi",
+            "path": "/app/dataset/files/video_medium_19_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_19_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_19_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_19_mov.mov",
+            "path": "/app/dataset/files/video_medium_19_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_19_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_19_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_1_avi.avi",
+            "path": "/app/dataset/files/video_medium_1_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_1_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_1_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_1_mov.mov",
+            "path": "/app/dataset/files/video_medium_1_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_1_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_1_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_20_avi.avi",
+            "path": "/app/dataset/files/video_medium_20_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_20_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_20_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_20_mov.mov",
+            "path": "/app/dataset/files/video_medium_20_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_20_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_20_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_21_avi.avi",
+            "path": "/app/dataset/files/video_medium_21_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_21_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_21_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_21_mov.mov",
+            "path": "/app/dataset/files/video_medium_21_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_21_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_21_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_22_avi.avi",
+            "path": "/app/dataset/files/video_medium_22_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_22_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_22_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_22_mov.mov",
+            "path": "/app/dataset/files/video_medium_22_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_22_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_22_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_23_avi.avi",
+            "path": "/app/dataset/files/video_medium_23_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_23_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_23_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_23_mov.mov",
+            "path": "/app/dataset/files/video_medium_23_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_23_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_23_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_24_avi.avi",
+            "path": "/app/dataset/files/video_medium_24_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_24_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_24_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_24_mov.mov",
+            "path": "/app/dataset/files/video_medium_24_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_24_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_24_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_2_avi.avi",
+            "path": "/app/dataset/files/video_medium_2_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_2_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_2_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_2_mov.mov",
+            "path": "/app/dataset/files/video_medium_2_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_2_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_2_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_3_avi.avi",
+            "path": "/app/dataset/files/video_medium_3_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_3_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_3_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_3_mov.mov",
+            "path": "/app/dataset/files/video_medium_3_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_3_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_3_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_4_avi.avi",
+            "path": "/app/dataset/files/video_medium_4_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_4_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_4_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_4_mov.mov",
+            "path": "/app/dataset/files/video_medium_4_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_4_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_4_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_5_avi.avi",
+            "path": "/app/dataset/files/video_medium_5_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_5_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_5_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_5_mov.mov",
+            "path": "/app/dataset/files/video_medium_5_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_5_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_5_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_6_avi.avi",
+            "path": "/app/dataset/files/video_medium_6_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_6_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_6_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_6_mov.mov",
+            "path": "/app/dataset/files/video_medium_6_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_6_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_6_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_7_avi.avi",
+            "path": "/app/dataset/files/video_medium_7_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_7_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_7_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_7_mov.mov",
+            "path": "/app/dataset/files/video_medium_7_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_7_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_7_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_8_avi.avi",
+            "path": "/app/dataset/files/video_medium_8_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_8_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_8_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_8_mov.mov",
+            "path": "/app/dataset/files/video_medium_8_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_8_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_8_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_9_avi.avi",
+            "path": "/app/dataset/files/video_medium_9_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 318936,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_9_mkv.mkv",
+            "path": "/app/dataset/files/video_medium_9_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 273637,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_9_mov.mov",
+            "path": "/app/dataset/files/video_medium_9_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 279784,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_medium_9_mp4.mp4",
+            "path": "/app/dataset/files/video_medium_9_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 279733,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_10_avi.avi",
+            "path": "/app/dataset/files/video_short_10_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_10_mkv.mkv",
+            "path": "/app/dataset/files/video_short_10_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_10_mov.mov",
+            "path": "/app/dataset/files/video_short_10_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_10_mp4.mp4",
+            "path": "/app/dataset/files/video_short_10_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_11_avi.avi",
+            "path": "/app/dataset/files/video_short_11_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_11_mkv.mkv",
+            "path": "/app/dataset/files/video_short_11_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_11_mov.mov",
+            "path": "/app/dataset/files/video_short_11_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_11_mp4.mp4",
+            "path": "/app/dataset/files/video_short_11_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_12_avi.avi",
+            "path": "/app/dataset/files/video_short_12_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_12_mkv.mkv",
+            "path": "/app/dataset/files/video_short_12_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_12_mov.mov",
+            "path": "/app/dataset/files/video_short_12_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_12_mp4.mp4",
+            "path": "/app/dataset/files/video_short_12_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_13_avi.avi",
+            "path": "/app/dataset/files/video_short_13_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_13_mkv.mkv",
+            "path": "/app/dataset/files/video_short_13_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_13_mov.mov",
+            "path": "/app/dataset/files/video_short_13_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_13_mp4.mp4",
+            "path": "/app/dataset/files/video_short_13_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_14_avi.avi",
+            "path": "/app/dataset/files/video_short_14_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_14_mkv.mkv",
+            "path": "/app/dataset/files/video_short_14_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_14_mov.mov",
+            "path": "/app/dataset/files/video_short_14_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_14_mp4.mp4",
+            "path": "/app/dataset/files/video_short_14_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_15_avi.avi",
+            "path": "/app/dataset/files/video_short_15_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_15_mkv.mkv",
+            "path": "/app/dataset/files/video_short_15_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_15_mov.mov",
+            "path": "/app/dataset/files/video_short_15_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_15_mp4.mp4",
+            "path": "/app/dataset/files/video_short_15_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_16_avi.avi",
+            "path": "/app/dataset/files/video_short_16_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_16_mkv.mkv",
+            "path": "/app/dataset/files/video_short_16_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_16_mov.mov",
+            "path": "/app/dataset/files/video_short_16_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_16_mp4.mp4",
+            "path": "/app/dataset/files/video_short_16_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_17_avi.avi",
+            "path": "/app/dataset/files/video_short_17_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_17_mkv.mkv",
+            "path": "/app/dataset/files/video_short_17_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_17_mov.mov",
+            "path": "/app/dataset/files/video_short_17_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_17_mp4.mp4",
+            "path": "/app/dataset/files/video_short_17_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_18_avi.avi",
+            "path": "/app/dataset/files/video_short_18_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_18_mkv.mkv",
+            "path": "/app/dataset/files/video_short_18_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_18_mov.mov",
+            "path": "/app/dataset/files/video_short_18_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_18_mp4.mp4",
+            "path": "/app/dataset/files/video_short_18_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_19_avi.avi",
+            "path": "/app/dataset/files/video_short_19_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_19_mkv.mkv",
+            "path": "/app/dataset/files/video_short_19_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_19_mov.mov",
+            "path": "/app/dataset/files/video_short_19_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_19_mp4.mp4",
+            "path": "/app/dataset/files/video_short_19_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_1_avi.avi",
+            "path": "/app/dataset/files/video_short_1_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_1_mkv.mkv",
+            "path": "/app/dataset/files/video_short_1_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_1_mov.mov",
+            "path": "/app/dataset/files/video_short_1_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_1_mp4.mp4",
+            "path": "/app/dataset/files/video_short_1_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_20_avi.avi",
+            "path": "/app/dataset/files/video_short_20_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_20_mkv.mkv",
+            "path": "/app/dataset/files/video_short_20_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_20_mov.mov",
+            "path": "/app/dataset/files/video_short_20_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_20_mp4.mp4",
+            "path": "/app/dataset/files/video_short_20_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_21_avi.avi",
+            "path": "/app/dataset/files/video_short_21_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_21_mkv.mkv",
+            "path": "/app/dataset/files/video_short_21_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_21_mov.mov",
+            "path": "/app/dataset/files/video_short_21_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_21_mp4.mp4",
+            "path": "/app/dataset/files/video_short_21_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_22_avi.avi",
+            "path": "/app/dataset/files/video_short_22_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_22_mkv.mkv",
+            "path": "/app/dataset/files/video_short_22_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_22_mov.mov",
+            "path": "/app/dataset/files/video_short_22_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_22_mp4.mp4",
+            "path": "/app/dataset/files/video_short_22_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_23_avi.avi",
+            "path": "/app/dataset/files/video_short_23_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_23_mkv.mkv",
+            "path": "/app/dataset/files/video_short_23_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_23_mov.mov",
+            "path": "/app/dataset/files/video_short_23_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_23_mp4.mp4",
+            "path": "/app/dataset/files/video_short_23_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_24_avi.avi",
+            "path": "/app/dataset/files/video_short_24_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_24_mkv.mkv",
+            "path": "/app/dataset/files/video_short_24_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_24_mov.mov",
+            "path": "/app/dataset/files/video_short_24_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_24_mp4.mp4",
+            "path": "/app/dataset/files/video_short_24_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_25_avi.avi",
+            "path": "/app/dataset/files/video_short_25_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_25_mkv.mkv",
+            "path": "/app/dataset/files/video_short_25_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_25_mov.mov",
+            "path": "/app/dataset/files/video_short_25_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_25_mp4.mp4",
+            "path": "/app/dataset/files/video_short_25_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_26_avi.avi",
+            "path": "/app/dataset/files/video_short_26_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_26_mkv.mkv",
+            "path": "/app/dataset/files/video_short_26_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_26_mov.mov",
+            "path": "/app/dataset/files/video_short_26_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_26_mp4.mp4",
+            "path": "/app/dataset/files/video_short_26_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_27_avi.avi",
+            "path": "/app/dataset/files/video_short_27_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_27_mkv.mkv",
+            "path": "/app/dataset/files/video_short_27_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_27_mov.mov",
+            "path": "/app/dataset/files/video_short_27_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_27_mp4.mp4",
+            "path": "/app/dataset/files/video_short_27_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_28_avi.avi",
+            "path": "/app/dataset/files/video_short_28_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_28_mkv.mkv",
+            "path": "/app/dataset/files/video_short_28_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_28_mov.mov",
+            "path": "/app/dataset/files/video_short_28_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_28_mp4.mp4",
+            "path": "/app/dataset/files/video_short_28_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_29_avi.avi",
+            "path": "/app/dataset/files/video_short_29_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_29_mkv.mkv",
+            "path": "/app/dataset/files/video_short_29_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_29_mov.mov",
+            "path": "/app/dataset/files/video_short_29_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_29_mp4.mp4",
+            "path": "/app/dataset/files/video_short_29_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_2_avi.avi",
+            "path": "/app/dataset/files/video_short_2_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_2_mkv.mkv",
+            "path": "/app/dataset/files/video_short_2_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_2_mov.mov",
+            "path": "/app/dataset/files/video_short_2_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_2_mp4.mp4",
+            "path": "/app/dataset/files/video_short_2_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_30_avi.avi",
+            "path": "/app/dataset/files/video_short_30_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_30_mkv.mkv",
+            "path": "/app/dataset/files/video_short_30_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_30_mov.mov",
+            "path": "/app/dataset/files/video_short_30_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_30_mp4.mp4",
+            "path": "/app/dataset/files/video_short_30_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_31_avi.avi",
+            "path": "/app/dataset/files/video_short_31_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_31_mkv.mkv",
+            "path": "/app/dataset/files/video_short_31_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_31_mov.mov",
+            "path": "/app/dataset/files/video_short_31_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_31_mp4.mp4",
+            "path": "/app/dataset/files/video_short_31_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_32_avi.avi",
+            "path": "/app/dataset/files/video_short_32_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_32_mkv.mkv",
+            "path": "/app/dataset/files/video_short_32_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_32_mov.mov",
+            "path": "/app/dataset/files/video_short_32_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_32_mp4.mp4",
+            "path": "/app/dataset/files/video_short_32_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_33_avi.avi",
+            "path": "/app/dataset/files/video_short_33_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_33_mkv.mkv",
+            "path": "/app/dataset/files/video_short_33_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_33_mov.mov",
+            "path": "/app/dataset/files/video_short_33_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_33_mp4.mp4",
+            "path": "/app/dataset/files/video_short_33_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_34_avi.avi",
+            "path": "/app/dataset/files/video_short_34_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_34_mkv.mkv",
+            "path": "/app/dataset/files/video_short_34_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_34_mov.mov",
+            "path": "/app/dataset/files/video_short_34_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_34_mp4.mp4",
+            "path": "/app/dataset/files/video_short_34_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_35_avi.avi",
+            "path": "/app/dataset/files/video_short_35_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_35_mkv.mkv",
+            "path": "/app/dataset/files/video_short_35_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_35_mov.mov",
+            "path": "/app/dataset/files/video_short_35_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_35_mp4.mp4",
+            "path": "/app/dataset/files/video_short_35_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_3_avi.avi",
+            "path": "/app/dataset/files/video_short_3_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_3_mkv.mkv",
+            "path": "/app/dataset/files/video_short_3_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_3_mov.mov",
+            "path": "/app/dataset/files/video_short_3_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_3_mp4.mp4",
+            "path": "/app/dataset/files/video_short_3_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_4_avi.avi",
+            "path": "/app/dataset/files/video_short_4_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_4_mkv.mkv",
+            "path": "/app/dataset/files/video_short_4_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_4_mov.mov",
+            "path": "/app/dataset/files/video_short_4_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_4_mp4.mp4",
+            "path": "/app/dataset/files/video_short_4_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_5_avi.avi",
+            "path": "/app/dataset/files/video_short_5_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_5_mkv.mkv",
+            "path": "/app/dataset/files/video_short_5_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_5_mov.mov",
+            "path": "/app/dataset/files/video_short_5_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_5_mp4.mp4",
+            "path": "/app/dataset/files/video_short_5_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_6_avi.avi",
+            "path": "/app/dataset/files/video_short_6_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_6_mkv.mkv",
+            "path": "/app/dataset/files/video_short_6_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_6_mov.mov",
+            "path": "/app/dataset/files/video_short_6_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_6_mp4.mp4",
+            "path": "/app/dataset/files/video_short_6_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_7_avi.avi",
+            "path": "/app/dataset/files/video_short_7_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_7_mkv.mkv",
+            "path": "/app/dataset/files/video_short_7_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_7_mov.mov",
+            "path": "/app/dataset/files/video_short_7_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_7_mp4.mp4",
+            "path": "/app/dataset/files/video_short_7_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_8_avi.avi",
+            "path": "/app/dataset/files/video_short_8_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_8_mkv.mkv",
+            "path": "/app/dataset/files/video_short_8_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_8_mov.mov",
+            "path": "/app/dataset/files/video_short_8_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_8_mp4.mp4",
+            "path": "/app/dataset/files/video_short_8_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_9_avi.avi",
+            "path": "/app/dataset/files/video_short_9_avi.avi",
+            "type": "video",
+            "format": "avi",
+            "size_bytes": 61674,
+            "mime_type": "video/x-msvideo",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_9_mkv.mkv",
+            "path": "/app/dataset/files/video_short_9_mkv.mkv",
+            "type": "video",
+            "format": "mkv",
+            "size_bytes": 46263,
+            "mime_type": "video/x-matroska",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_9_mov.mov",
+            "path": "/app/dataset/files/video_short_9_mov.mov",
+            "type": "video",
+            "format": "mov",
+            "size_bytes": 47844,
+            "mime_type": "video/quicktime",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        },
+        {
+            "filename": "video_short_9_mp4.mp4",
+            "path": "/app/dataset/files/video_short_9_mp4.mp4",
+            "type": "video",
+            "format": "mp4",
+            "size_bytes": 47793,
+            "mime_type": "video/mp4",
+            "operations": [
+                "convert",
+                "thumbnail"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,419 @@
+// cmd/worker/main.go
+// Nodo worker: pool de goroutines, integración FFmpeg, upload a MinIO, métricas.
+package main
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/lenokeckler/mediacase-platform/internal/models"
+	"github.com/lenokeckler/mediacase-platform/internal/monitoring"
+	"github.com/lenokeckler/mediacase-platform/internal/multimedia"
+	"github.com/lenokeckler/mediacase-platform/internal/storage"
+	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+// ── Configuración ────────────────────────────────────────────────────────────
+
+type workerConfig struct {
+	workerID       string
+	coordinatorURL string
+	poolSize       int
+	dbURL          string
+}
+
+func loadConfig() workerConfig {
+	poolSize := 4
+	if v := os.Getenv("WORKER_POOL_SIZE"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			poolSize = n
+		}
+	}
+	return workerConfig{
+		workerID:       getEnv("WORKER_ID", "worker-1"),
+		coordinatorURL: getEnv("COORDINATOR_URL", "http://coordinator:8080"),
+		poolSize:       poolSize,
+		dbURL:          getEnv("DATABASE_URL", "postgres://media:media@postgres:5432/mediacase?sslmode=disable"),
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+// ── Tipos de mensajes ────────────────────────────────────────────────────────
+
+type jobAssignment struct {
+	JobID     string `json:"id"`
+	FilePath  string `json:"file_path"`
+	Operation string `json:"operation"`
+	Priority  int    `json:"priority"`
+}
+
+type progressUpdate struct {
+	JobID     string `json:"job_id"`
+	Progress  int    `json:"progress"`
+	Status    string `json:"status"`
+	ResultURL string `json:"result_url,omitempty"`
+	ErrorMsg  string `json:"error,omitempty"`
+}
+
+// ── Worker ───────────────────────────────────────────────────────────────────
+
+type worker struct {
+	cfg     workerConfig
+	db      *sql.DB
+	storage *storage.MinIOClient
+	jobCh   chan jobAssignment
+	wg      sync.WaitGroup
+	mu      sync.Mutex
+	active  int
+}
+
+func newWorker(cfg workerConfig, db *sql.DB, s *storage.MinIOClient) *worker {
+	return &worker{
+		cfg:     cfg,
+		db:      db,
+		storage: s,
+		jobCh:   make(chan jobAssignment, cfg.poolSize*2),
+	}
+}
+
+func (w *worker) startPool(ctx context.Context) {
+	for i := 0; i < w.cfg.poolSize; i++ {
+		w.wg.Add(1)
+		go func(slotID int) {
+			defer w.wg.Done()
+			log.Printf("[pool-slot-%d] goroutine iniciada", slotID)
+			for {
+				select {
+				case <-ctx.Done():
+					log.Printf("[pool-slot-%d] apagando", slotID)
+					return
+				case job, ok := <-w.jobCh:
+					if !ok {
+						return
+					}
+					w.mu.Lock()
+					w.active++
+					w.mu.Unlock()
+
+					monitoring.ActiveJobs.WithLabelValues(w.cfg.workerID).Inc()
+					start := time.Now()
+
+					w.processJob(ctx, job)
+
+					elapsed := time.Since(start).Seconds()
+					monitoring.JobDuration.WithLabelValues(w.cfg.workerID, job.Operation).Observe(elapsed)
+					monitoring.ActiveJobs.WithLabelValues(w.cfg.workerID).Dec()
+
+					w.mu.Lock()
+					w.active--
+					w.mu.Unlock()
+				}
+			}
+		}(i)
+	}
+}
+
+// ── Handlers HTTP ────────────────────────────────────────────────────────────
+
+func (w *worker) handleAssign(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var job jobAssignment
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
+		http.Error(rw, "bad request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if job.JobID == "" || job.FilePath == "" || job.Operation == "" {
+		http.Error(rw, "faltan campos requeridos", http.StatusBadRequest)
+		return
+	}
+
+	select {
+	case w.jobCh <- job:
+		log.Printf("[assign] job %s aceptado (op=%s)", job.JobID, job.Operation)
+		rw.WriteHeader(http.StatusAccepted)
+		_ = json.NewEncoder(rw).Encode(map[string]string{"status": "accepted"})
+	default:
+		log.Printf("[assign] pool lleno, rechazando job %s", job.JobID)
+		http.Error(rw, "worker pool lleno", http.StatusTooManyRequests)
+	}
+}
+
+func (w *worker) handleHealth(rw http.ResponseWriter, _ *http.Request) {
+	w.mu.Lock()
+	active := w.active
+	w.mu.Unlock()
+	rw.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(rw).Encode(map[string]interface{}{
+		"status":      "ok",
+		"worker_id":   w.cfg.workerID,
+		"active_jobs": active,
+		"pool_size":   w.cfg.poolSize,
+	})
+}
+
+// ── Procesamiento ────────────────────────────────────────────────────────────
+
+func (w *worker) processJob(ctx context.Context, job jobAssignment) {
+	log.Printf("[job %s] inicio — op=%s file=%s", job.JobID, job.Operation, job.FilePath)
+
+	w.updateDBStatus(job.JobID, string(models.StatusRunning), 0, "", "")
+	w.reportProgress(job.JobID, 0, string(models.StatusRunning), "", "")
+
+	var resultPath string
+	var opErr error
+
+	progressCB := func(pct int) {
+		w.updateDBStatus(job.JobID, string(models.StatusRunning), pct, "", "")
+		w.reportProgress(job.JobID, pct, string(models.StatusRunning), "", "")
+	}
+
+	switch job.Operation {
+	case string(models.OpConvert):
+		resultPath, opErr = multimedia.Convert(ctx, job.FilePath, progressCB)
+	case string(models.OpExtractAudio):
+		resultPath, opErr = multimedia.ExtractAudio(ctx, job.FilePath, progressCB)
+	case string(models.OpThumbnail):
+		resultPath, opErr = multimedia.Thumbnail(ctx, job.FilePath, progressCB)
+	case string(models.OpConvertAudio):
+		resultPath, opErr = multimedia.ConvertAudio(ctx, job.FilePath, progressCB)
+	default:
+		opErr = fmt.Errorf("operación desconocida: %s", job.Operation)
+	}
+
+	if opErr != nil {
+		log.Printf("[job %s] FALLÓ: %v", job.JobID, opErr)
+		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
+		w.updateDBStatus(job.JobID, string(models.StatusFailed), 0, "", opErr.Error())
+		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", opErr.Error())
+		return
+	}
+
+	url, uploadErr := w.storage.Upload(ctx, job.JobID, resultPath)
+	if uploadErr != nil {
+		log.Printf("[job %s] upload FALLÓ: %v", job.JobID, uploadErr)
+		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
+		w.updateDBStatus(job.JobID, string(models.StatusFailed), 100, "", uploadErr.Error())
+		w.reportProgress(job.JobID, 100, string(models.StatusFailed), "", uploadErr.Error())
+		return
+	}
+
+	_ = os.Remove(resultPath)
+
+	log.Printf("[job %s] COMPLETADO — resultado en %s", job.JobID, url)
+	monitoring.JobsCompleted.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
+	w.updateDBStatus(job.JobID, string(models.StatusCompleted), 100, url, "")
+	w.reportProgress(job.JobID, 100, string(models.StatusCompleted), url, "")
+}
+
+// updateDBStatus persiste en la tabla jobs el estado de la sub-tarea:
+// progreso, resultado o error, marcas de tiempo y worker responsable.
+func (w *worker) updateDBStatus(jobID, status string, progress int, resultURL, errMsg string) {
+	if w.db == nil {
+		return
+	}
+	now := time.Now()
+	var completedAt *time.Time
+	var startedAt *time.Time
+
+	if status == string(models.StatusRunning) {
+		startedAt = &now
+	}
+	if status == string(models.StatusCompleted) || status == string(models.StatusFailed) {
+		completedAt = &now
+	}
+
+	query := `
+		UPDATE jobs 
+		SET    status       = $1, 
+			   progress     = $2, 
+			   result_url   = NULLIF($3, ''), 
+			   error_msg    = NULLIF($4, ''),
+			   started_at   = COALESCE(started_at, $5),
+			   completed_at = $6,
+			   worker_id    = $7
+		WHERE  id = $8`
+
+	_, err := w.db.Exec(query,
+		status, progress, resultURL, errMsg, startedAt, completedAt, w.cfg.workerID, jobID)
+
+	if err != nil {
+		log.Printf("[db] error actualizando job %s: %v", jobID, err)
+	}
+}
+
+func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg string) {
+	payload := progressUpdate{
+		JobID:     jobID,
+		Progress:  pct,
+		Status:    status,
+		ResultURL: resultURL,
+		ErrorMsg:  errMsg,
+	}
+	body, _ := json.Marshal(payload)
+	url := fmt.Sprintf("%s/jobs/%s/progress", w.cfg.coordinatorURL, jobID)
+	resp, err := http.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
+	if err != nil {
+		log.Printf("[progress] POST falló para job %s: %v", jobID, err)
+		return
+	}
+	defer resp.Body.Close()
+}
+
+// ── Registro y heartbeat ─────────────────────────────────────────────────────
+
+func (w *worker) register() error {
+	payload := map[string]interface{}{
+		"id":       w.cfg.workerID,
+		"hostname": fmt.Sprintf("%s:8090", w.cfg.workerID),
+	}
+	body, _ := json.Marshal(payload)
+	resp, err := http.Post(
+		w.cfg.coordinatorURL+"/workers/register",
+		"application/json",
+		bytes.NewReader(body),
+	) //nolint:gosec
+	if err != nil {
+		return fmt.Errorf("POST /workers/register falló: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("registro retornó %d", resp.StatusCode)
+	}
+	log.Printf("[register] registrado como %s en %s", w.cfg.workerID, w.cfg.coordinatorURL)
+	return nil
+}
+
+func (w *worker) heartbeatLoop(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			w.mu.Lock()
+			active := w.active
+			w.mu.Unlock()
+
+			cpu, mem := monitoring.GetSystemStats()
+			payload := map[string]interface{}{
+				"cpu_percent": cpu,
+				"mem_percent": mem,
+				"active_jobs": active,
+			}
+			body, _ := json.Marshal(payload)
+			url := fmt.Sprintf("%s/workers/%s/heartbeat", w.cfg.coordinatorURL, w.cfg.workerID)
+			resp, err := http.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
+			if err != nil {
+				log.Printf("[heartbeat] falló: %v", err)
+				continue
+			}
+			resp.Body.Close()
+		}
+	}
+}
+
+// ── main ─────────────────────────────────────────────────────────────────────
+
+func main() {
+	cfg := loadConfig()
+	log.Printf("=== MediaCase Worker ===")
+	log.Printf("ID=%s | pool=%d | coordinator=%s", cfg.workerID, cfg.poolSize, cfg.coordinatorURL)
+
+	db, err := sql.Open("postgres", cfg.dbURL)
+	if err != nil {
+		log.Fatalf("db open: %v", err)
+	}
+	defer db.Close()
+
+	for i := 0; i < 15; i++ {
+		if err = db.Ping(); err == nil {
+			break
+		}
+		log.Printf("[db] no disponible aún, reintentando... (%d/15)", i+1)
+		time.Sleep(2 * time.Second)
+	}
+	if err != nil {
+		log.Fatalf("[db] no se pudo conectar tras reintentos: %v", err)
+	}
+	log.Println("[db] conectado a PostgreSQL")
+
+	minioClient, err := storage.NewMinIOClient()
+	if err != nil {
+		log.Fatalf("[storage] init MinIO: %v", err)
+	}
+
+	monitoring.Init(cfg.workerID)
+
+	w := newWorker(cfg, db, minioClient)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	w.startPool(ctx)
+
+	for i := 0; i < 10; i++ {
+		if err := w.register(); err == nil {
+			break
+		} else {
+			log.Printf("[register] intento %d falló: %v — reintentando en 3s", i+1, err)
+			time.Sleep(3 * time.Second)
+		}
+	}
+
+	go w.heartbeatLoop(ctx)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/tasks", w.handleAssign)
+	mux.HandleFunc("/health", w.handleHealth)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	srv := &http.Server{
+		Addr:         ":8090",
+		Handler:      mux,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	go func() {
+		log.Println("[http] worker escuchando en :8090")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("[http] error fatal: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("[shutdown] señal recibida, apagando...")
+
+	cancel()
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+	_ = srv.Shutdown(shutdownCtx)
+
+	log.Println("[shutdown] esperando jobs en vuelo...")
+	w.wg.Wait()
+	log.Println("[shutdown] worker detenido limpiamente")
+}

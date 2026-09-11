@@ -1,0 +1,358 @@
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.panelHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.desc {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* ── Folder picker ── */
+.pickerSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.browseBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.browseBtn:hover {
+    opacity: 0.85;
+}
+
+.folderName {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.folderCount {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+/* ── Advanced / server path ── */
+.advancedRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.advancedToggle {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+
+.advancedToggle:hover {
+    color: var(--text);
+}
+
+.pathInput {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.pathInput:focus {
+    border-color: var(--accent);
+}
+
+.pathPreview {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Summary bar ── */
+.summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.summaryTotal {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.summaryChip {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ── Operation pickers ── */
+.opSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.opPicker {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.opPickerTitle {
+    background: var(--bg);
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+.opCards {
+    display: flex;
+    flex-direction: column;
+}
+
+.opCard {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    position: relative;
+}
+
+.opCard:last-child {
+    border-bottom: none;
+}
+
+.opCard:hover {
+    background: #12151f;
+}
+
+.opCardActive {
+    background: #12151f;
+}
+
+.opCardActive::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+}
+
+.opRadio {
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.opLabel {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    flex-shrink: 0;
+}
+
+.opDesc {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* ── File list ── */
+.label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.fileSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.fileList {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow-y: auto;
+    max-height: 220px;
+}
+
+.fileRow {
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+
+.fileRow:last-child {
+    border-bottom: none;
+}
+
+.fileRow:hover {
+    background: var(--surface);
+}
+
+.typeBadge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.fileName {
+    font-size: 12px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'Courier New', monospace;
+}
+
+.fileSize {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* ── Submit ── */
+.submitRow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.submitBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    width: 100%;
+}
+
+.submitBtn:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.submitBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Toast ── */
+.toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid;
+}
+
+.toastOk {
+    background: #052e16;
+    border-color: #166534;
+    color: var(--green);
+}
+
+.toastErr {
+    background: #450a0a;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+.toastClose {
+    background: transparent;
+    border: none;
+    color: currentColor;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.toastClose:hover {
+    opacity: 1;
+}

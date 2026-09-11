@@ -1,0 +1,311 @@
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.panelHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.desc {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* ── File picker ── */
+.pickerRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.addBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+}
+
+.addBtn:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.addBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.fileCount {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* ── Advanced / server path ── */
+.advancedRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.advancedToggle {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+
+.advancedToggle:hover {
+    color: var(--text);
+}
+
+.pathInput {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.pathInput:focus {
+    border-color: var(--accent);
+}
+
+.pathPreview {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Courier New', monospace;
+}
+
+/* ── File table ── */
+.fileTable {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fileTableHead {
+    display: grid;
+    grid-template-columns: 52px 1fr 160px 80px 32px;
+    gap: 10px;
+    background: var(--bg);
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.fileTableRow {
+    display: grid;
+    grid-template-columns: 52px 1fr 160px 80px 32px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+
+.fileTableRow:last-child {
+    border-bottom: none;
+}
+
+.fileTableRow:hover {
+    background: #0d1117;
+}
+
+.typeBadge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-align: center;
+    justify-self: start;
+}
+
+.fileName {
+    font-size: 12px;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.fileSize {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: inherit;
+}
+
+.serverPath {
+    font-size: 9px;
+    color: var(--accent);
+    font-family: 'Courier New', monospace;
+    opacity: 0.7;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.opSelect {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2364748b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+}
+
+.opSelect:focus {
+    border-color: var(--accent);
+}
+
+.opSelect:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.removeBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.removeBtn:hover:not(:disabled) {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.removeBtn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ── Submit ── */
+.submitRow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.submitBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    width: 100%;
+}
+
+.submitBtn:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.submitBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Toast ── */
+.toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid;
+}
+
+.toastOk {
+    background: #052e16;
+    border-color: #166534;
+    color: var(--green);
+}
+
+.toastErr {
+    background: #450a0a;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+.toastClose {
+    background: transparent;
+    border: none;
+    color: currentColor;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.toastClose:hover {
+    opacity: 1;
+}

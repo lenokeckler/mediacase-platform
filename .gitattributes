@@ -1,0 +1,24 @@
+# Normalización de finales de línea.
+* text=auto
+
+# Estos archivos se ejecutan dentro de contenedores Linux: si Git los
+# convierte a CRLF en Windows, el shebang y las recetas fallan.
+*.sh        text eol=lf
+Dockerfile* text eol=lf
+Makefile    text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+nginx.conf  text eol=lf
+
+# Binarios: nunca normalizar.
+*.mp4 binary
+*.mkv binary
+*.avi binary
+*.mov binary
+*.mp3 binary
+*.wav binary
+*.aac binary
+*.flac binary
+*.ogg binary
+*.png binary
+*.jpg binary

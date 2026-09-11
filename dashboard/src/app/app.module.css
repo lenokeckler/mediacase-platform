@@ -1,0 +1,186 @@
+.layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 16px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.logo {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.subtitle {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* ── Connection badge ── */
+.connBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+}
+
+.connOk {
+    color: var(--green);
+    border-color: #166534;
+    background: #052e16;
+}
+
+.connErr {
+    color: var(--red);
+    border-color: #7f1d1d;
+    background: #450a0a;
+}
+
+.connDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* ── Main content ── */
+.main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ── Section ── */
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.sectionTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.sectionCount {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.refreshBtn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.refreshBtn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+/* ── Worker grid ── */
+.workerGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+/* ── Empty state ── */
+.empty {
+    color: var(--muted);
+    font-size: 13px;
+    grid-column: 1 / -1;
+}
+
+.empty code {
+    background: var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* ── Tab navigation ── */
+.tabs {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    justify-content: center;
+}
+
+.tab {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 6px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.tab:hover {
+    color: var(--text);
+    background: var(--border);
+}
+
+.tabActive {
+    color: var(--text);
+    background: var(--border);
+}
+
+/* ── Submit page two-column grid ── */
+.submitGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .submitGrid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,17 @@
+# Stage 1: build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY dashboard/package.json dashboard/package-lock.json ./
+RUN npm ci
+COPY dashboard/ .
+# Point the WS URL at the coordinator inside Docker
+ENV VITE_WS_URL=ws://localhost:8080/ws
+RUN npm run build
+
+# Stage 2: serve with nginx
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+# nginx config that proxies /api and /ws to the coordinator
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
