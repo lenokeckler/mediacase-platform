@@ -56,3 +56,9 @@ dataset/files/
 # Artefactos de prueba sueltos
 test_output.*
 *.mp4.tmp
+
+# Config real por máquina (los .example sí se versionan)
+infra/env/*.env
+# Binarios y paquetes generados
+bin/
+dist/

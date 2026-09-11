@@ -22,3 +22,6 @@ nginx.conf  text eol=lf
 *.ogg binary
 *.png binary
 *.jpg binary
+
+# PowerShell 5.1 solo lee UTF-8 si lleva BOM
+*.ps1 text working-tree-encoding=UTF-8 eol=crlf
