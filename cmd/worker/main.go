@@ -262,6 +262,9 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	defer os.RemoveAll(inDir) // también si la descarga falla a medias
 	localInput, dlErr := w.storage.Download(ctx, storage.DatasetBucket, job.FilePath, inDir)
 	if dlErr != nil {
+		if w.shuttingDown(ctx, job.JobID) {
+			return
+		}
 		log.Printf("[job %s] descarga FALLÓ: %v", job.JobID, dlErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
 		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", "descarga de entrada: "+dlErr.Error())
@@ -289,6 +292,9 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	}
 
 	if opErr != nil {
+		if w.shuttingDown(ctx, job.JobID) {
+			return
+		}
 		log.Printf("[job %s] FALLÓ: %v", job.JobID, opErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
 		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", opErr.Error())
@@ -297,6 +303,9 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 
 	url, uploadErr := w.storage.Upload(ctx, job.JobID, resultPath)
 	if uploadErr != nil {
+		if w.shuttingDown(ctx, job.JobID) {
+			return
+		}
 		log.Printf("[job %s] upload FALLÓ: %v", job.JobID, uploadErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
 		w.reportProgress(job.JobID, 100, string(models.StatusFailed), "", uploadErr.Error())
@@ -308,6 +317,39 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	log.Printf("[job %s] COMPLETADO — resultado en %s", job.JobID, url)
 	monitoring.JobsCompleted.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
 	w.reportProgress(job.JobID, 100, string(models.StatusCompleted), url, "")
+}
+
+// shuttingDown distingue "la sub-tarea falló" de "nos están apagando a mitad de la sub-tarea".
+// En el segundo caso NO se reporta fallo: el coordinador la re-encola cuando reciba la
+// despedida (unregister) o cuando detecte el proceso nuevo / la ausencia de heartbeat.
+func (w *worker) shuttingDown(ctx context.Context, jobID string) bool {
+	// Al cerrar la consola, Windows mata a ffmpeg y avisa al worker en el mismo instante; el
+	// fallo de ffmpeg puede llegar unos microsegundos ANTES de que el contexto quede cancelado.
+	// Se espera un momento antes de decidir que el fallo es real.
+	if ctx.Err() == nil {
+		select {
+		case <-ctx.Done():
+		case <-time.After(500 * time.Millisecond):
+			return false
+		}
+	}
+	log.Printf("[job %s] interrumpida por apagado del worker; el coordinador la re-encolará", jobID)
+	return true
+}
+
+// unregister avisa al coordinador que este proceso se va, para que re-encole lo que tenía
+// asignado de inmediato en vez de esperar a que venza el heartbeat. Best-effort.
+func (w *worker) unregister() {
+	url := fmt.Sprintf("%s/workers/%s/unregister", w.cfg.coordinatorURL, w.cfg.workerID)
+	body, _ := json.Marshal(map[string]string{"instance": w.instance})
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
+	if err != nil {
+		log.Printf("[shutdown] no se pudo avisar al coordinador: %v", err)
+		return
+	}
+	resp.Body.Close()
+	log.Printf("[shutdown] coordinador avisado; sus sub-tareas vuelven a la cola")
 }
 
 func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg string) {
@@ -460,5 +502,6 @@ func main() {
 
 	log.Println("[shutdown] esperando jobs en vuelo...")
 	w.wg.Wait()
+	w.unregister()
 	log.Println("[shutdown] worker detenido limpiamente")
 }

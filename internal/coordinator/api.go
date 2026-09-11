@@ -68,6 +68,7 @@ func (a *API) Router() http.Handler {
 	mux.HandleFunc("POST /workers/register", a.registerWorker)
 	mux.HandleFunc("POST /workers/{id}/heartbeat", a.workerHeartbeat)
 	mux.HandleFunc("GET /workers/{id}/stream", a.workerHub.ServeStream) // canal saliente del worker
+	mux.HandleFunc("POST /workers/{id}/unregister", a.unregisterWorker) // despedida: re-encolar lo suyo ya
 	mux.HandleFunc("GET /workers", a.listWorkers)
 
 	// Stats + WebSocket
@@ -212,6 +213,25 @@ func (a *API) registerWorker(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "registered"})
+}
+
+// unregisterWorker: el worker se apaga de forma ordenada. Se da de baja y sus sub-tareas
+// asignadas o en ejecución vuelven a la cola de inmediato (sin esperar los 15 s del heartbeat).
+func (a *API) unregisterWorker(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var payload struct {
+		Instance string `json:"instance"`
+	}
+	json.NewDecoder(r.Body).Decode(&payload)
+	if !a.registry.Remove(id, payload.Instance) {
+		w.WriteHeader(http.StatusNoContent) // ya no estaba (o era una instancia vieja)
+		return
+	}
+	log.Printf("[api] worker %s se despidió; reclamando sus sub-tareas", id)
+	if a.onWorkerRestart != nil {
+		a.onWorkerRestart(r.Context(), id)
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (a *API) workerHeartbeat(w http.ResponseWriter, r *http.Request) {

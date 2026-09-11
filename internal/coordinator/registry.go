@@ -128,6 +128,22 @@ func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 	return best
 }
 
+// Remove da de baja un worker que se despidió. Devuelve false si no estaba (o si la instancia
+// no coincide: un proceso viejo despidiéndose no debe borrar al nuevo).
+func (r *Registry) Remove(id, instance string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	w, ok := r.workers[id]
+	if !ok {
+		return false
+	}
+	if instance != "" && w.Instance != "" && w.Instance != instance {
+		return false
+	}
+	delete(r.workers, id)
+	return true
+}
+
 func (r *Registry) All() []*models.WorkerInfo {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

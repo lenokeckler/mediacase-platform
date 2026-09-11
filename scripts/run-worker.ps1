@@ -6,4 +6,4 @@ Set-Location (Join-Path $PSScriptRoot '..')
 New-Item -ItemType Directory -Force bin | Out-Null
 go build -o bin/mediacase-worker-host.exe ./cmd/worker
 if ($LASTEXITCODE -ne 0) { Write-Error 'fallo la compilacion'; exit 1 }
-& "$PWDin\mediacase-worker-host.exe"
+& (Join-Path $PWD "bin/mediacase-worker-host.exe")
