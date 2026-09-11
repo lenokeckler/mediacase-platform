@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Página "Conectar esta PC" y descarga del worker empaquetado.
@@ -66,6 +67,12 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	env := workerEnvFor(r.Host)
+
+	// El servidor corta cualquier respuesta a los 10 s (WriteTimeout). Un ZIP de ~85 MB por WiFi
+	// tarda más: esta respuesta recibe su propio plazo sin relajar el del resto de la API.
+	if err := http.NewResponseController(w).SetWriteDeadline(time.Now().Add(15 * time.Minute)); err != nil {
+		log.Printf("[download] no se pudo extender el plazo de escritura: %v", err)
+	}
 
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="mediacase-worker-%s.zip"`, osName))
