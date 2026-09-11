@@ -45,14 +45,16 @@ type Job struct {
 }
 
 type WorkerInfo struct {
-	ID         string    `json:"id"`
-	Instance   string    `json:"instance,omitempty"` // identifica al PROCESO: cambia en cada arranque
-	Hostname   string    `json:"hostname"`
-	Status     string    `json:"status"`
-	ActiveJobs int       `json:"active_jobs"`
-	CPUPercent float64   `json:"cpu_percent"`
-	MemPercent float64   `json:"mem_percent"`
-	LastSeen   time.Time `json:"last_seen"`
+	ID           string    `json:"id"`
+	Instance     string    `json:"instance,omitempty"` // identifica al PROCESO: cambia en cada arranque
+	Hostname     string    `json:"hostname"`
+	Role         string    `json:"role,omitempty"`         // video | audio | metadata | all
+	Capabilities []string  `json:"capabilities,omitempty"` // pools que este worker atiende
+	Status       string    `json:"status"`
+	ActiveJobs   int       `json:"active_jobs"`
+	CPUPercent   float64   `json:"cpu_percent"`
+	MemPercent   float64   `json:"mem_percent"`
+	LastSeen     time.Time `json:"last_seen"`
 }
 
 type JobEvent struct {

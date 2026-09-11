@@ -31,8 +31,23 @@ import (
 
 type workerConfig struct {
 	workerID       string
+	role           string // video | audio | metadata | all
 	coordinatorURL string
 	poolSize       int
+}
+
+// Pools de workers (deben coincidir con internal/cases.PoolFor).
+var allPools = []string{"video", "audio", "metadata"}
+
+// RoleCapabilities traduce el rol a los pools que atiende. Un rol desconocido o vacío
+// se trata como genérico ("all"): mejor procesar de más que quedarse ocioso por un typo.
+func RoleCapabilities(role string) []string {
+	switch role {
+	case "video", "audio", "metadata":
+		return []string{role}
+	default:
+		return append([]string(nil), allPools...)
+	}
 }
 
 func loadConfig() workerConfig {
@@ -44,6 +59,7 @@ func loadConfig() workerConfig {
 	}
 	return workerConfig{
 		workerID:       getEnv("WORKER_ID", "worker-1"),
+		role:           getEnv("WORKER_ROLE", "all"),
 		coordinatorURL: getEnv("COORDINATOR_URL", "http://coordinator:8080"),
 		poolSize:       poolSize,
 	}
@@ -317,9 +333,11 @@ func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg
 func (w *worker) register() error {
 	host, _ := os.Hostname()
 	payload := map[string]interface{}{
-		"id":       w.cfg.workerID,
-		"instance": w.instance,
-		"hostname": host, // solo informativo: el coordinador ya no necesita alcanzar al worker
+		"id":           w.cfg.workerID,
+		"instance":     w.instance,
+		"hostname":     host, // solo informativo: el coordinador ya no necesita alcanzar al worker
+		"role":         w.cfg.role,
+		"capabilities": RoleCapabilities(w.cfg.role),
 	}
 	body, _ := json.Marshal(payload)
 	resp, err := http.Post(
@@ -380,7 +398,7 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 func main() {
 	cfg := loadConfig()
 	log.Printf("=== MediaCase Worker ===")
-	log.Printf("ID=%s | pool=%d | coordinator=%s", cfg.workerID, cfg.poolSize, cfg.coordinatorURL)
+	log.Printf("ID=%s | rol=%s (%v) | pool=%d | coordinator=%s", cfg.workerID, cfg.role, RoleCapabilities(cfg.role), cfg.poolSize, cfg.coordinatorURL)
 
 	minioClient, err := storage.NewMinIOClient()
 	if err != nil {

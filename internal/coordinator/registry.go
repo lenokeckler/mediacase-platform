@@ -3,6 +3,7 @@ package coordinator
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,7 +30,7 @@ func NewRegistry(db *sql.DB) *Registry {
 // loadFromDB recupera workers registrados recientemente al arrancar.
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
-		SELECT id, hostname FROM worker_registry
+		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,'') FROM worker_registry
 		WHERE last_seen > NOW() - INTERVAL '1 minute'`)
 	if err != nil {
 		return
@@ -37,7 +38,11 @@ func (r *Registry) loadFromDB() {
 	defer rows.Close()
 	for rows.Next() {
 		w := &models.WorkerInfo{}
-		rows.Scan(&w.ID, &w.Hostname)
+		var caps string
+		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps)
+		if caps != "" {
+			w.Capabilities = strings.Split(caps, ",")
+		}
 		w.LastSeen = time.Now()
 		w.Status = "idle"
 		r.workers[w.ID] = w
@@ -52,10 +57,10 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 
 	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
 	r.db.Exec(`
-		INSERT INTO worker_registry (id, hostname, last_seen)
-		VALUES ($1, $2, NOW())
-		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW()`,
-		w.ID, w.Hostname,
+		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities)
+		VALUES ($1, $2, NOW(), $3, $4)
+		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4`,
+		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","),
 	)
 	return restarted
 }
@@ -96,12 +101,18 @@ func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int) bool {
 	return true
 }
 
-func (r *Registry) LeastLoaded() *models.WorkerInfo {
+// LeastLoaded elige el worker vivo con menos carga, sin filtrar por pool.
+func (r *Registry) LeastLoaded() *models.WorkerInfo { return r.LeastLoadedFor("") }
+
+// LeastLoadedFor elige, entre los workers vivos que atienden el pool, el de menos sub-tareas
+// activas (empate: menor CPU). Es el balanceo "least-loaded" dentro de cada pool.
+// pool == "" no filtra. Un worker sin capabilities declaradas se considera genérico.
+func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	var best *models.WorkerInfo
 	for _, w := range r.workers {
-		if !r.isAlive(w) {
+		if !r.isAlive(w) || (pool != "" && !hasCapability(w, pool)) {
 			continue
 		}
 		if best == nil {
@@ -143,4 +154,16 @@ func (r *Registry) EvictStale() []string {
 
 func (r *Registry) isAlive(w *models.WorkerInfo) bool {
 	return time.Since(w.LastSeen) < heartbeatTimeout
+}
+
+func hasCapability(w *models.WorkerInfo, pool string) bool {
+	if len(w.Capabilities) == 0 {
+		return true // worker sin rol declarado: genérico
+	}
+	for _, c := range w.Capabilities {
+		if c == pool {
+			return true
+		}
+	}
+	return false
 }

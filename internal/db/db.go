@@ -78,6 +78,10 @@ func Migrate(db *sql.DB) error {
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS pool      TEXT NOT NULL DEFAULT '';
 	CREATE INDEX IF NOT EXISTS idx_jobs_case    ON jobs(case_id);
 	CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
+
+	-- Pools especializados: qué atiende cada worker (sobrevive reinicios del coordinador)
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS role         TEXT NOT NULL DEFAULT '';
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capabilities TEXT NOT NULL DEFAULT '';
 	`)
 	return err
 }
