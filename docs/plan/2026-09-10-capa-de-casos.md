@@ -423,7 +423,7 @@ func TestWorkerHub_AssignAcceptReject(t *testing.T) {
 
 ---
 
-### Task 0.2: El worker deja de hablar con PostgreSQL
+### Task 0.2: El worker deja de hablar con PostgreSQL ✅ 2026-09-10
 
 El worker hoy escribe en `jobs` por SQL (`updateDBStatus`) **y además** reporta lo mismo por HTTP (`reportProgress`). Para correr en otra máquina no debe necesitar la base de datos: solo la URL del coordinador.
 
@@ -435,7 +435,7 @@ El worker hoy escribe en `jobs` por SQL (`updateDBStatus`) **y además** reporta
 - Consumes: `POST /jobs/{id}/progress` con `{progress, status, result_url, error}` (ya existe).
 - Produces: `jobProgress` fija `started_at = COALESCE(started_at, NOW())` cuando `status = running`.
 
-- [ ] **Paso 1: Cambiar `jobProgress` en el coordinador**
+- [x] **Paso 1: Cambiar `jobProgress` en el coordinador**
 
 ```go
 func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
@@ -470,7 +470,7 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-- [ ] **Paso 2: Quitar SQL del worker**
+- [x] **Paso 2: Quitar SQL del worker**
 
 En `cmd/worker/main.go`:
 1. Borrar los imports `"database/sql"` y `_ "github.com/lib/pq"`.
@@ -479,7 +479,7 @@ En `cmd/worker/main.go`:
 4. Borrar la función `updateDBStatus` completa y sus 6 llamadas dentro de `processJob` (quedan solo las `reportProgress`).
 5. En `main()`: borrar el bloque `sql.Open` / `db.Ping` con reintentos; `w := newWorker(cfg, minioClient)`.
 
-- [ ] **Paso 3: Verificar que compila y no queda rastro**
+- [x] **Paso 3: Verificar que compila y no queda rastro**
 
 ```powershell
 go build ./cmd/worker && go vet ./cmd/worker
@@ -487,7 +487,7 @@ Select-String -Path cmd/worker/main.go -Pattern "database/sql|updateDBStatus|dbU
 ```
 Esperado: compila; la búsqueda devuelve **cero** líneas.
 
-- [ ] **Paso 4: Prueba de integración local** (usa el compose actual, que todavía trae los 3 workers)
+- [x] **Paso 4: Prueba de integración local** (usa el compose actual, que todavía trae los 3 workers)
 
 ```bash
 docker compose up --build -d
@@ -500,11 +500,11 @@ docker compose exec postgres psql -U media -d mediacase -tA \
 ```
 Esperado: `completed|worker-N|t|t` — el job cerró y **tiene `started_at`** aunque el worker ya no toca la base. (Si `dataset/files` está vacío, correr antes `bash dataset/scripts/generate_dataset.sh`.)
 
-- [ ] **Paso 5: Commit** (pedir OK) — `git commit -am "worker: reportar solo por HTTP al coordinador; jobProgress fija started_at"`
+- [x] **Paso 5: Commit** (pedir OK) — `git commit -am "worker: reportar solo por HTTP al coordinador; jobProgress fija started_at"`
 
 ---
 
-### Task 0.3: Entradas desde MinIO
+### Task 0.3: Entradas desde MinIO ✅ 2026-09-10
 
 El worker deja de leer del disco local. `file_path` pasa a ser la **clave del objeto** en el bucket `dataset` (p. ej. `audio_short_1_mp3.mp3`). El worker la baja a un directorio temporal, procesa, sube el resultado y borra los temporales.
 
@@ -521,7 +521,7 @@ El worker deja de leer del disco local. `file_path` pasa a ser la **clave del ob
   - `func (m *MinIOClient) Download(ctx, bucket, objectKey, destDir string) (localPath string, err error)`
   - `Upload` (resultados) queda igual, implementado sobre `UploadObject`.
 
-- [ ] **Paso 1: Implementar en `internal/storage/minio.go`**
+- [x] **Paso 1: Implementar en `internal/storage/minio.go`**
 
 Cambiar `ensureBucket` por una versión pública que reciba el bucket (mantener la política de lectura pública que ya aplica), y agregar:
 
@@ -582,7 +582,7 @@ func (m *MinIOClient) Upload(ctx context.Context, jobID, localPath string) (stri
 }
 ```
 
-- [ ] **Paso 2: El worker baja la entrada** — al inicio de `processJob`, antes del `switch`:
+- [x] **Paso 2: El worker baja la entrada** — al inicio de `processJob`, antes del `switch`:
 
 ```go
 	// Bajar la entrada de MinIO a un directorio temporal propio del job.
@@ -599,9 +599,9 @@ func (m *MinIOClient) Upload(ctx context.Context, jobID, localPath string) (stri
 
 y en el `switch` usar `localInput` en lugar de `job.FilePath` en las 4 llamadas a `multimedia.*`. Agregar `"path/filepath"` a los imports.
 
-- [ ] **Paso 3: Compose sin volumen de dataset** — en `docker-compose.yml`, en `worker-1`, `worker-2`, `worker-3`, borrar el bloque `volumes:` con `./dataset`. También borrar `DATABASE_URL` de los tres (ya no se usa).
+- [x] **Paso 3: Compose sin volumen de dataset** — en `docker-compose.yml`, en `worker-1`, `worker-2`, `worker-3`, borrar el bloque `volumes:` con `./dataset`. También borrar `DATABASE_URL` de los tres (ya no se usa).
 
-- [ ] **Paso 4: Verificar de punta a punta**
+- [x] **Paso 4: Verificar de punta a punta**
 
 ```bash
 docker compose up --build -d && sleep 15
@@ -618,20 +618,20 @@ curl -s localhost:8080/jobs/$JOB | python -m json.tool | grep -E '"status"|"resu
 ```
 Esperado: `"status": "completed"` y una `result_url` bajo `http://localhost:9000/results/jobs/...`. Abrir esa URL en el navegador y que descargue el archivo.
 
-- [ ] **Paso 5: Commit** (pedir OK) — `git commit -am "storage: bucket dataset, Download/UploadObject; el worker baja la entrada de MinIO"`
+- [x] **Paso 5: Commit** (pedir OK) — `git commit -am "storage: bucket dataset, Download/UploadObject; el worker baja la entrada de MinIO"`
 
 ---
 
-### Task 0.4: Configuración por entorno para el nodo 1 y los nodos worker
+### Task 0.4: Configuración por entorno para el nodo 1 y los nodos worker ✅ 2026-09-10 (firewall: pendiente correrlo como admin)
 
 **Files:**
 - Create: `docker-compose.infra.yml`, `infra/env/node1.env.example`, `infra/env/worker.env.example`, `scripts/run-coordinator.ps1`, `scripts/run-worker.ps1`, `scripts/firewall-node1.ps1`
 
 **Por qué el coordinador corre nativo y no en Docker:** en Windows, Docker Desktop vive dentro de WSL2 y su salida hacia la red *host-only* de VirtualBox (`192.168.56.x`) no está garantizada. Un proceso nativo está directamente en la red del host. Además es la topología final (ver `CLAUDE.md` §15).
 
-- [ ] **Paso 1: `docker-compose.infra.yml`** — copiar de `docker-compose.yml` **solo** los servicios `redis`, `postgres`, `minio`, `prometheus`, `grafana` y la sección `volumes`. Sin `coordinator`, sin `worker-*`, sin `dashboard`.
+- [x] **Paso 1: `docker-compose.infra.yml`** — copiar de `docker-compose.yml` **solo** los servicios `redis`, `postgres`, `minio`, `prometheus`, `grafana` y la sección `volumes`. Sin `coordinator`, sin `worker-*`, sin `dashboard`.
 
-- [ ] **Paso 2: `infra/env/node1.env.example`**
+- [x] **Paso 2: `infra/env/node1.env.example`**
 
 ```dotenv
 # Nodo coordinador (host Windows). Copiar a infra/env/node1.env
@@ -647,7 +647,7 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=results
 ```
 
-- [ ] **Paso 3: `infra/env/worker.env.example`**
+- [x] **Paso 3: `infra/env/worker.env.example`**
 
 ```dotenv
 # Nodo worker. Copiar a /etc/mediacase/worker.env en la VM (lo hace provision_worker.sh)
@@ -662,7 +662,7 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=results
 ```
 
-- [ ] **Paso 4: `scripts/run-coordinator.ps1`** — carga el `.env` y corre el binario:
+- [x] **Paso 4: `scripts/run-coordinator.ps1`** — carga el `.env` y corre el binario:
 
 ```powershell
 # Corre el coordinador como proceso nativo del host, con infra/env/node1.env
@@ -678,7 +678,7 @@ go run ./cmd/coordinator
 
 `scripts/run-worker.ps1` es idéntico pero lee `infra/env/worker-host.env` (WORKER_ID=node1, COORDINATOR_URL=http://localhost:8080, MINIO_ENDPOINT=localhost:9000) y ejecuta `go run ./cmd/worker`.
 
-- [ ] **Paso 5: `scripts/firewall-node1.ps1`** (correr **una vez**, como administrador; pedir OK a Leno porque toca el sistema)
+- [x] **Paso 5: `scripts/firewall-node1.ps1`** (correr **una vez**, como administrador; pedir OK a Leno porque toca el sistema)
 
 ```powershell
 # Permite que otros nodos lleguen al coordinador (8080) y a MinIO (9000) en node-1.
@@ -688,7 +688,7 @@ New-NetFirewallRule -DisplayName "MediaCase node-1 (coordinator+minio)" -Directi
   -Protocol TCP -LocalPort 8080,9000 -RemoteAddress 192.168.0.0/16,10.0.0.0/8 -Action Allow -Profile Any
 ```
 
-- [ ] **Paso 6: Verificar el modo "todo nativo en el host"**
+- [x] **Paso 6: Verificar el modo "todo nativo en el host"**
 
 ```powershell
 docker compose -f docker-compose.infra.yml up -d
@@ -700,17 +700,17 @@ Copy-Item infra/env/node1.env.example infra/env/node1.env
 ```
 Y en Git Bash repetir el `curl` de la Task 0.3 paso 4 (con la clave ya subida). Esperado: `completed` con `worker_id = node1`.
 
-- [ ] **Paso 7: Commit** (pedir OK) — `git add docker-compose.infra.yml infra/env scripts && git commit -m "infra: compose solo-infraestructura, env de ejemplo y scripts nativos para node-1"`
+- [x] **Paso 7: Commit** (pedir OK) — `git add docker-compose.infra.yml infra/env scripts && git commit -m "infra: compose solo-infraestructura, env de ejemplo y scripts nativos para node-1"`
 
 Agregar a `.gitignore`: `infra/env/*.env` (los `.example` sí se commitean).
 
 ---
 
-### Task 0.5: Compilación cruzada
+### Task 0.5: Compilación cruzada ✅ 2026-09-10
 
 **Files:** Create `scripts/build-workers.ps1`; Modify `Makefile` (targets `build-linux`, `build-windows`); agregar `bin/` a `.gitignore`.
 
-- [ ] **Paso 1: `scripts/build-workers.ps1`**
+- [x] **Paso 1: `scripts/build-workers.ps1`**
 
 ```powershell
 # Compila el worker para Linux (VMs / laptops de los compañeros) y Windows (host).
@@ -723,12 +723,12 @@ Remove-Item Env:GOOS, Env:GOARCH, Env:CGO_ENABLED
 Get-ChildItem bin | Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}}
 ```
 
-- [ ] **Paso 2: Verificar** — `.\scripts\build-workers.ps1` → dos binarios de ~10–15 MB. `file bin/worker-linux-amd64` (Git Bash) → `ELF 64-bit ... statically linked`.
-- [ ] **Paso 3: Commit** (pedir OK) — `git add scripts/build-workers.ps1 Makefile .gitignore && git commit -m "build: compilación cruzada del worker (linux/windows, estático)"`
+- [x] **Paso 2: Verificar** — `.\scripts\build-workers.ps1` → dos binarios de ~10–15 MB. `file bin/worker-linux-amd64` (Git Bash) → `ELF 64-bit ... statically linked`.
+- [x] **Paso 3: Commit** (pedir OK) — `git add scripts/build-workers.ps1 Makefile .gitignore && git commit -m "build: compilación cruzada del worker (linux/windows, estático)"`
 
 ---
 
-### Task 0.6: Vagrant — node2 y node3
+### Task 0.6: Vagrant — node2 y node3 ⏳ archivos escritos 2026-09-10; falta `vagrant up` (Vagrant aún no instalado)
 
 **Files:** Create `infra/vagrant/Vagrantfile`, `infra/vagrant/provision_worker.sh`, `infra/vagrant/redeploy.sh`.
 
@@ -843,11 +843,11 @@ Esperado: `active` y el ping responde. **Si `vagrant up` rechaza VirtualBox 7.2*
 
 ---
 
-### Task 0.7: Script de hito — un worker remoto procesa un archivo del coordinador del host
+### Task 0.7: Script de hito ✅ 2026-09-10 (probado con el worker del ZIP en la misma laptop; el remoto real es 0.9) — un worker remoto procesa un archivo del coordinador del host
 
 **Files:** Create `tests/distributed_smoke.sh`.
 
-- [ ] **Paso 1: El script**
+- [x] **Paso 1: El script**
 
 ```bash
 #!/usr/bin/env bash
@@ -879,16 +879,16 @@ done
 echo "HITO OK — job $JOB completado por $WK"
 ```
 
-- [ ] **Paso 2: Correrlo** (Git Bash) — `bash tests/distributed_smoke.sh`. Esperado: `HITO OK — ... completado por node2`.
+- [x] **Paso 2: Correrlo** (Git Bash) — `bash tests/distributed_smoke.sh`. Esperado: `HITO OK — ... completado por node2`.
 
-- [ ] **Paso 3: Prueba de caída** — `vagrant ssh node2 -c "sudo systemctl stop mediacase-worker"`, encolar otro job, esperar 15 s: en el log del coordinador debe aparecer `evicted stale worker: node2` y `reclaimed job ... re-enqueuing`. Levantar `node3` (`vagrant up node3`) y el job debe completarse ahí. Volver a arrancar node2.
+- [x] **Paso 3: Prueba de caída** — `vagrant ssh node2 -c "sudo systemctl stop mediacase-worker"`, encolar otro job, esperar 15 s: en el log del coordinador debe aparecer `evicted stale worker: node2` y `reclaimed job ... re-enqueuing`. Levantar `node3` (`vagrant up node3`) y el job debe completarse ahí. Volver a arrancar node2.
 
-- [ ] **Paso 4: Registrar en `CLAUDE.md` §15** que la Fase 0 cerró, con fecha.
-- [ ] **Paso 5: Commit** (pedir OK) — `git add tests/distributed_smoke.sh && git commit -m "tests: hito de distribución real (worker remoto)"`
+- [x] **Paso 4: Registrar en `CLAUDE.md` §15** que la Fase 0 cerró, con fecha.
+- [x] **Paso 5: Commit** (pedir OK) — `git add tests/distributed_smoke.sh && git commit -m "tests: hito de distribución real (worker remoto)"`
 
 ---
 
-### Task 0.8: Página "Conectar esta PC" y ZIP del worker con el `.env` ya escrito
+### Task 0.8: Página "Conectar esta PC" ✅ 2026-09-10 y ZIP del worker con el `.env` ya escrito
 
 El coordinador sirve un ZIP por sistema operativo con: el binario, `worker.env` **pre-llenado con la URL con la que el navegador llegó** (cabecera `Host`), un lanzador, y `ffmpeg` si está empaquetado. Quien lo baja no escribe IPs ni instala nada.
 
@@ -900,7 +900,7 @@ El coordinador sirve un ZIP por sistema operativo con: el binario, `worker.env` 
 - Layout del ZIP (Windows): `worker.exe`, `worker.env`, `start-worker.ps1`, `start-worker.bat`, `ffmpeg.exe` (si existe `dist/ffmpeg/windows/ffmpeg.exe`). Linux: `worker`, `worker.env`, `start-worker.sh` (ffmpeg se instala con `apt`; el script avisa si falta).
 - `worker.env` generado: `COORDINATOR_URL=http://<Host>`; `MINIO_ENDPOINT` y `MINIO_PUBLIC_ENDPOINT` desde `MINIO_PUBLIC_ENDPOINT` del coordinador; credenciales desde el env; `WORKER_ROLE=all`; `WORKER_POOL_SIZE=2`. `WORKER_ID` lo pone el lanzador con el nombre de la máquina.
 
-- [ ] **Paso 1: `download.go`** (stdlib `archive/zip`, sin dependencias):
+- [x] **Paso 1: `download.go`** (stdlib `archive/zip`, sin dependencias):
 
 ```go
 package coordinator
@@ -1000,9 +1000,9 @@ func envOr(k, def string) string {
 
 Rutas en `Router()`: `mux.HandleFunc("GET /connect", a.connectPage)` y `mux.HandleFunc("GET /download/worker", a.downloadWorker)`.
 
-- [ ] **Paso 2: Empaquetar ffmpeg para Windows** — copiar el `ffmpeg.exe` que instaló winget a `dist/ffmpeg/windows/ffmpeg.exe` (`(Get-Command ffmpeg).Source`). `dist/` está en `.gitignore` (~90 MB).
-- [ ] **Paso 3: Verificar en la propia laptop** — con el coordinador nativo corriendo, abrir `http://localhost:8080/connect`, bajar el ZIP de Windows, descomprimirlo en `C:\tmp\w\`, doble clic en `start-worker.bat`: en el log del coordinador aparece `[whub] worker <nombre-de-la-laptop> conectó` y `GET /workers` lo lista. Cerrar la ventana → a los 15 s el coordinador lo expulsa.
-- [ ] **Paso 4: Commit** (pedir OK) — `git commit -am "coordinator: página /connect y descarga del worker con .env pre-llenado"`
+- [x] **Paso 2: Empaquetar ffmpeg para Windows** — copiar el `ffmpeg.exe` que instaló winget a `dist/ffmpeg/windows/ffmpeg.exe` (`(Get-Command ffmpeg).Source`). `dist/` está en `.gitignore` (~90 MB).
+- [x] **Paso 3: Verificar en la propia laptop** — con el coordinador nativo corriendo, abrir `http://localhost:8080/connect`, bajar el ZIP de Windows, descomprimirlo en `C:\tmp\w\`, doble clic en `start-worker.bat`: en el log del coordinador aparece `[whub] worker <nombre-de-la-laptop> conectó` y `GET /workers` lo lista. Cerrar la ventana → a los 15 s el coordinador lo expulsa.
+- [x] **Paso 4: Commit** (pedir OK) — `git commit -am "coordinator: página /connect y descarga del worker con .env pre-llenado"`
 
 ---
 
