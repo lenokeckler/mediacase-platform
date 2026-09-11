@@ -1,4 +1,4 @@
-.PHONY: up down logs build test fmt vet
+.PHONY: up down logs build build-workers test fmt vet
 
 up:
 	docker compose up --build -d
@@ -16,6 +16,12 @@ logs:
 
 build:
 	go build ./...
+
+# Binarios estáticos del worker para repartir a otros nodos (equivale a scripts/build-workers.ps1)
+build-workers:
+	mkdir -p bin
+	CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags '-s -w' -o bin/worker-linux-amd64       ./cmd/worker
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags '-s -w' -o bin/worker-windows-amd64.exe ./cmd/worker
 
 test:
 	go test -race ./...
