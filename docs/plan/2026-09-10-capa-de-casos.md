@@ -1019,7 +1019,7 @@ Requiere: `docker-compose.infra.yml` arriba, coordinador nativo corriendo en la 
 
 ---
 
-# FASE 1 — Capa de casos
+# FASE 1 — Capa de casos  ✅ cerrada 2026-09-10 (hito `tests/case_scenario.sh` → HITO OK)
 
 **Hito:** `POST /cases` con 3 archivos (2 válidos, 1 corrupto) → los 3 se procesan en paralelo → el caso cierra solo como `partially_completed` → `GET /cases/{id}/report` devuelve el reporte consolidado con el resumen *"de 3 archivos — 1 video convertido, 1 audio convertido, 1 fallido"*.
 
@@ -1090,7 +1090,7 @@ En `job.go` agregar a `Job`:
 
 y la constante `StatusCancelled JobStatus = "cancelled"`.
 
-- [ ] **Paso 1: Migración** — agregar al final del `Exec` de `Migrate`:
+- [x] **Paso 1: Migración** — agregar al final del `Exec` de `Migrate`:
 
 ```sql
 	CREATE TABLE IF NOT EXISTS cases (
@@ -1111,7 +1111,7 @@ y la constante `StatusCancelled JobStatus = "cancelled"`.
 	CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
 ```
 
-- [ ] **Paso 2: Consultas de jobs con los campos nuevos** — en `db.go`:
+- [x] **Paso 2: Consultas de jobs con los campos nuevos** — en `db.go`:
 
 ```go
 const jobColumns = `id, file_path, operation, status, priority,
@@ -1131,14 +1131,14 @@ func InsertJob(db *sql.DB, job *models.Job) error {
 
 `GetJob` y `ListJobs` usan `SELECT ` + `jobColumns` + ` FROM jobs ...`. En `scanJob` agregar `var caseID sql.NullString` al final del `Scan` (`&caseID, &j.FileType, &j.Pool`) y `j.CaseID = caseID.String`.
 
-- [ ] **Paso 3: Verificar** — `go build ./... && go vet ./...`; luego `docker compose -f docker-compose.infra.yml up -d`, correr el coordinador y:
+- [x] **Paso 3: Verificar** — `go build ./... && go vet ./...`; luego `docker compose -f docker-compose.infra.yml up -d`, correr el coordinador y:
 
 ```bash
 docker compose -f docker-compose.infra.yml exec postgres psql -U media -d mediacase -c "\d cases" -c "\d jobs" | grep -E "case_id|file_type|pool|total_jobs"
 ```
 Esperado: las 4 columnas listadas.
 
-- [ ] **Paso 4: Commit** (pedir OK) — `git commit -am "models/db: entidad Case, case_id/file_type/pool en jobs, migración"`
+- [x] **Paso 4: Commit** (pedir OK) — `git commit -am "models/db: entidad Case, case_id/file_type/pool en jobs, migración"`
 
 ---
 
@@ -1167,7 +1167,7 @@ func PoolFor(ft models.FileType) string
 func Route(filename string, requested models.Operation) (RouteDecision, error)
 ```
 
-- [ ] **Paso 1: Pruebas**
+- [x] **Paso 1: Pruebas**
 
 ```go
 package cases
@@ -1230,9 +1230,9 @@ func TestRoute_RechazaOperacionIncompatible(t *testing.T) {
 }
 ```
 
-- [ ] **Paso 2: Verificar que falla** — `go test ./internal/cases/ -v` → no compila (`Route` no definida).
+- [x] **Paso 2: Verificar que falla** — `go test ./internal/cases/ -v` → no compila (`Route` no definida).
 
-- [ ] **Paso 3: Implementar**
+- [x] **Paso 3: Implementar**
 
 ```go
 // Package cases contiene la lógica de casos: routing por tipo, barrier/join y reporte.
@@ -1311,8 +1311,8 @@ func Route(filename string, requested models.Operation) (RouteDecision, error) {
 }
 ```
 
-- [ ] **Paso 4: Verificar que pasa** — `go test ./internal/cases/ -v` → 4 × `PASS`.
-- [ ] **Paso 5: Commit** (pedir OK) — `git add internal/cases && git commit -m "cases: router por tipo de contenido (decisión del coordinador)"`
+- [x] **Paso 4: Verificar que pasa** — `go test ./internal/cases/ -v` → 4 × `PASS`.
+- [x] **Paso 5: Commit** (pedir OK) — `git add internal/cases && git commit -m "cases: router por tipo de contenido (decisión del coordinador)"`
 
 ---
 
@@ -1337,7 +1337,7 @@ type CaseCounts struct{ Total, Completed, Failed, Running, Pending int }
 func CountJobsByCase(tx *sql.Tx, caseID string) (CaseCounts, error) // recibe Tx: lo usa el barrier
 ```
 
-- [ ] **Paso 1: Implementar** — SQL directo, mismo estilo que `db.go`:
+- [x] **Paso 1: Implementar** — SQL directo, mismo estilo que `db.go`:
 
 ```go
 package db
@@ -1440,8 +1440,8 @@ func CountJobsByCase(tx *sql.Tx, caseID string) (CaseCounts, error) {
 func itoa(n int) string { return strconv.Itoa(n) } // import "strconv"
 ```
 
-- [ ] **Paso 2: Verificar** — `go build ./... && go vet ./internal/db/`.
-- [ ] **Paso 3: Commit** (pedir OK) — `git add internal/db/cases.go && git commit -m "db: consultas de casos y conteo de sub-tareas por caso"`
+- [x] **Paso 2: Verificar** — `go build ./... && go vet ./internal/db/`.
+- [x] **Paso 3: Commit** (pedir OK) — `git add internal/db/cases.go && git commit -m "db: consultas de casos y conteo de sub-tareas por caso"`
 
 ---
 
@@ -1465,7 +1465,7 @@ func itoa(n int) string { return strconv.Itoa(n) } // import "strconv"
 ```
 Errores: `400` si `files` vacío o alguna ruta no válida (se rechaza el caso completo, no se inserta nada).
 
-- [ ] **Paso 1: Handler**
+- [x] **Paso 1: Handler**
 
 ```go
 package coordinator
@@ -1550,7 +1550,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-- [ ] **Paso 2: Rutas** — en `Router()` agregar `mux.HandleFunc("POST /cases", a.submitCase)`. En `submitJob` (el endpoint suelto que sigue existiendo para pruebas), después de decodificar:
+- [x] **Paso 2: Rutas** — en `Router()` agregar `mux.HandleFunc("POST /cases", a.submitCase)`. En `submitJob` (el endpoint suelto que sigue existiendo para pruebas), después de decodificar:
 
 ```go
 	d, err := cases.Route(req.FilePath, req.Operation)
@@ -1561,7 +1561,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 	job.Operation, job.FileType, job.Pool = d.Operation, d.FileType, d.Pool
 ```
 
-- [ ] **Paso 3: Verificar** — con infra + coordinador + worker host corriendo, y dos claves subidas a `dataset/`:
+- [x] **Paso 3: Verificar** — con infra + coordinador + worker host corriendo, y dos claves subidas a `dataset/`:
 
 ```bash
 curl -s -X POST localhost:8080/cases -H 'Content-Type: application/json' -d '{
@@ -1570,7 +1570,7 @@ curl -s -X POST localhost:8080/cases -H 'Content-Type: application/json' -d '{
 ```
 Esperado: `201`, `"status": "queued"`, `"total_jobs": 2`, y en `jobs[]` el video con `"operation": "convert", "pool": "video"` y el audio con `"convert_audio", "audio"` — **sin que el cliente los haya pedido**. Un `{"key":"x.exe"}` debe devolver `400 archivo x.exe: formato no soportado`.
 
-- [ ] **Paso 4: Commit** (pedir OK) — `git add internal/coordinator && git commit -m "coordinator: POST /cases con routing por tipo y descomposición en sub-tareas"`
+- [x] **Paso 4: Commit** (pedir OK) — `git add internal/coordinator && git commit -m "coordinator: POST /cases con routing por tipo y descomposición en sub-tareas"`
 
 ---
 
@@ -1593,7 +1593,7 @@ func (b *Barrier) OnJobResolved(ctx context.Context, caseID string) error
 
 Regla: `closed ⇔ completed+failed == total`. Con `closed`: `failed==0 → completed`; `completed==0 → failed`; si no → `partially_completed`.
 
-- [ ] **Paso 1: Prueba de la regla pura**
+- [x] **Paso 1: Prueba de la regla pura**
 
 ```go
 package cases
@@ -1627,9 +1627,9 @@ func TestComputeStatus(t *testing.T) {
 }
 ```
 
-- [ ] **Paso 2: Verificar que falla** — `go test ./internal/cases/ -run TestComputeStatus`.
+- [x] **Paso 2: Verificar que falla** — `go test ./internal/cases/ -run TestComputeStatus`.
 
-- [ ] **Paso 3: Implementar**
+- [x] **Paso 3: Implementar**
 
 ```go
 package cases
@@ -1712,8 +1712,8 @@ func (b *Barrier) OnJobResolved(ctx context.Context, caseID string) error {
 }
 ```
 
-- [ ] **Paso 4: Verificar que pasa** — `go test ./internal/cases/ -v` → `TestComputeStatus PASS`; `go vet ./internal/cases/`.
-- [ ] **Paso 5: Commit** (pedir OK) — `git add internal/cases/barrier*.go && git commit -m "cases: barrier/join con cierre exactamente-una-vez"`
+- [x] **Paso 4: Verificar que pasa** — `go test ./internal/cases/ -v` → `TestComputeStatus PASS`; `go vet ./internal/cases/`.
+- [x] **Paso 5: Commit** (pedir OK) — `git add internal/cases/barrier*.go && git commit -m "cases: barrier/join con cierre exactamente-una-vez"`
 
 ---
 
@@ -1726,7 +1726,7 @@ Una sub-tarea llega a `completed`/`failed` en **cuatro** lugares. Los cuatro deb
 - Modify: `internal/coordinator/scheduler.go` (`Scheduler` recibe `*cases.Barrier`; `requeueJob`, `reclaimStuckJobs`)
 - Modify: `cmd/coordinator/main.go` (construir el barrier y pasarlo)
 
-- [ ] **Paso 1: Helper compartido** en `api.go`:
+- [x] **Paso 1: Helper compartido** en `api.go`:
 
 ```go
 // caseOf devuelve el case_id de un job ("" si es un job suelto).
@@ -1737,7 +1737,7 @@ func caseOf(database *sql.DB, jobID string) string {
 }
 ```
 
-- [ ] **Paso 2: `jobProgress`** — en los `case` de `completed` y `failed`, después del `Exec`:
+- [x] **Paso 2: `jobProgress`** — en los `case` de `completed` y `failed`, después del `Exec`:
 
 ```go
 		if err := a.barrier.OnJobResolved(r.Context(), caseOf(a.db, id)); err != nil {
@@ -1750,9 +1750,9 @@ Y en el `case running`, además del `UPDATE jobs`, mover el caso a `processing`:
 		           WHERE id=(SELECT case_id FROM jobs WHERE id=$1) AND status IN ('queued','retrying')`, id)
 ```
 
-- [ ] **Paso 3: Scheduler** — en `requeueJob`, cuando `job.Retries >= job.MaxRetries` y se marca `failed`: `s.barrier.OnJobResolved(ctx, job.CaseID)`. En `reclaimStuckJobs`, cambiar el `UPDATE` por `UPDATE ... RETURNING case_id` e invocar el barrier por cada `case_id` distinto no nulo.
+- [x] **Paso 3: Scheduler** — en `requeueJob`, cuando `job.Retries >= job.MaxRetries` y se marca `failed`: `s.barrier.OnJobResolved(ctx, job.CaseID)`. En `reclaimStuckJobs`, cambiar el `UPDATE` por `UPDATE ... RETURNING case_id` e invocar el barrier por cada `case_id` distinto no nulo.
 
-- [ ] **Paso 4: Cableado en `main.go`**
+- [x] **Paso 4: Cableado en `main.go`**
 
 ```go
 	barrier := cases.NewBarrier(database, nil) // onClose se conecta en la Task 1.7
@@ -1760,7 +1760,7 @@ Y en el `case running`, además del `UPDATE jobs`, mover el caso a `processing`:
 	api := coordinator.NewAPI(q, registry, hub, database, barrier)
 ```
 
-- [ ] **Paso 5: Verificar** — repetir el `POST /cases` de la Task 1.4 y esperar ~30 s:
+- [x] **Paso 5: Verificar** — repetir el `POST /cases` de la Task 1.4 y esperar ~30 s:
 
 ```bash
 docker compose -f docker-compose.infra.yml exec postgres psql -U media -d mediacase -tA \
@@ -1768,7 +1768,7 @@ docker compose -f docker-compose.infra.yml exec postgres psql -U media -d mediac
 ```
 Esperado: `...|completed|t|t`. Repetir con un caso que incluya una clave que **no existe** en MinIO (`{"key":"no-existe.mp4"}`): esa sub-tarea falla en la descarga y el caso debe quedar `partially_completed`.
 
-- [ ] **Paso 6: Commit** (pedir OK) — `git commit -am "coordinator: el barrier se dispara en los 4 puntos donde una sub-tarea resuelve"`
+- [x] **Paso 6: Commit** (pedir OK) — `git commit -am "coordinator: el barrier se dispara en los 4 puntos donde una sub-tarea resuelve"`
 
 ---
 
@@ -1810,7 +1810,7 @@ func Summary(r *Report) string                                  // puro, en espa
 ```
 Todos los campos con etiquetas `json:"snake_case"`.
 
-- [ ] **Paso 1: Prueba del resumen**
+- [x] **Paso 1: Prueba del resumen**
 
 ```go
 func TestSummary(t *testing.T) {
@@ -1833,7 +1833,7 @@ func TestSummary(t *testing.T) {
 }
 ```
 
-- [ ] **Paso 2: Verificar que falla**, luego **Paso 3: Implementar**
+- [x] **Paso 2: Verificar que falla**, luego **Paso 3: Implementar**
 
 ```go
 package cases
@@ -1936,7 +1936,7 @@ func firstLine(s string) string {
 }
 ```
 
-- [ ] **Paso 4: Generar y guardar el reporte al cerrar** — en `cmd/coordinator/main.go`, construir MinIO (`storage.NewMinIOClient()`; si falla, solo log) y:
+- [x] **Paso 4: Generar y guardar el reporte al cerrar** — en `cmd/coordinator/main.go`, construir MinIO (`storage.NewMinIOClient()`; si falla, solo log) y:
 
 ```go
 	barrier := cases.NewBarrier(database, func(caseID string) {
@@ -1959,7 +1959,7 @@ func firstLine(s string) string {
 	})
 ```
 
-- [ ] **Paso 5: Endpoint** en `cases_api.go` + ruta `GET /cases/{id}/report`:
+- [x] **Paso 5: Endpoint** en `cases_api.go` + ruta `GET /cases/{id}/report`:
 
 ```go
 func (a *API) getCaseReport(w http.ResponseWriter, r *http.Request) {
@@ -1979,8 +1979,8 @@ func (a *API) getCaseReport(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-- [ ] **Paso 6: Verificar** — `go test ./internal/cases/ -v` (TestSummary PASS). Luego un caso real y, tras cerrar: `curl -s localhost:8080/cases/$ID/report | python -m json.tool` → `summary`, `by_type_and_operation`, `sub_tasks[]` con `worker_id`, `started_at`, `completed_at`. En MinIO (`localhost:9001`) debe existir `results/cases/<id>/report.json`.
-- [ ] **Paso 7: Commit** (pedir OK) — `git commit -am "cases: reporte consolidado por caso + GET /cases/{id}/report"`
+- [x] **Paso 6: Verificar** — `go test ./internal/cases/ -v` (TestSummary PASS). Luego un caso real y, tras cerrar: `curl -s localhost:8080/cases/$ID/report | python -m json.tool` → `summary`, `by_type_and_operation`, `sub_tasks[]` con `worker_id`, `started_at`, `completed_at`. En MinIO (`localhost:9001`) debe existir `results/cases/<id>/report.json`.
+- [x] **Paso 7: Commit** (pedir OK) — `git commit -am "cases: reporte consolidado por caso + GET /cases/{id}/report"`
 
 ---
 
@@ -1988,7 +1988,7 @@ func (a *API) getCaseReport(w http.ResponseWriter, r *http.Request) {
 
 **Files:** Modify `cases_api.go`, `api.go` (rutas), `scheduler.go` (saltar jobs cancelados).
 
-- [ ] **Paso 1: Handlers**
+- [x] **Paso 1: Handlers**
 
 ```go
 func (a *API) listCases(w http.ResponseWriter, r *http.Request) {
@@ -2023,7 +2023,7 @@ func (a *API) cancelCase(w http.ResponseWriter, r *http.Request) {
 ```
 Rutas: `GET /cases`, `GET /cases/{id}`, `POST /cases/{id}/cancel`.
 
-- [ ] **Paso 2: Scheduler salta cancelados** — en `dispatch`, después de `Dequeue`:
+- [x] **Paso 2: Scheduler salta cancelados** — en `dispatch`, después de `Dequeue`:
 
 ```go
 	var st string
@@ -2034,8 +2034,8 @@ Rutas: `GET /cases`, `GET /cases/{id}`, `POST /cases/{id}/cancel`.
 	}
 ```
 
-- [ ] **Paso 3: Verificar** — `POST /cases` con 6 archivos, inmediatamente `POST /cases/$ID/cancel`; `GET /cases/$ID` debe mostrar `cancelled` y sub-tareas `cancelled`/`completed` pero ninguna `pending`. `GET /cases?status=cancelled` la lista.
-- [ ] **Paso 4: Commit** (pedir OK) — `git commit -am "coordinator: listar, consultar y cancelar casos"`
+- [x] **Paso 3: Verificar** — `POST /cases` con 6 archivos, inmediatamente `POST /cases/$ID/cancel`; `GET /cases/$ID` debe mostrar `cancelled` y sub-tareas `cancelled`/`completed` pero ninguna `pending`. `GET /cases?status=cancelled` la lista.
+- [x] **Paso 4: Commit** (pedir OK) — `git commit -am "coordinator: listar, consultar y cancelar casos"`
 
 ---
 
@@ -2045,7 +2045,7 @@ Cuando un worker muere, sus sub-tareas se re-encolan (`reclaimWorkerJobs`). El c
 
 **Files:** Modify `scheduler.go` (`reclaimWorkerJobs`).
 
-- [ ] **Paso 1:** al final de `reclaimWorkerJobs`, con los `case_id` de los jobs reclamados (agregar `case_id` al `RETURNING` y recolectarlos en un `map[string]bool`):
+- [x] **Paso 1:** al final de `reclaimWorkerJobs`, con los `case_id` de los jobs reclamados (agregar `case_id` al `RETURNING` y recolectarlos en un `map[string]bool`):
 
 ```go
 	for caseID := range affected {
@@ -2054,8 +2054,8 @@ Cuando un worker muere, sus sub-tareas se re-encolan (`reclaimWorkerJobs`). El c
 ```
 La vuelta a `processing` ya está cubierta por la Task 1.6 (`status IN ('queued','retrying')` cuando una sub-tarea reporta `running`).
 
-- [ ] **Paso 2: Verificar** — caso de 4 archivos hacia node2; a mitad, `vagrant ssh node2 -c "sudo systemctl stop mediacase-worker"`. En ≤15 s `GET /cases/$ID` → `retrying`. Arrancar node3: pasa a `processing` y termina `completed`.
-- [ ] **Paso 3: Commit** (pedir OK) — `git commit -am "coordinator: estado retrying al reclamar sub-tareas de un worker caído"`
+- [x] **Paso 2: Verificar** — caso de 4 archivos hacia node2; a mitad, `vagrant ssh node2 -c "sudo systemctl stop mediacase-worker"`. En ≤15 s `GET /cases/$ID` → `retrying`. Arrancar node3: pasa a `processing` y termina `completed`.
+- [x] **Paso 3: Commit** (pedir OK) — `git commit -am "coordinator: estado retrying al reclamar sub-tareas de un worker caído"`
 
 ---
 
@@ -2063,7 +2063,7 @@ La vuelta a `processing` ya está cubierta por la Task 1.6 (`status IN ('queued'
 
 **Files:** Modify `cmd/client/main.go`.
 
-- [ ] **Paso 1: Flags y función**
+- [x] **Paso 1: Flags y función**
 
 ```go
 	caseMode  := flag.Bool("case", false, "Enviar un caso (usa -files, -name, -priority)")
@@ -2112,8 +2112,8 @@ func runCase(coordinatorURL, name, files string, priority int, watch bool) {
 ```
 En `main()`: `case *caseMode: runCase(*coordinatorURL, *caseName, *files, *priority, *watch)`.
 
-- [ ] **Paso 2: Verificar** — `go run ./cmd/client -coordinator http://localhost:8080 -case -name demo -files video_short_1_mp4.mp4,audio_short_1_mp3.mp3 -priority 8 -watch` → imprime progreso y al final el JSON del reporte.
-- [ ] **Paso 3: Commit** (pedir OK) — `git commit -am "client: modo -case con seguimiento y reporte"`
+- [x] **Paso 2: Verificar** — `go run ./cmd/client -coordinator http://localhost:8080 -case -name demo -files video_short_1_mp4.mp4,audio_short_1_mp3.mp3 -priority 8 -watch` → imprime progreso y al final el JSON del reporte.
+- [x] **Paso 3: Commit** (pedir OK) — `git commit -am "client: modo -case con seguimiento y reporte"`
 
 ---
 
@@ -2121,7 +2121,7 @@ En `main()`: `case *caseMode: runCase(*coordinatorURL, *caseName, *files, *prior
 
 **Files:** Create `tests/case_scenario.sh`.
 
-- [ ] **Paso 1: Script**
+- [x] **Paso 1: Script**
 
 ```bash
 #!/usr/bin/env bash
@@ -2159,9 +2159,9 @@ echo "$REP" | python -c "import sys,json; r=json.load(sys.stdin); assert all(s['
 echo "HITO OK — $(echo "$REP" | python -c "import sys,json;print(json.load(sys.stdin)['summary'])")"
 ```
 
-- [ ] **Paso 2: Correr en modo local** (worker del host) y **en modo distribuido** (node2 + node3 arriba, worker host apagado). Ambos deben dar `HITO OK`.
-- [ ] **Paso 3: Registrar en `CLAUDE.md` §15** que la Fase 1 cerró.
-- [ ] **Paso 4: Commit** (pedir OK) — `git add tests/case_scenario.sh && git commit -m "tests: hito de caso heterogéneo con fallo parcial"`
+- [x] **Paso 2: Correr en modo local** (worker del host) y **en modo distribuido** (node2 + node3 arriba, worker host apagado). Ambos deben dar `HITO OK`.
+- [x] **Paso 3: Registrar en `CLAUDE.md` §15** que la Fase 1 cerró.
+- [x] **Paso 4: Commit** (pedir OK) — `git add tests/case_scenario.sh && git commit -m "tests: hito de caso heterogéneo con fallo parcial"`
 
 ---
 
