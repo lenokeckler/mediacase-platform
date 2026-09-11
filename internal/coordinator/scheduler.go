@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/lenokeckler/mediacase-platform/internal/cases"
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
 )
@@ -18,10 +19,11 @@ type Scheduler struct {
 	registry  *Registry
 	workerHub *WorkerHub
 	db        *sql.DB
+	barrier   *cases.Barrier
 }
 
-func NewScheduler(q *queue.Queue, reg *Registry, workerHub *WorkerHub, db *sql.DB) *Scheduler {
-	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db}
+func NewScheduler(q *queue.Queue, reg *Registry, workerHub *WorkerHub, db *sql.DB, barrier *cases.Barrier) *Scheduler {
+	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db, barrier: barrier}
 }
 
 // Run is the main loop - it runs indefinitely in its own goroutine.
@@ -77,6 +79,14 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 	}
 	if job == nil {
 		return queue.ErrNoMessages
+	}
+
+	// Si el caso se canceló mientras la sub-tarea esperaba en cola, no se ejecuta.
+	var st string
+	s.db.QueryRow(`SELECT status FROM jobs WHERE id=$1`, job.ID).Scan(&st)
+	if st == string(models.StatusCancelled) {
+		s.queue.Ack(ctx, queue.StreamForPriority(job.Priority), msgID)
+		return nil
 	}
 
 	log.Printf("[scheduler] assigning job %s (op: %s) to worker %s", job.ID, job.Operation, worker.ID)
@@ -150,19 +160,35 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 // reclaimStuckJobs marks as failed any job that has been in 'running' state
 // for longer than 15 minutes — these are jobs whose worker silently dropped them.
 func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
-	result, err := s.db.ExecContext(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs
-		 SET status='failed',
+		 SET status='failed', completed_at=NOW(),
 		     error_msg='job timed out: worker did not report completion within 15 minutes'
 		 WHERE status='running'
-		   AND started_at < NOW() - INTERVAL '15 minutes'`,
+		   AND started_at < NOW() - INTERVAL '15 minutes'
+		 RETURNING id, COALESCE(case_id, '')`,
 	)
 	if err != nil {
 		log.Printf("[scheduler] stuck-job reclaim failed: %v", err)
 		return
 	}
-	if n, _ := result.RowsAffected(); n > 0 {
+	defer rows.Close()
+	n := 0
+	affected := map[string]bool{}
+	for rows.Next() {
+		var id, caseID string
+		if rows.Scan(&id, &caseID) == nil {
+			n++
+			if caseID != "" {
+				affected[caseID] = true
+			}
+		}
+	}
+	if n > 0 {
 		log.Printf("[scheduler] marked %d stuck running job(s) as failed", n)
+	}
+	for caseID := range affected {
+		s.barrier.OnJobResolved(ctx, caseID) // una sub-tarea vencida también resuelve el barrier
 	}
 }
 
@@ -171,7 +197,9 @@ func (s *Scheduler) requeueJob(ctx context.Context, job *models.Job) {
 	job.Retries++
 	if job.Retries >= job.MaxRetries {
 		log.Printf("[scheduler] job %s exceeded max retries, marking failed", job.ID)
-		s.updateJobStatus(job.ID, models.StatusFailed, "")
+		s.db.Exec(`UPDATE jobs SET status='failed', worker_id=NULL, completed_at=NOW(),
+			error_msg='no se pudo entregar a ningún worker tras '||retries||' intentos' WHERE id=$1`, job.ID)
+		s.barrier.OnJobResolved(ctx, job.CaseID)
 		return
 	}
 	if err := s.queue.Enqueue(ctx, job); err != nil {

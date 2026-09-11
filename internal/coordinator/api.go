@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lenokeckler/mediacase-platform/internal/cases"
 	"github.com/lenokeckler/mediacase-platform/internal/db"
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
@@ -25,26 +26,39 @@ type API struct {
 	hub       *Hub       // WebSocket del dashboard
 	workerHub *WorkerHub // WebSocket de los workers (canal saliente)
 	db        *sql.DB
+	barrier   *cases.Barrier // cierra el caso cuando todas sus sub-tareas resolvieron
 
 	// onWorkerRestart se invoca cuando un worker se registra con un ID conocido pero otra
 	// instancia (proceso nuevo): sus jobs en vuelo deben volver a la cola. Lo conecta el scheduler.
 	onWorkerRestart func(ctx context.Context, workerID string)
+	// onCaseClosed genera el reporte consolidado (también al cancelar). Lo conecta main.
+	onCaseClosed func(caseID string)
 }
+
+// SetOnCaseClosed conecta la generación del reporte al cierre/cancelación de un caso.
+func (a *API) SetOnCaseClosed(fn func(caseID string)) { a.onCaseClosed = fn }
 
 // SetOnWorkerRestart conecta el reclaim del scheduler al registro de workers.
 func (a *API) SetOnWorkerRestart(fn func(ctx context.Context, workerID string)) {
 	a.onWorkerRestart = fn
 }
 
-func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, database *sql.DB) *API {
-	return &API{queue: q, registry: reg, hub: hub, workerHub: workerHub, db: database}
+func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, database *sql.DB, barrier *cases.Barrier) *API {
+	return &API{queue: q, registry: reg, hub: hub, workerHub: workerHub, db: database, barrier: barrier}
 }
 
 // Router builds and returns the HTTP mux with all the routes.
 func (a *API) Router() http.Handler {
 	mux := http.NewServeMux()
 
-	// Jobs
+	// Casos (la unidad de trabajo de la consigna v2.0)
+	mux.HandleFunc("POST /cases", a.submitCase)
+	mux.HandleFunc("GET /cases", a.listCases)
+	mux.HandleFunc("GET /cases/{id}", a.getCase)
+	mux.HandleFunc("GET /cases/{id}/report", a.getCaseReport)
+	mux.HandleFunc("POST /cases/{id}/cancel", a.cancelCase)
+
+	// Jobs sueltos (pruebas y compatibilidad)
 	mux.HandleFunc("POST /jobs", a.submitJob)
 	mux.HandleFunc("POST /batch", a.submitBatch)
 	mux.HandleFunc("GET /jobs", a.listJobs)
@@ -90,10 +104,19 @@ func (a *API) submitJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Routing por tipo también aquí: el coordinador valida/decide la operación y el pool.
+	d, err := cases.Route(req.FilePath, req.Operation)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	job := &models.Job{
 		ID:         uuid.New().String(),
+		FileID:     req.FilePath,
 		FilePath:   req.FilePath,
-		Operation:  req.Operation,
+		FileType:   d.FileType,
+		Pool:       d.Pool,
+		Operation:  d.Operation,
 		Priority:   req.Priority,
 		Status:     models.StatusPending,
 		MaxRetries: 3,
@@ -241,12 +264,17 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 	case string(models.StatusRunning):
 		_, err = a.db.Exec(`UPDATE jobs SET status='running', progress=$1,
 			started_at=COALESCE(started_at, NOW()) WHERE id=$2`, payload.Progress, id)
+		// La primera sub-tarea que arranca mueve el caso a processing (o lo saca de retrying).
+		a.db.Exec(`UPDATE cases SET status='processing', started_at=COALESCE(started_at, NOW())
+			WHERE id=(SELECT case_id FROM jobs WHERE id=$1) AND status IN ('queued','retrying')`, id)
 	case string(models.StatusCompleted):
 		_, err = a.db.Exec(`UPDATE jobs SET status='completed', progress=100, result_url=$1,
-			completed_at=NOW() WHERE id=$2`, payload.ResultURL, id)
+			completed_at=NOW() WHERE id=$2 AND status <> 'cancelled'`, payload.ResultURL, id)
+		a.resolveCase(r.Context(), id)
 	case string(models.StatusFailed):
 		_, err = a.db.Exec(`UPDATE jobs SET status='failed', progress=$1, error_msg=$2,
-			completed_at=NOW() WHERE id=$3`, payload.Progress, payload.ErrorMsg, id)
+			completed_at=NOW() WHERE id=$3 AND status <> 'cancelled'`, payload.Progress, payload.ErrorMsg, id)
+		a.resolveCase(r.Context(), id)
 	case "":
 		_, err = a.db.Exec(`UPDATE jobs SET progress=$1 WHERE id=$2`, payload.Progress, id)
 	default:
@@ -476,4 +504,14 @@ func shortID(s string) string {
 		return s[:8]
 	}
 	return s
+}
+
+// resolveCase avisa al barrier que una sub-tarea del caso llegó a un estado final.
+func (a *API) resolveCase(ctx context.Context, jobID string) {
+	if a.barrier == nil {
+		return
+	}
+	if err := a.barrier.OnJobResolved(ctx, caseOf(a.db, jobID)); err != nil {
+		log.Printf("[barrier] job %s: %v", jobID, err)
+	}
 }

@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/lenokeckler/mediacase-platform/internal/cases"
 	"github.com/lenokeckler/mediacase-platform/internal/coordinator"
 	"github.com/lenokeckler/mediacase-platform/internal/db"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
+	"github.com/lenokeckler/mediacase-platform/internal/storage"
 )
 
 func main() {
@@ -38,9 +42,45 @@ func main() {
 	registry := coordinator.NewRegistry(database)
 	hub := coordinator.NewHub()             // dashboard
 	workerHub := coordinator.NewWorkerHub() // canal saliente de cada worker
-	scheduler := coordinator.NewScheduler(q, registry, workerHub, database)
-	api := coordinator.NewAPI(q, registry, hub, workerHub, database)
+
+	// MinIO (opcional para el coordinador): guarda una copia del reporte junto a los resultados.
+	minioClient, err := storage.NewMinIOClient()
+	if err != nil {
+		log.Printf("[coordinator] MinIO no disponible (%v): los reportes solo quedan en Postgres", err)
+		minioClient = nil
+	}
+
+	// Barrier/join: cierra el caso cuando todas sus sub-tareas resolvieron y genera el reporte.
+	barrier := cases.NewBarrier(database, nil)
+	buildReport := func(caseID string) {
+		c, err := db.GetCase(database, caseID)
+		if err != nil {
+			log.Printf("[report] get case %s: %v", caseID, err)
+			return
+		}
+		jobs, _ := db.ListJobsByCase(database, caseID)
+		rep := cases.BuildReport(c, jobs)
+		raw, _ := json.MarshalIndent(rep, "", "  ")
+		if err := db.SaveCaseReport(database, caseID, raw); err != nil {
+			log.Printf("[report] save %s: %v", caseID, err)
+		}
+		if minioClient != nil {
+			tmp := filepath.Join(os.TempDir(), "mediacase-report-"+caseID+".json")
+			if os.WriteFile(tmp, raw, 0o644) == nil {
+				if err := minioClient.UploadObject(ctx, "results", "cases/"+caseID+"/report.json", tmp); err != nil {
+					log.Printf("[report] upload %s: %v", caseID, err)
+				}
+				os.Remove(tmp)
+			}
+		}
+		log.Printf("[report] caso %s: %s", caseID, rep.Summary)
+	}
+	barrier.SetOnClose(buildReport)
+
+	scheduler := coordinator.NewScheduler(q, registry, workerHub, database, barrier)
+	api := coordinator.NewAPI(q, registry, hub, workerHub, database, barrier)
 	api.SetOnWorkerRestart(scheduler.ReclaimWorkerJobs) // proceso nuevo con ID conocido → re-encolar lo suyo
+	api.SetOnCaseClosed(buildReport)                    // al cancelar también hay reporte
 
 	// ── WebSocket broadcast loop ───────────────────────────────────────────
 	hub.StartBroadcastLoop(func() coordinator.SystemSnapshot {
