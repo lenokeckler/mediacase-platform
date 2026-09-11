@@ -12,7 +12,9 @@ import (
 // ExtractAudio extracts the audio track from inputPath and saves it as MP3.
 // Returns a clear error if the input has no audio stream.
 func ExtractAudio(ctx context.Context, inputPath string, cb progressFn) (string, error) {
-	if !probeHasStream(ctx, inputPath, "a") {
+	if has, err := probeHasStream(ctx, inputPath, "a"); err != nil {
+		return "", fmt.Errorf("extract_audio: %w", err)
+	} else if !has {
 		return "", fmt.Errorf("extract_audio: input has no audio stream — try a different file or operation")
 	}
 
@@ -51,7 +53,9 @@ func ExtractAudio(ctx context.Context, inputPath string, cb progressFn) (string,
 // ConvertAudio converts any audio file to WAV format (PCM 16-bit stereo 44.1 kHz).
 // Returns a clear error if the input has no audio stream.
 func ConvertAudio(ctx context.Context, inputPath string, cb progressFn) (string, error) {
-	if !probeHasStream(ctx, inputPath, "a") {
+	if has, err := probeHasStream(ctx, inputPath, "a"); err != nil {
+		return "", fmt.Errorf("convert_audio: %w", err)
+	} else if !has {
 		return "", fmt.Errorf("convert_audio: input has no audio stream — try a different file or operation")
 	}
 

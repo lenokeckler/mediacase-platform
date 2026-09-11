@@ -142,7 +142,7 @@ func TestConvert_ContextCancelado(t *testing.T) {
 func TestParseFFmpegTime(t *testing.T) {
 	cases := []struct {
 		h, m, s, cs string
-		want         float64
+		want        float64
 	}{
 		{"0", "0", "5", "0", 5.0},
 		{"0", "1", "0", "0", 60.0},

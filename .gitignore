@@ -61,4 +61,4 @@ test_output.*
 infra/env/*.env
 # Binarios y paquetes generados
 bin/
-dist/
+/dist/

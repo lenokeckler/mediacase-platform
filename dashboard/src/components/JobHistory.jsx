@@ -47,6 +47,8 @@ function shortFile(filePath) {
     return filePath.split(/[\\/]/).pop() || filePath
 }
 
+const FILTER_LABEL = { all: 'todas', pending: 'pendientes', assigned: 'asignadas', running: 'en ejecución', completed: 'completadas', failed: 'fallidas', cancelled: 'canceladas' }
+
 export default function JobHistory() {
     const [jobs, setJobs] = useState([])
     const [loading, setLoading] = useState(false)
@@ -100,7 +102,7 @@ export default function JobHistory() {
                             className={`${styles.filterBtn} ${filter === f ? styles.active : ''}`}
                             onClick={() => setFilter(f)}
                         >
-                            {f}
+                            {FILTER_LABEL[f] || f}
                             {counts[f] > 0 && (
                                 <span className={styles.pill}>{counts[f]}</span>
                             )}
@@ -109,7 +111,7 @@ export default function JobHistory() {
                 </div>
                 <input
                     className={styles.search}
-                    placeholder="Search by ID, file, operation, worker…"
+                    placeholder="Buscar por id, archivo, operación, worker…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                 />
@@ -124,23 +126,23 @@ export default function JobHistory() {
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            <th>Job ID</th>
-                            <th>File</th>
-                            <th>Operation</th>
-                            <th>Status</th>
-                            <th>Progress</th>
+                            <th>Sub-tarea</th>
+                            <th>Archivo</th>
+                            <th>Operación</th>
+                            <th>Estado</th>
+                            <th>Progreso</th>
                             <th>Worker</th>
-                            <th>Priority</th>
-                            <th>Created</th>
-                            <th>Duration</th>
-                            <th>Result / Error</th>
+                            <th>Prioridad</th>
+                            <th>Creada</th>
+                            <th>Duración</th>
+                            <th>Resultado / Error</th>
                         </tr>
                     </thead>
                     <tbody>
                         {visible.length === 0 && (
                             <tr>
                                 <td colSpan={10} className={styles.empty}>
-                                    {loading ? 'Loading…' : 'No jobs match the current filter.'}
+                                    {loading ? 'Cargando…' : 'Ninguna sub-tarea con ese filtro.'}
                                 </td>
                             </tr>
                         )}
@@ -150,7 +152,7 @@ export default function JobHistory() {
                                     key={job.id}
                                     className={`${styles.row} ${expandedId === job.id ? styles.rowExpanded : ''}`}
                                     onClick={() => setExpandedId(expandedId === job.id ? null : job.id)}
-                                    title="Click to expand details"
+                                    title="Clic para ver el detalle"
                                 >
                                     <td className={styles.jobId}>{job.id.slice(0, 8)}…</td>
                                     <td className={styles.fileName} title={job.file_path}>

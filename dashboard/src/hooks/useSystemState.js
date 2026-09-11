@@ -12,7 +12,7 @@ const EMPTY_STATE = {
     workers: [],
     jobs: [],
     stats: { pending: 0, assigned: 0, running: 0, completed: 0, failed: 0 },
-    queue_depth: { high: 0, normal: 0, low: 0 },
+    queue_depth: { high: 0, normal: 0, low: 0, by_pool: {} },
 }
 
 export function useSystemState() {
@@ -64,13 +64,14 @@ export function useSystemState() {
                 // Otherwise use server data
                 let queue_depth = {}
                 if (refreshTimeRef.current) {
-                    queue_depth = { high: 0, normal: 0, low: 0 }
+                    queue_depth = { high: 0, normal: 0, low: 0, by_pool: {} }
                 } else {
                     const qd = data.queue_depth || {}
                     queue_depth = {
                         high: qd.high ?? 0,
                         normal: qd.normal ?? 0,
                         low: qd.low ?? 0,
+                        by_pool: qd.by_pool || {},
                     }
                 }
 
@@ -118,7 +119,7 @@ export function useSystemState() {
             ...prev,
             jobs: [],
             stats: { pending: 0, assigned: 0, running: 0, completed: 0, failed: 0 },
-            queue_depth: { high: 0, normal: 0, low: 0 },
+            queue_depth: { high: 0, normal: 0, low: 0, by_pool: {} },
         }))
     }, [])
 

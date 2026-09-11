@@ -1,11 +1,11 @@
 import styles from './StatsBar.module.css'
 
 const STAT_CONFIG = [
-    { key: 'pending', label: 'Pending', color: 'var(--muted)' },
-    { key: 'assigned', label: 'Assigned', color: 'var(--blue)' },
-    { key: 'running', label: 'Running', color: 'var(--accent)' },
-    { key: 'completed', label: 'Completed', color: 'var(--green)' },
-    { key: 'failed', label: 'Failed', color: 'var(--red)' },
+    { key: 'pending', label: 'Pendientes', color: 'var(--muted)' },
+    { key: 'assigned', label: 'Asignadas', color: 'var(--blue)' },
+    { key: 'running', label: 'En ejecución', color: 'var(--accent)' },
+    { key: 'completed', label: 'Completadas', color: 'var(--green)' },
+    { key: 'failed', label: 'Fallidas', color: 'var(--red)' },
 ]
 
 export default function StatsBar({ stats }) {

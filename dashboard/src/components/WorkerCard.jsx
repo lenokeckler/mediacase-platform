@@ -26,8 +26,14 @@ export default function WorkerCard({ worker }) {
                 <span className={styles.dot} style={{ background: isStale ? 'var(--red)' : statusColor }} />
                 <span className={styles.id}>{worker.id}</span>
                 <span className={styles.status} style={{ color: isStale ? 'var(--red)' : statusColor }}>
-                    {isStale ? 'offline' : worker.status}
+                    {isStale ? 'desconectado' : worker.status === 'busy' ? 'ocupado' : 'libre'}
                 </span>
+            </div>
+            <div className={styles.pools}>
+                <span className={styles.hostname}>{worker.hostname}</span>
+                {(worker.capabilities && worker.capabilities.length ? worker.capabilities : ['video', 'audio', 'metadata']).map(p => (
+                    <span key={p} className={styles.pool}>{p}</span>
+                ))}
             </div>
 
             <div className={styles.metric}>
@@ -44,9 +50,9 @@ export default function WorkerCard({ worker }) {
 
             <div className={styles.footer}>
                 <span>
-                    <strong>{worker.active_jobs}</strong> active jobs
+                    <strong>{worker.active_jobs}</strong> sub-tarea{worker.active_jobs === 1 ? '' : 's'} activa{worker.active_jobs === 1 ? '' : 's'}
                 </span>
-                <span className={styles.muted}>seen {secondsAgo}s ago</span>
+                <span className={styles.muted}>visto hace {secondsAgo}s</span>
             </div>
         </div>
     )

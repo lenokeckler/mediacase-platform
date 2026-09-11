@@ -90,20 +90,32 @@ type Depth struct {
 	Total      int64
 }
 
+// Depth cuenta lo que de verdad espera: entradas aún no entregadas al grupo (lag) más las
+// entregadas y no confirmadas (pending). XLEN no sirve: cuenta también lo ya procesado.
 func (q *Queue) Depth(ctx context.Context) Depth {
 	d := Depth{ByPool: map[string]int64{}, ByPriority: map[string]int64{}}
 	for _, p := range Pools {
 		for _, n := range priorityNames {
-			l, err := q.client.XLen(ctx, "jobs:"+p+":"+n).Result()
-			if err != nil {
-				continue
-			}
+			l := q.waiting(ctx, "jobs:"+p+":"+n)
 			d.ByPool[p] += l
 			d.ByPriority[n] += l
 			d.Total += l
 		}
 	}
 	return d
+}
+
+func (q *Queue) waiting(ctx context.Context, stream string) int64 {
+	groups, err := q.client.XInfoGroups(ctx, stream).Result()
+	if err != nil {
+		return 0
+	}
+	for _, g := range groups {
+		if g.Name == GroupName {
+			return g.Lag + g.Pending
+		}
+	}
+	return 0
 }
 
 // Enqueue adds a job to the stream of its pool and priority.
@@ -157,9 +169,12 @@ func (q *Queue) Dequeue(ctx context.Context, consumerID, pool string) (*models.J
 	return nil, "", nil
 }
 
-// Ack acknowledges a processed message.
+// Ack confirma el mensaje y lo borra del stream: lo procesado no debe seguir ocupando memoria.
 func (q *Queue) Ack(ctx context.Context, stream, msgID string) error {
-	return q.client.XAck(ctx, stream, GroupName, msgID).Err()
+	if err := q.client.XAck(ctx, stream, GroupName, msgID).Err(); err != nil {
+		return err
+	}
+	return q.client.XDel(ctx, stream, msgID).Err()
 }
 
 // EnsureGroups creates the consumer group on every stream if it doesn't exist.

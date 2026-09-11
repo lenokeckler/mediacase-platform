@@ -184,3 +184,5 @@
         grid-template-columns: 1fr;
     }
 }
+/* la tarjeta de colas ocupa una columna doble en la grilla de workers */
+.workerGrid > :last-child { grid-column: span 2; }

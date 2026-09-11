@@ -50,3 +50,9 @@
     height: 100%;
     transition: width 0.4s ease, background 0.4s ease;
 }
+.pools { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
+.poolRow { display: grid; grid-template-columns: 64px 1fr 32px; align-items: center; gap: 0.5rem; font-size: 0.74rem; }
+.poolName { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.poolTrack { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.poolFill { height: 100%; transition: width 0.3s; }
+.poolCount { text-align: right; font-variant-numeric: tabular-nums; }

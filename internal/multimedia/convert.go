@@ -6,6 +6,7 @@ package multimedia
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -84,7 +85,9 @@ func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 // probeHasStream returns true if the file contains at least one stream of the
 // given type. streamType is "v" for video or "a" for audio.
 // Uses ffprobe, which ships with every ffmpeg Alpine package.
-func probeHasStream(ctx context.Context, inputPath, streamType string) bool {
+// probeHasStream pregunta a ffprobe si el archivo tiene un stream del tipo dado.
+// Un ffprobe ausente o roto se reporta como error, no como "no hay stream".
+func probeHasStream(ctx context.Context, inputPath, streamType string) (bool, error) {
 	cmd := exec.CommandContext(ctx, "ffprobe",
 		"-v", "error",
 		"-select_streams", streamType+":0",
@@ -92,8 +95,26 @@ func probeHasStream(ctx context.Context, inputPath, streamType string) bool {
 		"-of", "default=noprint_wrappers=1:nokey=1",
 		inputPath,
 	)
-	out, _ := cmd.Output()
-	return strings.TrimSpace(string(out)) != ""
+	out, err := cmd.Output()
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			// ffprobe corrió pero el archivo no se pudo leer (corrupto, formato inválido)
+			return false, fmt.Errorf("ffprobe: %s", strings.TrimSpace(string(exitErr.Stderr)))
+		}
+		return false, fmt.Errorf("ffprobe no disponible: %w", err)
+	}
+	return strings.TrimSpace(string(out)) != "", nil
+}
+
+// CheckTools verifica que ffmpeg y ffprobe estén en el PATH. Sin ellos el worker es inútil.
+func CheckTools() error {
+	for _, tool := range []string{"ffmpeg", "ffprobe"} {
+		if _, err := exec.LookPath(tool); err != nil {
+			return fmt.Errorf("%s no está en el PATH: %w", tool, err)
+		}
+	}
+	return nil
 }
 
 // outputSeq garantiza unicidad aunque dos llamadas caigan en el mismo tick del reloj
@@ -112,7 +133,9 @@ func outputPath(inputPath, ext string) string {
 // Convert convierte inputPath a MP4 usando H.264 + AAC.
 // Retorna la ruta del archivo de salida y cualquier error.
 func Convert(ctx context.Context, inputPath string, cb progressFn) (string, error) {
-	if !probeHasStream(ctx, inputPath, "v") {
+	if has, err := probeHasStream(ctx, inputPath, "v"); err != nil {
+		return "", fmt.Errorf("convert: %w", err)
+	} else if !has {
 		return "", fmt.Errorf("convert: input has no video stream — use an audio operation instead")
 	}
 

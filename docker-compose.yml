@@ -141,14 +141,15 @@ services:
     depends_on:
       - coordinator
 
-  dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    ports:
-      - "5173:80"
-    depends_on:
-      - coordinator
+  # El coordinador ya sirve el dashboard en :8080; este servicio (nginx en :5173) queda opcional.
+  # dashboard:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dashboard
+  #   ports:
+  #     - "5173:80"
+  #   depends_on:
+  #     - coordinator
 
 volumes:
   redis_data:

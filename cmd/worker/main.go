@@ -442,6 +442,10 @@ func main() {
 	log.Printf("=== MediaCase Worker ===")
 	log.Printf("ID=%s | rol=%s (%v) | pool=%d | coordinator=%s", cfg.workerID, cfg.role, RoleCapabilities(cfg.role), cfg.poolSize, cfg.coordinatorURL)
 
+	if err := multimedia.CheckTools(); err != nil {
+		log.Fatalf("[worker] %v — instalar ffmpeg (Windows: usar el ZIP de /connect o winget install Gyan.FFmpeg; Linux: apt install ffmpeg)", err)
+	}
+
 	minioClient, err := storage.NewMinIOClient()
 	if err != nil {
 		log.Fatalf("[storage] init MinIO: %v", err)

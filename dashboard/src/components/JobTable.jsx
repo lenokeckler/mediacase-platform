@@ -32,6 +32,7 @@ function ProgressBar({ value, status }) {
 }
 
 const FILTERS = ['all', 'pending', 'running', 'completed', 'failed']
+const FILTER_LABEL = { all: 'todas', pending: 'pendientes', running: 'en ejecución', completed: 'completadas', failed: 'fallidas' }
 
 export default function JobTable({ jobs }) {
     const [filter, setFilter] = useState('all')
@@ -52,13 +53,13 @@ export default function JobTable({ jobs }) {
                             className={`${styles.filterBtn} ${filter === f ? styles.active : ''}`}
                             onClick={() => setFilter(f)}
                         >
-                            {f}
+                            {FILTER_LABEL[f] || f}
                         </button>
                     ))}
                 </div>
                 <input
                     className={styles.search}
-                    placeholder="Search job ID, operation, worker…"
+                    placeholder="Buscar por id, operación, worker…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                 />
@@ -68,19 +69,19 @@ export default function JobTable({ jobs }) {
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            <th>Job ID</th>
-                            <th>Operation</th>
-                            <th>Status</th>
-                            <th>Progress</th>
+                            <th>Sub-tarea</th>
+                            <th>Operación</th>
+                            <th>Estado</th>
+                            <th>Progreso</th>
                             <th>Worker</th>
-                            <th>Priority</th>
-                            <th>Created</th>
+                            <th>Prioridad</th>
+                            <th>Creada</th>
                         </tr>
                     </thead>
                     <tbody>
                         {visible.length === 0 && (
                             <tr>
-                                <td colSpan={7} className={styles.empty}>No jobs match the current filter.</td>
+                                <td colSpan={7} className={styles.empty}>Ninguna sub-tarea con ese filtro.</td>
                             </tr>
                         )}
                         {visible.map(job => (
