@@ -40,6 +40,7 @@ func main() {
 	workerHub := coordinator.NewWorkerHub() // canal saliente de cada worker
 	scheduler := coordinator.NewScheduler(q, registry, workerHub, database)
 	api := coordinator.NewAPI(q, registry, hub, workerHub, database)
+	api.SetOnWorkerRestart(scheduler.ReclaimWorkerJobs) // proceso nuevo con ID conocido → re-encolar lo suyo
 
 	// ── WebSocket broadcast loop ───────────────────────────────────────────
 	hub.StartBroadcastLoop(func() coordinator.SystemSnapshot {

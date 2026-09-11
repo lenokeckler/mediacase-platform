@@ -45,20 +45,32 @@ func (r *Registry) loadFromDB() {
 	}
 }
 
-func (r *Registry) Register(w *models.WorkerInfo) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	w.LastSeen = time.Now()
-	w.Status = "idle"
-	r.workers[w.ID] = w
+// Register da de alta (o refresca) un worker. Devuelve true si el ID ya existía pero
+// con OTRA instancia: es un proceso nuevo, y los jobs del proceso anterior quedaron huérfanos.
+func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
+	restarted = r.registerNoDB(w)
 
-	// Persistir en DB para sobrevivir reinicios
+	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
 	r.db.Exec(`
 		INSERT INTO worker_registry (id, hostname, last_seen)
 		VALUES ($1, $2, NOW())
 		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW()`,
 		w.ID, w.Hostname,
 	)
+	return restarted
+}
+
+// registerNoDB es la parte en memoria de Register (probable sin base de datos).
+func (r *Registry) registerNoDB(w *models.WorkerInfo) (restarted bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if prev, ok := r.workers[w.ID]; ok && prev.Instance != "" && w.Instance != "" && prev.Instance != w.Instance {
+		restarted = true
+	}
+	w.LastSeen = time.Now()
+	w.Status = "idle"
+	r.workers[w.ID] = w
+	return restarted
 }
 
 func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int) bool {

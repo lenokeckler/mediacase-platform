@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 	"github.com/lenokeckler/mediacase-platform/internal/monitoring"
 	"github.com/lenokeckler/mediacase-platform/internal/multimedia"
@@ -83,19 +84,21 @@ type progressUpdate struct {
 // ── Worker ───────────────────────────────────────────────────────────────────
 
 type worker struct {
-	cfg     workerConfig
-	storage *storage.MinIOClient
-	jobCh   chan jobAssignment
-	wg      sync.WaitGroup
-	mu      sync.Mutex
-	active  int
+	cfg      workerConfig
+	instance string // aleatorio por proceso: le dice al coordinador si somos un arranque nuevo
+	storage  *storage.MinIOClient
+	jobCh    chan jobAssignment
+	wg       sync.WaitGroup
+	mu       sync.Mutex
+	active   int
 }
 
 func newWorker(cfg workerConfig, s *storage.MinIOClient) *worker {
 	return &worker{
-		cfg:     cfg,
-		storage: s,
-		jobCh:   make(chan jobAssignment, cfg.poolSize*2),
+		cfg:      cfg,
+		instance: uuid.New().String(),
+		storage:  s,
+		jobCh:    make(chan jobAssignment, cfg.poolSize*2),
 	}
 }
 
@@ -315,6 +318,7 @@ func (w *worker) register() error {
 	host, _ := os.Hostname()
 	payload := map[string]interface{}{
 		"id":       w.cfg.workerID,
+		"instance": w.instance,
 		"hostname": host, // solo informativo: el coordinador ya no necesita alcanzar al worker
 	}
 	body, _ := json.Marshal(payload)

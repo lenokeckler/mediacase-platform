@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"io"
@@ -24,6 +25,15 @@ type API struct {
 	hub       *Hub       // WebSocket del dashboard
 	workerHub *WorkerHub // WebSocket de los workers (canal saliente)
 	db        *sql.DB
+
+	// onWorkerRestart se invoca cuando un worker se registra con un ID conocido pero otra
+	// instancia (proceso nuevo): sus jobs en vuelo deben volver a la cola. Lo conecta el scheduler.
+	onWorkerRestart func(ctx context.Context, workerID string)
+}
+
+// SetOnWorkerRestart conecta el reclaim del scheduler al registro de workers.
+func (a *API) SetOnWorkerRestart(fn func(ctx context.Context, workerID string)) {
+	a.onWorkerRestart = fn
 }
 
 func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, database *sql.DB) *API {
@@ -55,6 +65,10 @@ func (a *API) Router() http.Handler {
 
 	// File browser (for batch UI)
 	mux.HandleFunc("GET /files", a.listFiles)
+
+	// Conectar otra máquina como worker: página + ZIP con el .env ya escrito
+	mux.HandleFunc("GET /connect", a.connectPage)
+	mux.HandleFunc("GET /download/worker", a.downloadWorker)
 
 	mux.HandleFunc("POST /jobs/{id}/progress", a.jobProgress)
 	mux.HandleFunc("POST /jobs/{id}/complete", a.jobComplete)
@@ -166,8 +180,13 @@ func (a *API) registerWorker(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
 	}
-	a.registry.Register(&info)
-	log.Printf("[api] worker registered: %s (%s)", info.ID, info.Hostname)
+	restarted := a.registry.Register(&info)
+	log.Printf("[api] worker registered: %s (%s) instance=%s", info.ID, info.Hostname, shortID(info.Instance))
+	if restarted && a.onWorkerRestart != nil {
+		// Proceso nuevo con el mismo ID: lo que el proceso anterior tenía en vuelo se perdió.
+		log.Printf("[api] worker %s es un proceso nuevo: reclamando sus sub-tareas huérfanas", info.ID)
+		a.onWorkerRestart(r.Context(), info.ID)
+	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "registered"})
 }
@@ -450,4 +469,11 @@ func guessFileType(filename string) string {
 		return "video"
 	}
 	return "audio"
+}
+
+func shortID(s string) string {
+	if len(s) > 8 {
+		return s[:8]
+	}
+	return s
 }

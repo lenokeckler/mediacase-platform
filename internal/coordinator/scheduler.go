@@ -43,7 +43,7 @@ func (s *Scheduler) Run(ctx context.Context) {
 			evicted := s.registry.EvictStale()
 			for _, id := range evicted {
 				log.Printf("[scheduler] evicted stale worker: %s", id)
-				s.reclaimWorkerJobs(ctx, id)
+				s.ReclaimWorkerJobs(ctx, id)
 			}
 
 		case <-stuckTicker.C:
@@ -120,9 +120,9 @@ func (s *Scheduler) sendToWorker(ctx context.Context, worker *models.WorkerInfo,
 	return s.workerHub.Assign(ctx, worker.ID, job)
 }
 
-// reclaimWorkerJobs re-enqueues all ASSIGNED or RUNNING jobs
-// from a worker that stopped responding back into the Redis queue.
-func (s *Scheduler) reclaimWorkerJobs(ctx context.Context, workerID string) {
+// ReclaimWorkerJobs re-enqueues all ASSIGNED or RUNNING jobs of a worker that stopped
+// responding (evicted) or that came back as a new process (re-registered with another instance).
+func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs SET status='pending', worker_id=NULL
 		 WHERE worker_id=$1 AND status IN ('assigned','running')

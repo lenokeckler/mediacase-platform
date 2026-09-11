@@ -42,6 +42,7 @@ type Job struct {
 
 type WorkerInfo struct {
 	ID         string    `json:"id"`
+	Instance   string    `json:"instance,omitempty"` // identifica al PROCESO: cambia en cada arranque
 	Hostname   string    `json:"hostname"`
 	Status     string    `json:"status"`
 	ActiveJobs int       `json:"active_jobs"`
