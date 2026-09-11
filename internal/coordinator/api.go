@@ -19,14 +19,15 @@ import (
 
 // API groups all HTTP handlers of the coordinator.
 type API struct {
-	queue    *queue.Queue
-	registry *Registry
-	hub      *Hub
-	db       *sql.DB
+	queue     *queue.Queue
+	registry  *Registry
+	hub       *Hub       // WebSocket del dashboard
+	workerHub *WorkerHub // WebSocket de los workers (canal saliente)
+	db        *sql.DB
 }
 
-func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, database *sql.DB) *API {
-	return &API{queue: q, registry: reg, hub: hub, db: database}
+func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, database *sql.DB) *API {
+	return &API{queue: q, registry: reg, hub: hub, workerHub: workerHub, db: database}
 }
 
 // Router builds and returns the HTTP mux with all the routes.
@@ -42,6 +43,7 @@ func (a *API) Router() http.Handler {
 	// Workers
 	mux.HandleFunc("POST /workers/register", a.registerWorker)
 	mux.HandleFunc("POST /workers/{id}/heartbeat", a.workerHeartbeat)
+	mux.HandleFunc("GET /workers/{id}/stream", a.workerHub.ServeStream) // canal saliente del worker
 	mux.HandleFunc("GET /workers", a.listWorkers)
 
 	// Stats + WebSocket

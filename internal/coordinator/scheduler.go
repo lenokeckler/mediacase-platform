@@ -3,11 +3,9 @@ package coordinator
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/lenokeckler/mediacase-platform/internal/models"
@@ -16,13 +14,14 @@ import (
 
 // Scheduler reads jobs from the queue and assigns them to workers.
 type Scheduler struct {
-	queue    *queue.Queue
-	registry *Registry
-	db       *sql.DB
+	queue     *queue.Queue
+	registry  *Registry
+	workerHub *WorkerHub
+	db        *sql.DB
 }
 
-func NewScheduler(q *queue.Queue, reg *Registry, db *sql.DB) *Scheduler {
-	return &Scheduler{queue: q, registry: reg, db: db}
+func NewScheduler(q *queue.Queue, reg *Registry, workerHub *WorkerHub, db *sql.DB) *Scheduler {
+	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db}
 }
 
 // Run is the main loop - it runs indefinitely in its own goroutine.
@@ -67,7 +66,8 @@ func (s *Scheduler) Run(ctx context.Context) {
 // dispatch takes a job from the queue and assigns it to the best available worker.
 func (s *Scheduler) dispatch(ctx context.Context) error {
 	worker := s.registry.LeastLoaded()
-	if worker == nil {
+	if worker == nil || !s.workerHub.IsConnected(worker.ID) {
+		// Sin worker vivo con canal abierto: las sub-tareas esperan en la cola.
 		return fmt.Errorf("no workers available")
 	}
 
@@ -90,7 +90,7 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 
 	// Send the job to the worker over HTTP.
 	if err := s.sendToWorker(ctx, worker, job); err != nil {
-		if strings.Contains(err.Error(), "returned 429") {
+		if errors.Is(err, ErrWorkerBusy) {
 			log.Printf("[scheduler] worker %s is full, re-queueing job %s without incrementing retries", worker.ID, job.ID)
 			// Re-enqueue without incrementing retries
 			if err := s.queue.Enqueue(ctx, job); err != nil {
@@ -114,23 +114,10 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 	return nil
 }
 
-// sendToWorker sends an HTTP POST to the worker with the assigned job.
+// sendToWorker entrega la sub-tarea por el canal que el propio worker abrió.
+// El coordinador nunca inicia una conexión hacia el worker.
 func (s *Scheduler) sendToWorker(ctx context.Context, worker *models.WorkerInfo, job *models.Job) error {
-	data, _ := json.Marshal(job)
-	url := fmt.Sprintf("http://%s/tasks", worker.Hostname)
-	req, _ := http.NewRequestWithContext(ctx, "POST", url, strings.NewReader(string(data)))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusAccepted {
-		return fmt.Errorf("worker returned %d", resp.StatusCode)
-	}
-	return nil
+	return s.workerHub.Assign(ctx, worker.ID, job)
 }
 
 // reclaimWorkerJobs re-enqueues all ASSIGNED or RUNNING jobs

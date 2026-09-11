@@ -36,9 +36,10 @@ func main() {
 
 	// ── Inicializar componentes ────────────────────────────────────────────
 	registry := coordinator.NewRegistry(database)
-	hub := coordinator.NewHub()
-	scheduler := coordinator.NewScheduler(q, registry, database)
-	api := coordinator.NewAPI(q, registry, hub, database)
+	hub := coordinator.NewHub()             // dashboard
+	workerHub := coordinator.NewWorkerHub() // canal saliente de cada worker
+	scheduler := coordinator.NewScheduler(q, registry, workerHub, database)
+	api := coordinator.NewAPI(q, registry, hub, workerHub, database)
 
 	// ── WebSocket broadcast loop ───────────────────────────────────────────
 	hub.StartBroadcastLoop(func() coordinator.SystemSnapshot {
