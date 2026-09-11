@@ -1,0 +1,20 @@
+.wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+}
+.header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.title { font-size: 13px; font-weight: 600; color: var(--text); }
+.summary { font-size: 12px; color: var(--muted); }
+.legend { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--muted); }
+.legendItem { display: inline-flex; align-items: center; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 320px; overflow-y: auto; }
+.row { cursor: pointer; }
+.row:hover .name { color: var(--accent, #818cf8); }
+.rowHead { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+.name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+.counts { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar { display: flex; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.seg { height: 100%; transition: width 0.4s ease; }

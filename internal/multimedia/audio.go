@@ -34,6 +34,7 @@ func ExtractAudio(ctx context.Context, inputPath string, cb progressFn) (string,
 	}
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	lowerPriority(cmd) // ffmpeg por debajo de los procesos de control (ver priority_*.go)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return "", fmt.Errorf("stderr pipe: %w", err)
@@ -41,6 +42,7 @@ func ExtractAudio(ctx context.Context, inputPath string, cb progressFn) (string,
 	if err := cmd.Start(); err != nil {
 		return "", fmt.Errorf("ffmpeg start: %w", err)
 	}
+	lowerPriorityStarted(cmd)
 
 	go streamProgress(stderr, cb)
 
@@ -75,6 +77,7 @@ func ConvertAudio(ctx context.Context, inputPath string, cb progressFn) (string,
 	}
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	lowerPriority(cmd) // ffmpeg por debajo de los procesos de control (ver priority_*.go)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return "", fmt.Errorf("stderr pipe: %w", err)
@@ -82,6 +85,7 @@ func ConvertAudio(ctx context.Context, inputPath string, cb progressFn) (string,
 	if err := cmd.Start(); err != nil {
 		return "", fmt.Errorf("ffmpeg start: %w", err)
 	}
+	lowerPriorityStarted(cmd)
 
 	go streamProgress(stderr, cb)
 

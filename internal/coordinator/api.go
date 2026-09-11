@@ -69,9 +69,10 @@ func (a *API) Router() http.Handler {
 	mux.HandleFunc("POST /workers/{id}/unregister", a.unregisterWorker) // despedida: re-encolar lo suyo ya
 	mux.HandleFunc("GET /workers", a.listWorkers)
 
-	// Stats + WebSocket
+	// Stats + WebSocket + Prometheus
 	mux.HandleFunc("GET /stats", a.getStats)
 	mux.HandleFunc("GET /ws", a.hub.ServeWS)
+	mux.Handle("GET /metrics", MetricsHandler(a.registry, a.queue, a.db))
 
 	// Entradas: subir al bucket dataset/ y listarlo (lo usa el dashboard para armar casos)
 	mux.HandleFunc("POST /upload", a.uploadFiles)
@@ -224,10 +225,25 @@ func (a *API) listWorkers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(a.registry.All())
 }
 
+// getStats: conteo de sub-tareas por estado y, además, los casos abiertos con sus sub-tareas
+// agrupadas por estado (consigna: "sub-tareas activas o en espera, agrupadas por caso").
 func (a *API) getStats(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, a.StatsSnapshot())
+}
+
+// StatsSnapshot arma el objeto de /stats; lo comparte el snapshot del WebSocket.
+func (a *API) StatsSnapshot() map[string]any {
 	stats, _ := db.GetStats(a.db)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
+	out := make(map[string]any, len(stats)+1)
+	for k, v := range stats {
+		out[k] = v
+	}
+	byCase, err := db.ListActiveCases(a.db)
+	if err != nil {
+		log.Printf("[stats] casos activos: %v", err)
+	}
+	out["by_case"] = byCase
+	return out
 }
 
 func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
@@ -260,10 +276,12 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 	case string(models.StatusCompleted):
 		_, err = a.db.Exec(`UPDATE jobs SET status='completed', progress=100, result_url=$1,
 			completed_at=NOW() WHERE id=$2 AND status <> 'cancelled'`, payload.ResultURL, id)
+		JobsResolved.WithLabelValues("completed", a.poolOf(id)).Inc()
 		a.resolveCase(r.Context(), id)
 	case string(models.StatusFailed):
 		_, err = a.db.Exec(`UPDATE jobs SET status='failed', progress=$1, error_msg=$2,
 			completed_at=NOW() WHERE id=$3 AND status <> 'cancelled'`, payload.Progress, payload.ErrorMsg, id)
+		JobsResolved.WithLabelValues("failed", a.poolOf(id)).Inc()
 		a.resolveCase(r.Context(), id)
 	case "":
 		_, err = a.db.Exec(`UPDATE jobs SET progress=$1 WHERE id=$2`, payload.Progress, id)
@@ -276,6 +294,15 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+// poolOf devuelve el pool de una sub-tarea (etiqueta de las métricas de throughput).
+func (a *API) poolOf(jobID string) string {
+	var pool sql.NullString
+	if err := a.db.QueryRow(`SELECT pool FROM jobs WHERE id=$1`, jobID).Scan(&pool); err != nil || !pool.Valid || pool.String == "" {
+		return "none"
+	}
+	return pool.String
 }
 
 func (a *API) jobComplete(w http.ResponseWriter, r *http.Request) {

@@ -304,24 +304,28 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 ---
 
-# FASE 5 — Monitoreo completo
+# FASE 5 — Monitoreo completo  ✅ cerrada 2026-09-11 (hito `tests/monitoring_scenario.sh`)
+
+> **Resultado:** `GET /metrics` del coordinador con 10 familias `mediacase_*` (workers vía heartbeat, colas por pool y prioridad, casos y sub-tareas por estado, histograma de duración de casos, contador de resueltas); Prometheus scrapea `host.docker.internal:8080`; Grafana con dashboard nuevo de 13 paneles (lectura anónima); `/stats` y el snapshot WS traen `by_case`; tarjeta **Casos activos** en Monitor (`#monitor` enlaza directo). `HITO OK` durante 20 casos concurrentes (412 sub-tareas): cola video hasta 195, 3 workers al 100 %, 20 casos observados en el histograma. Capturas en `docs/img/` (Grafana bajo carga, Monitor con casos activos, redistribución al matar node1 con node4 tomando su pool).
+>
+> **Desvíos y hallazgos bajo carga real (arreglados):** (1) el snapshot WS mandaba las 2000 sub-tareas más recientes cada segundo (~1 MB/s por cliente): ahora solo las vivas y los contadores vienen del servidor. (2) Reiniciar el coordinador a mitad de una carga perdía los reportes `completed` de los workers (quedaban en `assigned`/`running` hasta el vencimiento de 15 min): el worker reintenta los reportes terminales hasta 15 min y el coordinador re-encola `assigned` sin noticias tras 15 min (`assigned_at` nuevo). (3) Con 16 ffmpeg en la laptop, el coordinador se quedaba sin CPU, los heartbeats colgaban 30 s y los workers se expulsaban falsamente: ffmpeg ahora corre con prioridad por debajo de la normal (Windows `BELOW_NORMAL_PRIORITY_CLASS`, Linux `nice 10`) y el worker usa un cliente HTTP con plazo de 10 s. (4) `tests/measure_times.sh` reescrito para casos (Task 6.5 adelantada). (5) La captura de pantalla se hace con `scripts/screenshot.py` (Chrome headless vía DevTools) porque la extensión del navegador no estaba disponible.
 
 **Hito:** Grafana muestra, durante una carga de 20 casos: CPU/memoria por worker (incluidos los remotos), sub-tareas activas por pool, casos por estado, y profundidad de cola por pool; el dashboard agrupa las sub-tareas activas/en espera por caso.
 
-### Task 5.1: `/metrics` en el coordinador
+### Task 5.1: `/metrics` en el coordinador  ✅
 - Los workers remotos ya no exponen puerto: Prometheus no puede *scrapear*los. El coordinador expone `GET /metrics` con: `mediacase_worker_cpu_percent{worker,role}`, `mediacase_worker_mem_percent{worker,role}`, `mediacase_worker_active_jobs{worker,role}` (desde el heartbeat), `mediacase_queue_depth{pool,priority}`, `mediacase_cases{status}`, `mediacase_jobs{status,pool}`, `mediacase_case_duration_seconds` (histograma al cerrar).
 - `infra/prometheus.yml`: un solo target, `host.docker.internal:8080` (Prometheus corre en Docker, el coordinador nativo).
 - **Verificación:** `curl localhost:8080/metrics | grep mediacase_` ≥ 6 familias; en `localhost:9090` la query `mediacase_worker_cpu_percent` devuelve lila.
 
-### Task 5.2: Grafana
+### Task 5.2: Grafana  ✅
 - `infra/grafana/dashboards/mediacase.json` con paneles: workers (CPU/mem/activos), colas por pool, casos por estado, duración de casos p50/p95, throughput (sub-tareas/min).
 - **Verificación:** capturas durante `ingest load`.
 
-### Task 5.3: Sub-tareas agrupadas por caso en el monitoreo
+### Task 5.3: Sub-tareas agrupadas por caso en el monitoreo  ✅
 - `GET /stats` devuelve además `by_case: [{case_id, name, status, running, pending, completed, failed}]` para los casos no terminales; el snapshot WS lo incluye; `Monitor` del dashboard muestra una tarjeta "Casos activos" con esa agrupación.
 - **Verificación:** con 3 casos en curso, la tarjeta muestra los 3 con sus contadores cambiando.
 
-### Task 5.4: HITO
+### Task 5.4: HITO  ✅ `HITO OK` 2026-09-11 09:20
 - `ingest load --cases 20 --concurrency 5` con 3 workers (host + lila + VM o segundo worker local): capturas de Grafana y del dashboard con saturación (`by_pool` > 0 durante > 30 s) y redistribución (matar un worker: sus sub-tareas pasan a otro; se ve en la gráfica de activos por worker).
 
 ---

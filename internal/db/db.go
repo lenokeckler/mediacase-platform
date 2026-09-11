@@ -76,6 +76,7 @@ func Migrate(db *sql.DB) error {
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS case_id   TEXT REFERENCES cases(id);
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS file_type TEXT NOT NULL DEFAULT '';
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS pool      TEXT NOT NULL DEFAULT '';
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
 	CREATE INDEX IF NOT EXISTS idx_jobs_case    ON jobs(case_id);
 	CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
 
@@ -128,6 +129,25 @@ func ListJobs(db *sql.DB, status string) ([]*models.Job, error) {
 	for rows.Next() {
 		j, err := scanJob(rows)
 		if err == nil {
+			jobs = append(jobs, j)
+		}
+	}
+	return jobs, nil
+}
+
+// ListLiveJobs devuelve solo las sub-tareas no terminales (pending, assigned, running): es lo
+// que el dashboard dibuja en vivo. Mandar las 2000 más recientes cada segundo por WebSocket
+// pesaba ~1 MB por cliente con el dataset real; el historial se consulta aparte (GET /jobs).
+func ListLiveJobs(db *sql.DB) ([]*models.Job, error) {
+	rows, err := db.Query(`SELECT ` + jobColumns + ` FROM jobs
+		WHERE status IN ('pending', 'assigned', 'running') ORDER BY created_at DESC LIMIT 2000`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	jobs := make([]*models.Job, 0)
+	for rows.Next() {
+		if j, err := scanJob(rows); err == nil {
 			jobs = append(jobs, j)
 		}
 	}

@@ -352,6 +352,15 @@ func (w *worker) unregister() {
 	log.Printf("[shutdown] coordinador avisado; sus sub-tareas vuelven a la cola")
 }
 
+// apiClient: todas las llamadas HTTP al coordinador con plazo. Sin él, un coordinador saturado
+// dejaba colgado el heartbeat 30 s o más y el worker terminaba expulsado aunque estuviera vivo.
+var apiClient = &http.Client{Timeout: 10 * time.Second}
+
+// Cuánto insiste el worker en entregar un resultado terminal (completed/failed) si el
+// coordinador no responde. Coincide con la ventana en que el coordinador da por vencida una
+// sub-tarea en running sin noticias (reclaimStuckJobs, 15 min).
+const terminalReportRetry = 15 * time.Minute
+
 func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg string) {
 	payload := progressUpdate{
 		JobID:     jobID,
@@ -362,15 +371,41 @@ func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg
 	}
 	body, _ := json.Marshal(payload)
 	url := fmt.Sprintf("%s/jobs/%s/progress", w.cfg.coordinatorURL, jobID)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
-	if err != nil {
-		log.Printf("[progress] POST falló para job %s: %v", jobID, err)
+	err := postReport(url, body, status, jobID)
+	if err == nil {
 		return
+	}
+	log.Printf("[progress] POST falló para job %s: %v", jobID, err)
+	if status != string(models.StatusCompleted) && status != string(models.StatusFailed) {
+		return // un avance perdido no importa; el siguiente lo reemplaza
+	}
+	// El resultado de una sub-tarea NO se puede perder: si el coordinador está reiniciando, la
+	// sub-tarea quedaría en assigned/running para siempre. Se reintenta en segundo plano (el
+	// slot del pool queda libre) hasta que conteste o se agote la ventana.
+	go func() {
+		deadline := time.Now().Add(terminalReportRetry)
+		for wait := 2 * time.Second; time.Now().Before(deadline); wait = min(wait*2, 30*time.Second) {
+			time.Sleep(wait)
+			if err := postReport(url, body, status, jobID); err == nil {
+				log.Printf("[progress] reporte %s de job %s entregado tras reintentos", status, jobID)
+				return
+			}
+		}
+		log.Printf("[progress] reporte %s de job %s perdido: el coordinador no respondió en %s", status, jobID, terminalReportRetry)
+	}()
+}
+
+// postReport envía un reporte y devuelve error si no hubo respuesta 2xx.
+func postReport(url string, body []byte, status, jobID string) error {
+	resp, err := apiClient.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
-		log.Printf("[progress] coordinador respondió %d al reporte %s de job %s", resp.StatusCode, status, jobID)
+		return fmt.Errorf("coordinador respondió %d al reporte %s de job %s", resp.StatusCode, status, jobID)
 	}
+	return nil
 }
 
 // ── Registro y heartbeat ─────────────────────────────────────────────────────
@@ -385,7 +420,7 @@ func (w *worker) register() error {
 		"capabilities": RoleCapabilities(w.cfg.role),
 	}
 	body, _ := json.Marshal(payload)
-	resp, err := http.Post(
+	resp, err := apiClient.Post(
 		w.cfg.coordinatorURL+"/workers/register",
 		"application/json",
 		bytes.NewReader(body),
@@ -421,7 +456,7 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 			}
 			body, _ := json.Marshal(payload)
 			url := fmt.Sprintf("%s/workers/%s/heartbeat", w.cfg.coordinatorURL, w.cfg.workerID)
-			resp, err := http.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
+			resp, err := apiClient.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
 			if err != nil {
 				log.Printf("[heartbeat] falló: %v", err)
 				continue

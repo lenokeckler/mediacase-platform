@@ -157,6 +157,7 @@ func Convert(ctx context.Context, inputPath string, cb progressFn) (string, erro
 	}
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	lowerPriority(cmd) // ffmpeg por debajo de los procesos de control (ver priority_*.go)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return "", fmt.Errorf("stderr pipe: %w", err)
@@ -164,6 +165,7 @@ func Convert(ctx context.Context, inputPath string, cb progressFn) (string, erro
 	if err := cmd.Start(); err != nil {
 		return "", fmt.Errorf("ffmpeg start: %w", err)
 	}
+	lowerPriorityStarted(cmd)
 
 	go streamProgress(stderr, cb)
 

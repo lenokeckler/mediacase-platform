@@ -105,6 +105,15 @@ func (q *Queue) Depth(ctx context.Context) Depth {
 	return d
 }
 
+// DepthFor devuelve las sub-tareas en espera de UN pool, por nombre de prioridad.
+func (q *Queue) DepthFor(ctx context.Context, pool string) map[string]int64 {
+	out := make(map[string]int64, len(priorityNames))
+	for _, n := range priorityNames {
+		out[n] = q.waiting(ctx, "jobs:"+pool+":"+n)
+	}
+	return out
+}
+
 func (q *Queue) waiting(ctx context.Context, stream string) int64 {
 	groups, err := q.client.XInfoGroups(ctx, stream).Result()
 	if err != nil {

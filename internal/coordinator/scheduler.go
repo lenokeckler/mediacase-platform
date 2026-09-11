@@ -184,7 +184,11 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 
 // reclaimStuckJobs marks as failed any job that has been in 'running' state
 // for longer than 15 minutes — these are jobs whose worker silently dropped them.
+// Also re-queues jobs stuck in 'assigned' for that long: the worker accepted them but its
+// 'running' report never arrived (typically the coordinator was restarting), so nobody knows
+// if they ran; back to the queue is the safe move.
 func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
+	s.requeueStaleAssigned(ctx)
 	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs
 		 SET status='failed', completed_at=NOW(),
@@ -217,6 +221,30 @@ func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
 	}
 }
 
+// requeueStaleAssigned devuelve a la cola las sub-tareas asignadas hace > 15 min sin noticias.
+func (s *Scheduler) requeueStaleAssigned(ctx context.Context) {
+	rows, err := s.db.QueryContext(ctx,
+		`UPDATE jobs SET status='pending', worker_id=NULL
+		 WHERE status='assigned' AND COALESCE(assigned_at, created_at) < NOW() - INTERVAL '15 minutes'
+		 RETURNING id, file_path, operation, priority, retries, max_retries, COALESCE(case_id,''), file_type, pool`)
+	if err != nil {
+		log.Printf("[scheduler] stale-assigned reclaim failed: %v", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		job := &models.Job{}
+		if err := rows.Scan(&job.ID, &job.FilePath, &job.Operation, &job.Priority, &job.Retries, &job.MaxRetries,
+			&job.CaseID, &job.FileType, &job.Pool); err != nil {
+			continue
+		}
+		log.Printf("[scheduler] job %s llevaba > 15 min en assigned sin noticias — re-encolado", job.ID)
+		if err := s.queue.Enqueue(ctx, job); err != nil {
+			log.Printf("[scheduler] re-enqueue failed for stale job %s: %v", job.ID, err)
+		}
+	}
+}
+
 // requeueJob puts a job back in Redis.
 func (s *Scheduler) requeueJob(ctx context.Context, job *models.Job) {
 	job.Retries++
@@ -234,7 +262,8 @@ func (s *Scheduler) requeueJob(ctx context.Context, job *models.Job) {
 
 func (s *Scheduler) updateJobStatus(jobID string, status models.JobStatus, workerID string) error {
 	_, err := s.db.Exec(
-		`UPDATE jobs SET status=$1, worker_id=NULLIF($2,'') WHERE id=$3`,
+		`UPDATE jobs SET status=$1, worker_id=NULLIF($2,''),
+		 assigned_at=CASE WHEN $1='assigned' THEN NOW() ELSE assigned_at END WHERE id=$3`,
 		status, workerID, jobID,
 	)
 	return err

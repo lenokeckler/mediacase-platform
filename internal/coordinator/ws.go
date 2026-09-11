@@ -25,6 +25,7 @@ type SystemSnapshot struct {
 	Jobs       interface{}        `json:"jobs"`
 	QueueDepth QueueDepthSnapshot `json:"queue_depth"`
 	Stats      interface{}        `json:"stats"`
+	ByCase     interface{}        `json:"by_case"` // casos abiertos con sus sub-tareas por estado
 }
 
 // Hub manages all active WebSocket connections.

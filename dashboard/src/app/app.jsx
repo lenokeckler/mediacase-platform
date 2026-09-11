@@ -5,6 +5,7 @@ import WorkerCard from '../components/WorkerCard'
 import JobTable from '../components/JobTable'
 import StatsBar from '../components/StatsBar'
 import QueueDepth from '../components/QueueDepth'
+import ActiveCases from '../components/ActiveCases'
 import JobHistory from '../components/JobHistory'
 import CasesPanel from '../components/CasesPanel'
 import SubmitCasePanel from '../components/SubmitCasePanel'
@@ -23,9 +24,10 @@ function ConnectionBadge({ connected }) {
 }
 
 export default function App() {
-    const { workers, jobs, stats, queue_depth, connected, refresh } = useSystemState()
+    const { workers, jobs, stats, queue_depth, by_case, connected, refresh } = useSystemState()
     const casesState = useCases()
-    const [tab, setTab] = useState('Casos')
+    // Pestaña inicial desde el hash (http://…:8080/#monitor) para enlazar directo al monitoreo.
+    const [tab, setTab] = useState(() => ({ '#monitor': 'Monitor', '#historial': 'Historial' })[window.location.hash] || 'Casos')
     const [showNew, setShowNew] = useState(false)
 
     const activeCases = casesState.cases.filter(c => !['completed', 'partially_completed', 'failed', 'cancelled'].includes(c.status)).length
@@ -113,6 +115,14 @@ export default function App() {
                                 {workers.map(w => <WorkerCard key={w.id} worker={w} />)}
                                 <QueueDepth queue_depth={queue_depth} />
                             </div>
+                        </section>
+
+                        <section className={styles.section}>
+                            <div className={styles.sectionHeader}>
+                                <h2 className={styles.sectionTitle}>Sub-tareas agrupadas por caso</h2>
+                                <span className={styles.sectionCount}>{by_case.length} caso{by_case.length === 1 ? '' : 's'} abierto{by_case.length === 1 ? '' : 's'} · clic en uno para abrirlo</span>
+                            </div>
+                            <ActiveCases byCase={by_case} onOpen={(id) => { casesState.openCase(id); setTab('Casos') }} />
                         </section>
 
                         <section className={styles.section}>

@@ -59,6 +59,11 @@ func main() {
 			return
 		}
 		jobs, _ := db.ListJobsByCase(database, caseID)
+		closedAt := time.Now()
+		if c.CompletedAt != nil {
+			closedAt = *c.CompletedAt
+		}
+		coordinator.ObserveCaseClosed(string(c.Status), c.CreatedAt, closedAt)
 		rep := cases.BuildReport(c, jobs)
 		raw, _ := json.MarshalIndent(rep, "", "  ")
 		if err := db.SaveCaseReport(database, caseID, raw); err != nil {
@@ -84,8 +89,8 @@ func main() {
 
 	// ── WebSocket broadcast loop ───────────────────────────────────────────
 	hub.StartBroadcastLoop(func() coordinator.SystemSnapshot {
-		jobs, _ := db.ListJobs(database, "")
-		stats, _ := db.GetStats(database)
+		jobs, _ := db.ListLiveJobs(database) // solo lo vivo; el historial va por GET /jobs
+		stats := api.StatsSnapshot()
 
 		// Profundidad de colas en vivo: por prioridad (para el dashboard actual) y por pool.
 		d := q.Depth(ctx)
@@ -97,6 +102,7 @@ func main() {
 			Workers: registry.All(),
 			Jobs:    jobs,
 			Stats:   stats,
+			ByCase:  stats["by_case"],
 			QueueDepth: coordinator.QueueDepthSnapshot{
 				High:   int(d.ByPriority["high"]),
 				Normal: int(d.ByPriority["normal"]),

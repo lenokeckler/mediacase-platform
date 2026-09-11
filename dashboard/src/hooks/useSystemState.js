@@ -13,6 +13,7 @@ const EMPTY_STATE = {
     jobs: [],
     stats: { pending: 0, assigned: 0, running: 0, completed: 0, failed: 0 },
     queue_depth: { high: 0, normal: 0, low: 0, by_pool: {} },
+    by_case: [],
 }
 
 export function useSystemState() {
@@ -51,14 +52,25 @@ export function useSystemState() {
                     })
                 }
 
-                // Calculate stats from filtered jobs only
-                const stats = {
-                    pending: filteredJobs.filter(j => j.status === 'pending').length,
-                    assigned: filteredJobs.filter(j => j.status === 'assigned').length,
-                    running: filteredJobs.filter(j => j.status === 'running').length,
-                    completed: filteredJobs.filter(j => j.status === 'completed').length,
-                    failed: filteredJobs.filter(j => j.status === 'failed').length,
-                }
+                // Los contadores vienen del servidor (cuentan TODAS las sub-tareas, también las
+                // terminadas, que ya no viajan en el snapshot). Tras "Limpiar" se cuentan solo las
+                // vivas creadas después.
+                const srv = data.stats || {}
+                const stats = refreshTimeRef.current
+                    ? {
+                        pending: filteredJobs.filter(j => j.status === 'pending').length,
+                        assigned: filteredJobs.filter(j => j.status === 'assigned').length,
+                        running: filteredJobs.filter(j => j.status === 'running').length,
+                        completed: 0,
+                        failed: 0,
+                    }
+                    : {
+                        pending: srv.pending ?? 0,
+                        assigned: srv.assigned ?? 0,
+                        running: srv.running ?? 0,
+                        completed: srv.completed ?? 0,
+                        failed: srv.failed ?? 0,
+                    }
 
                 // If refresh was clicked, queue_depth should be 0 (only new jobs in queue)
                 // Otherwise use server data
@@ -86,6 +98,7 @@ export function useSystemState() {
                     jobs: liveJobs,
                     stats,
                     queue_depth,
+                    by_case: Array.isArray(data.by_case) ? data.by_case : [],
                 })
             } catch {
                 // malformed message — ignore silently

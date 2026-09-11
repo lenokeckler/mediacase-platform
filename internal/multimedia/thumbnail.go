@@ -30,6 +30,7 @@ func Thumbnail(ctx context.Context, inputPath string, cb progressFn) (string, er
 	}
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	lowerPriority(cmd) // ffmpeg por debajo de los procesos de control (ver priority_*.go)
 	if out2, err := cmd.CombinedOutput(); err != nil {
 		// Video frame failed — try waveform (works for audio streams).
 		log.Printf("[thumbnail] video frame failed (%v), trying waveform", err)
