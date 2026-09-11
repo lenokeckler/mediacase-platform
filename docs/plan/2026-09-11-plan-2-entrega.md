@@ -269,11 +269,15 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 
 ---
 
-# FASE 4 — Dataset real y generación automática de casos
+# FASE 4 — Dataset real y generación automática de casos  ✅ cerrada 2026-09-11 (hito `tests/dataset_scenario.sh`)
+
+> **Resultado:** 492 archivos / 14.33 GB (250 video · 172 audio · 70 imágenes; 310 livianos · 140 medianos · 42 pesados), `check_manifest.py` OK, `ingest cases --group-by session --limit 10` → 10 casos (6 homogéneos, 4 heterogéneos, 197 sub-tareas) todos `completed`, `HITO OK`. Documentado en `docs/dataset.md`.
+>
+> **Desvíos respecto a lo planeado:** (1) el generador v2 no era reproducible (bash ≥ 5.1 re-siembra `$RANDOM` en cada subshell) ni respetaba los tamaños (libvpx dobla el bitrate con `-minrate/-maxrate`; x264 sin `nal-hrd=cbr` se queda corto en contenido simple) → reescrito como v3 con PRNG propio, tamaño objetivo + verificación con `stat` y un reintento; se regeneró todo desde cero. (2) 4.2 (clips públicos) **no se hizo**: era opcional, obligaba a descargar cientos de MB por máquina y la consigna no lo pide; `docs/dataset.md` lo explica. (3) Dos bugs del sistema encontrados con la carga real y arreglados: `POST /cases` con decenas de archivos superaba el `WriteTimeout` de 10 s (cliente recibía EOF con el caso ya creado) → plazo propio de 5 min en `submitCase`; y un avance de progreso rezagado devolvía a `running` una sub-tarea ya `completed` (el caso quedaba en `processing` y a los 15 min se marcaba vencida) → `jobProgress` ya no regresa estados terminales; y `by_pool` del dashboard mostraba `-1` bajo carga porque Redis pierde el `lag` del consumer group tras `XDEL` (go-redis lo entrega como -1) → `queue.waiting` cuenta a mano con `XRANGE` desde el último id entregado. Verificado con `ingest load --cases 20 --concurrency 5 --wait`: 20 casos cerrados `completed` en 26 min, y con `--cases 10` `by_pool.video` = 93 sostenido con los 3 workers al 100 % de CPU. (4) `--group-by` acepta también `type` y `tier`; `--homogeneous-only/--heterogeneous-only` se llaman `--only homogeneous|heterogeneous`.
 
 **Hito:** `dataset/` contiene 400-600 archivos con audio, video **e imágenes**, en tres tamaños reales (livianos < 5 MB · medianos 20-50 MB · pesados 150-400 MB), con metadatos por archivo (`evento`, `sesion`, `lote`, `usuario`); `cmd/ingest` los sube y crea **automáticamente** al menos un lote de casos homogéneos y uno de heterogéneos; el generador de carga lanza N casos concurrentes y en el dashboard se ve la saturación por pool. `docs/dataset.md` documenta composición, criterios y volumen.
 
-### Task 4.1: Generador v2 (`dataset/scripts/generate_dataset.sh`)
+### Task 4.1: Generador v2 (`dataset/scripts/generate_dataset.sh`)  ✅ (v3, ver desvíos)
 - Contenido visual real: `testsrc2`, `mandelbrot`, `life`, `cellauto` de ffmpeg (no color plano) a 1080p, bitrate 6-12 Mb/s; audio con `anoisesrc`/`sine` mezclados.
 - **Tres niveles por tamaño real**, no por duración: liviano (5-20 s, 480p), mediano (60-120 s, 720p), pesado (5-10 min, 1080p). Verificar con `stat` que caen en los rangos y abortar si no.
 - Imágenes: `mandelbrot`/`testsrc2` a 1 frame en jpg/png/webp, 60-80 imágenes.
@@ -282,20 +286,20 @@ y quitar `uploadFile` viejo y `listFiles` (ya no hay carpeta local). `BatchPanel
 - Semilla fija (`--seed 42`) para que el dataset sea reproducible en cualquier máquina.
 - **Verificación:** `bash dataset/scripts/generate_dataset.sh --seed 42` termina; `python dataset/scripts/check_manifest.py` imprime la composición y valida rangos, cantidades mínimas (≥400) y que haya ≥ 3 valores por cada criterio de agrupación.
 
-### Task 4.2: Videos reales de dominio público (opcional pero recomendado)
+### Task 4.2: Videos reales de dominio público (opcional pero recomendado)  ⏭ no se hizo (ver desvíos)
 - `dataset/scripts/fetch_public.sh`: descarga 3-5 clips (Big Buck Bunny, Sintel, Tears of Steel — CC BY) y los registra en el manifest con `event=publico`. Documentar la licencia en `docs/dataset.md`.
 
-### Task 4.3: `cmd/ingest` — ingesta y generación automática de casos
+### Task 4.3: `cmd/ingest` — ingesta y generación automática de casos  ✅
 - `ingest upload --dir dataset/files --manifest dataset/manifest.json` → sube a MinIO `dataset/` con clave = `filename` (reanudable: salta lo que ya existe con el mismo tamaño).
 - `ingest cases --group-by event|session|batch|folder --priority 5 [--dry-run] [--limit N]` → lee el manifest, agrupa, y por cada grupo hace `POST /cases` con nombre `<criterio>=<valor>`; imprime tabla grupo → nº archivos → tipos → id de caso. `--homogeneous-only` (grupos de un solo tipo) y `--heterogeneous-only`.
 - `ingest load --concurrency N --cases M --group-by session` → **generador de carga**: M casos enviados con N en paralelo, imprime tiempos de creación y, al final, `GET /cases` con conteo por estado.
 - Tests unitarios de la agrupación (función pura sobre el manifest).
 - **Verificación:** `ingest cases --group-by event --dry-run` muestra ≥ 4 casos; `--group-by session` produce casos homogéneos y heterogéneos (el manifest lo garantiza por construcción); `ingest load --cases 20 --concurrency 5` y en el dashboard `by_pool.video` > 0 sostenido, workers al 100 % de CPU.
 
-### Task 4.4: `docs/dataset.md`
+### Task 4.4: `docs/dataset.md`  ✅
 - Composición (tabla por tipo/formato/tier con conteos y GB), criterios de agrupación en casos, volumen total, cómo regenerarlo, licencias de los clips públicos, y cómo se usa para carga por lotes y análisis de tiempos.
 
-### Task 4.5: HITO
+### Task 4.5: HITO  ✅ `HITO OK` 2026-09-11 02:52
 - `tests/dataset_scenario.sh`: sube el dataset (o verifica que está), crea casos por `session` con `--limit 10`, espera a que cierren, y comprueba: ≥ 1 homogéneo `completed`, ≥ 1 heterogéneo `completed` o `partially_completed`, todas las sub-tareas con `worker_id`. `HITO OK`.
 
 ---
