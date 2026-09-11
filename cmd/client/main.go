@@ -2,7 +2,9 @@
 // Test client: single job submission and batch/concurrent load testing.
 // Usage:
 //
-//	Single:  ./client -file /path/to/video.mp4 -op convert -priority 5 -watch
+//	Caso:    ./client -case -name boda -files boda.mp4,discurso.mp3,foto.jpg -priority 8 -watch
+//	Seguir:  ./client -case-status <id>
+//	Single:  ./client -file <clave-en-minio> -op convert -priority 5 -watch
 //	Batch:   ./client -batch -manifest dataset/manifest.json -concurrency 50 -watch
 //	Stats:   ./client -stats
 package main
@@ -386,6 +388,12 @@ func main() {
 	concurrency := flag.Int("concurrency", 20,
 		"Number of concurrent submissions in batch mode")
 
+	// Case flags (la unidad de trabajo de la consigna v2.0)
+	caseMode := flag.Bool("case", false, "Enviar un caso: usa -files, -name, -priority, -watch")
+	caseFiles := flag.String("files", "", "Claves en MinIO separadas por coma; 'a.mp4:extract_audio' fuerza la operación")
+	caseName := flag.String("name", "", "Nombre del caso")
+	caseStatus := flag.String("case-status", "", "Seguir un caso existente por id hasta que cierre e imprimir su reporte")
+
 	// Stats flag
 	statsMode := flag.Bool("stats", false,
 		"Print system stats and worker list, then exit")
@@ -407,13 +415,21 @@ func main() {
 	case *statsMode:
 		runStats(url)
 
+	case *caseMode:
+		runCase(url, *caseName, *caseFiles, *priority, *watch)
+
+	case *caseStatus != "":
+		watchCase(url, *caseStatus)
+
 	case *batch:
 		runBatch(url, *manifestPath, *concurrency, *priority, *watch)
 
 	default:
 		if *filePath == "" {
 			fmt.Println("Usage:")
-			fmt.Println("  Single job:  client -file <path> -op <operation> [-priority N] [-watch]")
+			fmt.Println("  Caso:        client -case -name <nombre> -files a.mp4,b.mp3[,c.jpg] [-priority N] [-watch]")
+			fmt.Println("  Seguir caso: client -case-status <id>")
+			fmt.Println("  Single job:  client -file <clave> -op <operation> [-priority N] [-watch]")
 			fmt.Println("  Batch load:  client -batch -manifest dataset/manifest.json [-concurrency 50] [-watch]")
 			fmt.Println("  Stats:       client -stats")
 			fmt.Println("\nOperations: convert | extract_audio | thumbnail")
