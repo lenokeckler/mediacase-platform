@@ -42,7 +42,7 @@ export default function App() {
     const history = useMetricsHistory(workers)
     const { theme, toggle } = useTheme()
     const [tab, setTab] = useState(() => NAV.find(n => n.hash === window.location.hash)?.key || 'Casos')
-    const [showNew, setShowNew] = useState(false)
+    const [showNew, setShowNew] = useState(() => window.location.hash === '#nuevo') // #nuevo abre el formulario
 
     // #caso=<id> abre directamente ese caso (enlaces desde el informe, Grafana o un compañero).
     useEffect(() => {
@@ -126,12 +126,10 @@ export default function App() {
                 {tab === 'Casos' && (
                     <>
                         {showNew && (
-                            <Section title="Nuevo caso">
-                                <SubmitCasePanel
-                                    onClose={() => setShowNew(false)}
-                                    onCreated={(id) => { setShowNew(false); casesState.openCase(id); casesState.refresh() }}
-                                />
-                            </Section>
+                            <SubmitCasePanel
+                                onClose={() => setShowNew(false)}
+                                onCreated={(id) => { setShowNew(false); casesState.openCase(id); casesState.refresh() }}
+                            />
                         )}
                         {casesState.selected && (
                             <Section title="Detalle del caso">
