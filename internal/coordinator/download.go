@@ -22,7 +22,7 @@ import (
 const connectHTML = `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MediaCase — conectar esta PC</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
   body{font-family:system-ui,sans-serif;max-width:640px;margin:3rem auto;padding:0 1rem;line-height:1.55;color:#1b1b1b;background:#fafafa}
   h1{font-size:1.6rem}
@@ -32,7 +32,7 @@ const connectHTML = `<!doctype html>
   ol li{margin:.35rem 0}
   .note{font-size:.92rem;color:#555;margin-top:2rem}
 </style></head><body>
-<p style="margin:0 0 .5rem"><img src="/logo.svg" alt="MediaCase" width="56" height="56"></p>
+<p style="margin:0 0 .5rem"><img src="/logo.png" alt="MediaCase" width="72" height="72"></p>
 <h1>Conectar esta PC como worker</h1>
 <p>Descargue el worker para su sistema, descomprímalo y ejecútelo. En unos segundos esta máquina aparece en el dashboard y empieza a recibir sub-tareas.</p>
 <p><a class="b" href="/download/worker?os=windows">Descargar para Windows</a><a class="b alt" href="/download/worker?os=linux">Descargar para Linux</a></p>

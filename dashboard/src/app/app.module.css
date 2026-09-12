@@ -8,7 +8,7 @@
 .collapsed { grid-template-columns: 68px minmax(0, 1fr); }
 
 .sidebar {
-    position: sticky;
+    position: sticky; /* también ancla el botón de plegar (absolute) */
     top: 0;
     height: 100vh;
     display: flex;
@@ -19,33 +19,39 @@
     gap: 22px;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; position: relative; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 6px 8px 2px; }
+.brandSub { white-space: nowrap; }
 .brandText { min-width: 0; }
+/* Botón de plegar: pegado al borde derecho de la barra, a la altura del logo, sin robarle espacio. */
 .collapseBtn {
-    margin-left: auto;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    position: absolute;
+    right: -13px;
+    top: 30px;
+    z-index: 2;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     color: var(--muted);
     width: 26px; height: 26px;
-    border-radius: 7px;
+    border-radius: 50%;
     display: grid; place-items: center;
     cursor: pointer;
-    flex-shrink: 0;
+    box-shadow: var(--shadow);
 }
 .collapseBtn:hover { color: var(--text); border-color: var(--accent); }
 
 /* Plegada: solo iconos; los textos se ocultan y el botón de plegar baja debajo del logo. */
 .collapsed .sidebar { padding: 20px 10px; }
-.collapsed .brand { flex-direction: column; gap: 8px; padding: 0; }
+.collapsed .brand { justify-content: center; padding: 4px 0 0; }
 .collapsed .brandText, .collapsed .navLabel, .collapsed .navItem span, .collapsed .sideStat, .collapsed .themeBtn span, .collapsed .live span:last-child { display: none; }
-.collapsed .collapseBtn { margin-left: 0; }
+
 .collapsed .navItem { justify-content: center; padding: 10px 0; }
 .collapsed .navBadge { display: none; }
 .collapsed .live { padding: 6px; }
 .collapsed .themeBtn { justify-content: center; padding: 8px; }
 .collapsed .sideFoot { align-items: center; }
 
-.brandMark { width: 40px; height: 40px; flex-shrink: 0; display: block; }
+.brandMark { width: 56px; height: 56px; flex-shrink: 0; display: block; }
+.collapsed .brandMark { width: 40px; height: 40px; }
 .brandName { font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text); line-height: 1.1; }
 .brandSub { font-size: 11px; color: var(--muted); }
 

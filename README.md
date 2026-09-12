@@ -1,4 +1,4 @@
-<p align="center"><img src="dashboard/src/app/public/logo.svg" alt="MediaCase" width="96" height="96"></p>
+<p align="center"><img src="dashboard/src/app/public/logo.png" alt="MediaCase" width="140" height="140"></p>
 
 # MediaCase
 
