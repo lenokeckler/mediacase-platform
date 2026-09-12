@@ -32,12 +32,12 @@ const connectHTML = `<!doctype html>
   .note{font-size:.92rem;color:#555;margin-top:2rem}
 </style></head><body>
 <h1>Conectar esta PC como worker</h1>
-<p>Descargá el worker para tu sistema, descomprimilo y ejecutalo. En unos segundos esta máquina aparece en el dashboard y empieza a recibir sub-tareas.</p>
+<p>Descargue el worker para su sistema, descomprímalo y ejecútelo. En unos segundos esta máquina aparece en el dashboard y empieza a recibir sub-tareas.</p>
 <p><a class="b" href="/download/worker?os=windows">Descargar para Windows</a><a class="b alt" href="/download/worker?os=linux">Descargar para Linux</a></p>
 <ol>
   <li>Descomprimir el ZIP en cualquier carpeta.</li>
   <li><b>Windows:</b> doble clic en <code>start-worker.bat</code>. &nbsp; <b>Linux:</b> <code>bash start-worker.sh</code></li>
-  <li>Dejar la ventana abierta mientras quieras que esta PC procese. Cerrarla la desconecta.</li>
+  <li>Deje la ventana abierta mientras quiera que esta PC procese. Cerrarla la desconecta.</li>
 </ol>
 <p class="note">No hay que instalar nada ni abrir puertos: el worker se conecta <em>hacia</em> el coordinador en <code>%s</code>. Si esta PC pierde la red, reintenta sola.</p>
 </body></html>`

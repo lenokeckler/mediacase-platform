@@ -247,11 +247,11 @@ func classifyTunnelError(logs string) (msg, hint string) {
 		strings.Contains(l, "no recent network activity") || strings.Contains(l, "forcibly closed") ||
 		strings.Contains(l, "unable to establish connection"):
 		return "no se pudo conectar con Cloudflare: esta red bloquea el puerto 7844 del túnel",
-			"Si estás en el WiFi del TEC, encendé Cloudflare WARP (o una VPN) en esta laptop y volvé a intentar."
+			"Si está en el WiFi del TEC, encienda Cloudflare WARP (o una VPN) en esta laptop y vuelva a intentar."
 	case strings.TrimSpace(logs) == "":
-		return "cloudflared no respondió a tiempo", "Revisar la conexión a internet y volver a intentar."
+		return "cloudflared no respondió a tiempo", "Revise la conexión a internet y vuelva a intentar."
 	default:
-		return "cloudflared falló", "Revisar la conexión a internet y volver a intentar."
+		return "cloudflared falló", "Revise la conexión a internet y vuelva a intentar."
 	}
 }
 

@@ -293,7 +293,7 @@ VirtualBox y WSL), abrió coordinador y worker en sus ventanas y el navegador. E
 *Publicar en internet* con WARP encendido dio `abierto` en 6 s con la URL `https://…/connect` y
 *Cerrar túnel* dejó 0 `cloudflared`; con WARP apagado (WiFi del TEC) el coordinador se rindió a los
 45 s, mató los procesos y mostró: *"no se pudo conectar con Cloudflare: esta red bloquea el puerto
-7844 del túnel — Si estás en el WiFi del TEC, encendé Cloudflare WARP…"*.
+7844 del túnel — Si está en el WiFi del TEC, encienda Cloudflare WARP…"*.
 
 **Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
 con los roles repartidos entre las tres laptops físicas.

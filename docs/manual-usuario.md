@@ -44,7 +44,7 @@ detalle (archivo, operación, worker, tiempos, URL del resultado o error).
 
 1. En **Casos**, botón **+ Nuevo caso**.
 2. Elegir los archivos. Hay dos maneras, combinables:
-   - **Subir** archivos desde tu computadora (video, audio o imágenes; varios a la vez).
+   - **Subir** archivos desde su computadora (video, audio o imágenes; varios a la vez).
    - **Elegir del dataset**: los archivos que ya están en el sistema (los 492 del dataset de prueba).
 3. Nombre del caso y prioridad (1-10; 8 o más va a la cola alta).
 4. **Enviar**. El coordinador decide la operación de cada archivo por su tipo: video → convertir a
@@ -99,7 +99,7 @@ bin/ingest load --cases 20 --concurrency 5 --group-by session --wait
 
 Detalles en [`dataset.md`](dataset.md) y [`api.md`](api.md).
 
-## 5. Conectar tu computadora como worker
+## 5. Conectar su computadora como worker
 
 Cualquier PC de la red (o de otra red, si Leno abrió el túnel) puede procesar sub-tareas. No hay
 que instalar nada ni abrir puertos: el worker se conecta **hacia** el coordinador.
@@ -156,14 +156,14 @@ proyecto). Windows puede reaccionar de dos formas:
 - **Smart App Control** (viene activo en algunas instalaciones nuevas de Windows 11) bloquea
   cualquier `.exe` sin firma y no ofrece "ejecutar de todos modos". Se apaga en *Seguridad de
   Windows → Control de aplicaciones y navegador → Smart App Control → Desactivado*. **Es
-  irreversible** (solo se reactiva reinstalando Windows); si no querés apagarlo, usá otra PC, una
+  irreversible** (solo se reactiva reinstalando Windows); si no quiere apagarlo, use otra PC, una
   VM o Linux.
 
 ## 6. Si algo no funciona
 
 | Síntoma | Qué mirar |
 |---|---|
-| El worker arranca y se cierra, o dice `no se pudo conectar` | La PC no llega a `COORDINATOR_URL` del `worker.env`: ¿mismo WiFi? ¿el firewall de node-1 permite el 8080 (`scripts/firewall-node1.ps1`)? ¿cambió la IP de node-1? Volvé a bajar el ZIP desde `/connect`, trae la IP actual |
+| El worker arranca y se cierra, o dice `no se pudo conectar` | La PC no llega a `COORDINATOR_URL` del `worker.env`: ¿mismo WiFi? ¿el firewall de node-1 permite el 8080 (`scripts/firewall-node1.ps1`)? ¿cambió la IP de node-1? Vuelva a bajar el ZIP desde `/connect`, trae la IP actual |
 | El worker aparece pero sus sub-tareas fallan con `descarga de entrada` | No llega a MinIO (`MINIO_ENDPOINT` en el `worker.env`, puerto 9000). Mismo diagnóstico que arriba |
 | `Falta ffmpeg` en Linux | `sudo apt install ffmpeg` |
 | El dashboard dice "Reconectando…" | El coordinador está caído o reiniciando. Los workers esperan y se reconectan solos; nada se pierde |

@@ -111,7 +111,7 @@ export default function App() {
                             </div>
                             <div className={styles.workerGrid}>
                                 {workers.length === 0 && (
-                                    <p className={styles.empty}>No hay workers conectados. Abrí <a href="/connect" target="_blank" rel="noreferrer">Conectar esta PC</a> en cualquier máquina de la red.</p>
+                                    <p className={styles.empty}>No hay workers conectados. Abra <a href="/connect" target="_blank" rel="noreferrer">Conectar esta PC</a> en cualquier máquina de la red.</p>
                                 )}
                                 {workers.map(w => <WorkerCard key={w.id} worker={w} />)}
                                 <QueueDepth queue_depth={queue_depth} />
