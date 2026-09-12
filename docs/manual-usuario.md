@@ -17,6 +17,8 @@ nodos y el botón de **tema claro / oscuro** (se recuerda en el navegador; tambi
 `?theme=light` o `?theme=dark` en la URL). Cada sección se abre por URL: `#casos`, `#monitor`,
 `#historial`, y `#caso=<id>` abre directamente un caso.
 
+![El mismo Monitor en tema claro](img/dashboard-monitor-claro.png)
+
 ### Casos
 
 La lista de todos los casos, del más nuevo al más viejo, con estado, cantidad de sub-tareas,

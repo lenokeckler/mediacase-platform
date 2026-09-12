@@ -295,6 +295,19 @@ VirtualBox y WSL), abrió coordinador y worker en sus ventanas y el navegador. E
 45 s, mató los procesos y mostró: *"no se pudo conectar con Cloudflare: esta red bloquea el puerto
 7844 del túnel — Si está en el WiFi del TEC, encienda Cloudflare WARP…"*.
 
+**2026-09-11, 20:48 — telemetría de hardware por nodo (Administrador de tareas)**: con el caso
+`demo-rendimiento` (7 sub-tareas: 3 videos, 2 audios, 1 imagen y una extracción de audio) el
+Monitor mostró en vivo, por nodo, CPU (modelo y núcleos), memoria usada/instalada, disco y cada
+GPU con su porcentaje. En `node1` (Windows 11): CPU 69 %, RAM 14.1/15.3 GB, GPU 0 *AMD Radeon
+740M* 4 % y 393 MB de VRAM, GPU 1 *NVIDIA RTX 4050* 0 %, 4 MB/5.8 GB, 42 °C — los mismos valores
+que el Administrador de tareas en ese momento (misma fuente: contadores PDH + registro de DirectX
++ nvidia-smi). En la VM `archlinux`: CPU 96 % mientras convertía `pesado.mp4`, RAM 0.4/8.6 GB,
+disco 8 %, y su adaptador virtual (`VMware SVGA`) marcado *no disponible* porque el kernel no
+expone su uso; ninguna cifra inventada. Cada métrica lleva la gráfica de los últimos 60 s y las
+mismas series salen por `/metrics` a Grafana (paneles nuevos de GPU, VRAM y memoria).
+
+![Monitor con dos nodos bajo carga: archlinux al 96 % y node1 con sus dos GPUs](img/dashboard-monitor-rendimiento.png)
+
 **Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
 con los roles repartidos entre las tres laptops físicas.
 
