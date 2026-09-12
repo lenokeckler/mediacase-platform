@@ -73,7 +73,7 @@ export default function App() {
             {/* ── Barra lateral ── */}
             <aside className={styles.sidebar}>
                 <div className={styles.brand}>
-                    <span className={styles.brandMark}>⚡</span>
+                    <img className={styles.brandMark} src="/logo.svg" alt="" width="40" height="40" />
                     <div className={styles.brandText}>
                         <div className={styles.brandName}>MediaCase</div>
                         <div className={styles.brandSub}>Procesamiento por casos</div>

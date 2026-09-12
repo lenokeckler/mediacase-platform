@@ -192,7 +192,7 @@ proyecto). Windows puede reaccionar de dos formas:
   hace falta, levanta la infraestructura, detecta la IP de la laptop en el WiFi, abre el coordinador
   y el worker local en dos ventanas minimizadas y abre el dashboard en el navegador. Al final
   imprime la URL para pasarle a otras PCs. Si es la primera vez en esta máquina, correr una vez
-  `scriptsirewall-node1.ps1` como administrador (el lanzador avisa si falta la regla).
+  `scripts\firewall-node1.ps1` como administrador (el lanzador avisa si falta la regla).
 - **Apagar todo**: doble clic en `MediaCase-detener.bat`. Cierra coordinador, worker local y túneles,
   detiene los contenedores (los datos quedan) y cierra Docker Desktop para liberar memoria.
 - **Un worker en otra PC**: cerrar su ventana (Ctrl+C). Se despide del coordinador y sus sub-tareas

@@ -1,3 +1,5 @@
+<p align="center"><img src="dashboard/src/app/public/logo.svg" alt="MediaCase" width="96" height="96"></p>
+
 # MediaCase
 
 **Plataforma distribuida de procesamiento multimedia por casos y monitoreo cooperativo de recursos.**
@@ -50,14 +52,14 @@ Requisitos en node-1: Docker Desktop, ffmpeg en el PATH, Go 1.26+ (o los binario
 MinIO, Prometheus y Grafana, detecta la IP de la laptop en el WiFi (`MINIO_PUBLIC_ENDPOINT=auto`),
 compila y abre el coordinador y el worker local de video en dos ventanas, y abre el dashboard.
 `MediaCase-detener.bat` apaga todo (y cierra Docker Desktop para liberar RAM). Una vez, como
-administrador: `scriptsirewall-node1.ps1` (abre 8080 y 9000 para los demás nodos).
+administrador: `scripts\firewall-node1.ps1` (abre 8080 y 9000 para los demás nodos).
 
 A mano, son los mismos tres pasos:
 
 ```powershell
 docker compose -f docker-compose.infra.yml up -d   # 1. infraestructura
-scriptsun-coordinator.ps1                         # 2. coordinador (lee infra/env/node1.env)
-scriptsun-worker.ps1                              # 3. worker local de video (otra terminal)
+scripts\run-coordinator.ps1                         # 2. coordinador (lee infra/env/node1.env)
+scripts\run-worker.ps1                              # 3. worker local de video (otra terminal)
 ```
 
 | Servicio | URL |
