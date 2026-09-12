@@ -50,8 +50,8 @@
 .collapsed .themeBtn { justify-content: center; padding: 8px; }
 .collapsed .sideFoot { align-items: center; }
 
-.brandMark { width: 56px; height: 56px; flex-shrink: 0; display: block; }
-.collapsed .brandMark { width: 40px; height: 40px; }
+.brandMark { width: 40px; height: 40px; flex-shrink: 0; display: block; }
+.collapsed .brandMark { width: 35px; height: 35px; }
 .brandName { font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text); line-height: 1.1; }
 .brandSub { font-size: 11px; color: var(--muted); }
 
