@@ -242,6 +242,9 @@ Prometheus (`infra/prometheus.yml`) scrapea solo `host.docker.internal:8080`; Gr
 |---|---|
 | `GET /connect` | página HTML con instrucciones y los enlaces de descarga |
 | `GET /download/worker?os=windows\|linux` | ZIP con el binario del worker, ffmpeg (Windows) y un `worker.env` ya apuntando a este coordinador (URL y esquema tomados de `Host` y `X-Forwarded-Proto`: por IP de LAN da `http://`, por túnel da `https://` y MinIO por el túnel que dejó `scripts/tunnel.ps1` en `infra/env/tunnel.env`) |
+| `GET /share` | cómo llegar a este coordinador desde otra máquina: `primary_url` (la IP anunciada a los workers), `lan_urls`, `tunnel` (`status` off/starting/on/error, `coordinator_url`, `minio_url`, `error`, `hint`) y `cloudflared_installed` |
+| `POST /tunnel` | abre dos quick tunnels de Cloudflare (coordinador y MinIO) como procesos hijos; responde 202 `starting` y el estado se consulta en `/share`. Si la red bloquea el 7844, en ≤45 s pasa a `error` con la pista de encender WARP |
+| `DELETE /tunnel` | cierra los túneles |
 
 ## Clientes que ya usan esta API
 

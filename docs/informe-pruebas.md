@@ -286,6 +286,15 @@ aparece como `archlinux`.
 
 ![Monitor con el worker de Arch](img/monitor-worker-arch.png)
 
+**2026-09-11, 19:20 — encendido con un doble clic y túnel desde el dashboard**: `MediaCase-detener.bat`
+apagó coordinador, worker, contenedores y Docker Desktop (0 procesos); `MediaCase.bat` desde cero
+arrancó Docker Desktop, la infra, detectó `172.24.87.192` (ignorando los adaptadores de WARP,
+VirtualBox y WSL), abrió coordinador y worker en sus ventanas y el navegador. En Monitor → Compartir,
+*Publicar en internet* con WARP encendido dio `abierto` en 6 s con la URL `https://…/connect` y
+*Cerrar túnel* dejó 0 `cloudflared`; con WARP apagado (WiFi del TEC) el coordinador se rindió a los
+45 s, mató los procesos y mostró: *"no se pudo conectar con Cloudflare: esta red bloquea el puerto
+7844 del túnel — Si estás en el WiFi del TEC, encendé Cloudflare WARP…"*.
+
 **Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
 con los roles repartidos entre las tres laptops físicas.
 

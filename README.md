@@ -41,24 +41,24 @@ nodos, y monitoreo con balanceo de carga.
 
 Detalle con diagramas en [`docs/architecture.md`](docs/architecture.md).
 
-## Levantar node-1 (3 pasos)
+## Levantar node-1
 
-Requisitos en node-1: Docker Desktop, Go 1.26+, ffmpeg en el PATH, Node 20+ solo si se toca el
-dashboard (el compilado `dist/` está versionado).
+Requisitos en node-1: Docker Desktop, ffmpeg en el PATH, Go 1.26+ (o los binarios ya compilados en
+`bin/`), Node 20+ solo si se toca el dashboard (el compilado `dist/` está versionado).
+
+**Doble clic en `MediaCase.bat`.** Arranca Docker Desktop si hace falta, levanta Postgres, Redis,
+MinIO, Prometheus y Grafana, detecta la IP de la laptop en el WiFi (`MINIO_PUBLIC_ENDPOINT=auto`),
+compila y abre el coordinador y el worker local de video en dos ventanas, y abre el dashboard.
+`MediaCase-detener.bat` apaga todo (y cierra Docker Desktop para liberar RAM). Una vez, como
+administrador: `scriptsirewall-node1.ps1` (abre 8080 y 9000 para los demás nodos).
+
+A mano, son los mismos tres pasos:
 
 ```powershell
-# 1. Infraestructura
-docker compose -f docker-compose.infra.yml up -d
-
-# 2. Coordinador (compila a bin/ y arranca; lee infra/env/node1.env — copiar del .example y poner la IP del WiFi)
-scripts\run-coordinator.ps1
-
-# 3. Worker local de video (otra terminal; lee infra/env/worker-host.env)
-scripts\run-worker.ps1
+docker compose -f docker-compose.infra.yml up -d   # 1. infraestructura
+scriptsun-coordinator.ps1                         # 2. coordinador (lee infra/env/node1.env)
+scriptsun-worker.ps1                              # 3. worker local de video (otra terminal)
 ```
-
-Abrir `http://localhost:8080`. Una vez, como administrador: `scripts\firewall-node1.ps1` (abre
-8080 y 9000 para los demás nodos). `scripts\stop-all.ps1` para todo.
 
 | Servicio | URL |
 |---|---|
@@ -74,9 +74,11 @@ Abrir `http://localhost:8080`. Una vez, como administrador: `scripts\firewall-no
   el dashboard en segundos. Rol y tamaño del pool se cambian en `worker.env`.
 - **VMs node-2 y node-3** (Vagrant + VirtualBox, en node-1): `cd infra/vagrant && vagrant up`;
   tras recompilar, `bash redeploy.sh`.
-- **Desde otra red**: `scripts\tunnel.ps1` publica el 8080 y el 9000 con dos túneles de Cloudflare
-  (`--protocol http2`; si la red bloquea el puerto 7844, como el WiFi del TEC, activar WARP en
-  node-1); el ZIP descargado por esa URL sale con `https://`/`wss://` y MinIO por TLS.
+- **Desde otra red**: en el dashboard, Monitor → **Compartir → "Publicar en internet"**: el
+  coordinador abre dos túneles de Cloudflare (8080 y 9000) y muestra la URL `https://…/connect` para
+  pasar; el ZIP bajado por ahí sale con `https://`/`wss://` y MinIO por TLS. Si la red bloquea el
+  túnel (el WiFi del TEC corta el puerto 7844), la tarjeta lo dice y la salida es encender WARP en
+  node-1. También por script: `scripts\tunnel.ps1`.
 
 Guía paso a paso, avisos de Windows 11 y diagnóstico en
 [`docs/manual-usuario.md`](docs/manual-usuario.md).
@@ -134,7 +136,7 @@ internal/monitoring     métricas del worker
 dashboard/              React + Vite (fuente); dist/ es el compilado que sirve el coordinador
 dataset/                generador, manifest.json y validador; files/ no se versiona
 infra/                  prometheus.yml, Grafana provisionado, Vagrantfile, plantillas .env
-scripts/                run-coordinator/run-worker/stop-all, build-dashboard/build-workers, firewall, túnel
+scripts/                start-node1/stop-node1 (los .bat), run-coordinator/run-worker, build-dashboard/build-workers, firewall, túnel
 tests/                  scripts de hito e informe de tiempos
 docs/                   arquitectura, API, manual de usuario, dataset, informe de pruebas, plan
 ```

@@ -95,7 +95,14 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env := workerEnvFor(r.Host, requestScheme(r), minioTunnelEndpoint())
+	minioTunnel := ""
+	if a.tunnel != nil {
+		minioTunnel = a.tunnel.MinIOHost()
+	}
+	if minioTunnel == "" {
+		minioTunnel = minioTunnelEndpoint() // scripts/tunnel.ps1, el modo manual
+	}
+	env := workerEnvFor(r.Host, requestScheme(r), minioTunnel)
 
 	// El servidor corta cualquier respuesta a los 10 s (WriteTimeout). Un ZIP de ~85 MB por WiFi
 	// tarda más: esta respuesta recibe su propio plazo sin relajar el del resto de la API.

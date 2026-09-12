@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -121,6 +122,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	// Túnel a internet desde el dashboard: publica este puerto y el de MinIO (9000 en node-1).
+	tunnel := coordinator.NewTunnel(port, minioPortFromEnv())
+	api.SetTunnel(tunnel)
+	defer tunnel.Stop()
 	srv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      api.Handler(dashboardDir()),
@@ -140,11 +145,20 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("[coordinator] shutting down...")
+	_ = tunnel.Stop() // cloudflared son procesos hijos: que no queden huérfanos
 	cancel()
 	shutCtx, shutCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutCancel()
 	srv.Shutdown(shutCtx)
 	log.Println("[coordinator] stopped")
+}
+
+// minioPortFromEnv saca el puerto de MINIO_ENDPOINT (localhost:9000 en node-1) para el túnel.
+func minioPortFromEnv() string {
+	if _, p, err := net.SplitHostPort(os.Getenv("MINIO_ENDPOINT")); err == nil && p != "" {
+		return p
+	}
+	return "9000"
 }
 
 // dashboardDir es la carpeta del dashboard compilado que sirve el coordinador.

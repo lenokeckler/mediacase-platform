@@ -40,6 +40,11 @@ export const api = {
     listJobs: () => request('GET', '/jobs'),
     getStats: () => request('GET', '/stats'),
     listWorkers: () => request('GET', '/workers'),
+
+    // ── Compartir node-1: URLs de la LAN y túnel a internet ──
+    getShare: () => request('GET', '/share'),
+    startTunnel: () => request('POST', '/tunnel'),
+    stopTunnel: () => request('DELETE', '/tunnel'),
 }
 
 // ── Utilidades compartidas por los componentes ──

@@ -10,6 +10,7 @@ import JobHistory from '../components/JobHistory'
 import CasesPanel from '../components/CasesPanel'
 import SubmitCasePanel from '../components/SubmitCasePanel'
 import CaseDetail from '../components/CaseDetail'
+import SharePanel from '../components/SharePanel'
 import styles from './app.module.css'
 
 const TABS = ['Casos', 'Monitor', 'Historial']
@@ -115,6 +116,10 @@ export default function App() {
                                 {workers.map(w => <WorkerCard key={w.id} worker={w} />)}
                                 <QueueDepth queue_depth={queue_depth} />
                             </div>
+                        </section>
+
+                        <section className={styles.section}>
+                            <SharePanel />
                         </section>
 
                         <section className={styles.section}>

@@ -5,6 +5,10 @@ Import-DotEnv (Join-Path $PSScriptRoot '..\infra\env\node1.env')
 Set-Location (Join-Path $PSScriptRoot '..')
 # Compilar a un binario con nombre fijo (no 'go run': deja procesos huerfanos sin nombre en el puerto).
 New-Item -ItemType Directory -Force bin | Out-Null
-go build -o bin/mediacase-coordinator.exe ./cmd/coordinator
-if ($LASTEXITCODE -ne 0) { Write-Error 'fallo la compilacion'; exit 1 }
+if (Get-Command go -ErrorAction SilentlyContinue) {
+    go build -o bin/mediacase-coordinator.exe ./cmd/coordinator
+    if ($LASTEXITCODE -ne 0) { Write-Error 'fallo la compilacion'; exit 1 }
+} elseif (-not (Test-Path bin/mediacase-coordinator.exe)) {
+    Write-Error 'no hay Go instalado ni bin/mediacase-coordinator.exe'; exit 1
+}
 & (Join-Path $PWD "bin/mediacase-coordinator.exe")

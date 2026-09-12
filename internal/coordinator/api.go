@@ -31,7 +31,12 @@ type API struct {
 	onWorkerRestart func(ctx context.Context, workerID string)
 	// onCaseClosed genera el reporte consolidado (también al cancelar). Lo conecta main.
 	onCaseClosed func(caseID string)
+	// tunnel publica node-1 en internet desde el dashboard; nil = sin túnel (tests).
+	tunnel *Tunnel
 }
+
+// SetTunnel conecta el gestor de túnel (botón "Publicar en internet" del dashboard).
+func (a *API) SetTunnel(t *Tunnel) { a.tunnel = t }
 
 // SetOnCaseClosed conecta la generación del reporte al cierre/cancelación de un caso.
 func (a *API) SetOnCaseClosed(fn func(caseID string)) { a.onCaseClosed = fn }
@@ -81,6 +86,11 @@ func (a *API) Router() http.Handler {
 	// Conectar otra máquina como worker: página + ZIP con el .env ya escrito
 	mux.HandleFunc("GET /connect", a.connectPage)
 	mux.HandleFunc("GET /download/worker", a.downloadWorker)
+
+	// Compartir node-1: URLs de la LAN y túnel hacia internet manejado desde el dashboard
+	mux.HandleFunc("GET /share", a.getShare)
+	mux.HandleFunc("POST /tunnel", a.startTunnel)
+	mux.HandleFunc("DELETE /tunnel", a.stopTunnel)
 
 	mux.HandleFunc("POST /jobs/{id}/progress", a.jobProgress)
 	mux.HandleFunc("POST /jobs/{id}/complete", a.jobComplete)

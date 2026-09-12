@@ -128,14 +128,22 @@ WORKER_ID=laptop-jenn    # nombre que se ve en el dashboard (vacío = nombre de 
 
 ### Desde otra red (túnel)
 
-Si la PC no está en el mismo WiFi que node-1, Leno abre un túnel: `scripts	unnel.ps1` publica el
-coordinador y MinIO en dos URLs `https://….trycloudflare.com` (sin abrir puertos ni tener cuenta) y
-pasa la URL del dashboard. Los pasos son los mismos de arriba usando esa URL en vez de la IP: el
-ZIP descargado por el túnel ya trae `COORDINATOR_URL=https://…` (el worker se conecta por `wss://`)
-y `MINIO_ENDPOINT=<túnel de MinIO>` con `MINIO_USE_SSL=true`. Las URLs cambian cada vez que se abre
-el túnel, así que el ZIP hay que bajarlo con el túnel ya abierto. Requisitos del lado de Leno:
-`winget install --id Cloudflare.cloudflared` y una red que deje salir a Cloudflare (el WiFi del TEC
-lo bloquea; con **Cloudflare WARP** activo, o desde una casa, funciona).
+Si la PC no está en el mismo WiFi que node-1, en el dashboard de Leno, pestaña **Monitor → tarjeta
+"Compartir este coordinador" → "Publicar en internet"**. En unos segundos aparece una URL
+`https://….trycloudflare.com/connect` con botón *Copiar*: esa es la que se le pasa a la otra
+persona, y los pasos son los mismos de arriba con esa URL en vez de la IP. El ZIP descargado por el
+túnel ya sale configurado para él (`https://`, el worker se conecta por `wss://`, y MinIO por su
+propio túnel con TLS); no hay nada que editar.
+
+![Tarjeta Compartir con el túnel abierto](img/dashboard-compartir-tunel.png)
+
+Detalles: el túnel son dos procesos `cloudflared` que maneja el coordinador (se cierran con el botón
+*Cerrar túnel* o al apagar node-1); la URL cambia cada vez que se abre, así que el ZIP se baja con
+el túnel ya abierto. Necesita `cloudflared` instalado en node-1 (`winget install --id
+Cloudflare.cloudflared`; la tarjeta avisa si falta) y una red que deje salir a Cloudflare: **el WiFi
+del TEC lo bloquea**; si pasa eso, la tarjeta lo dice y la salida es encender **Cloudflare WARP** (o
+una VPN) en la laptop de Leno y volver a intentar. Desde una casa o con datos del celular funciona
+directo. El mismo túnel se puede abrir sin dashboard con `scripts\tunnel.ps1`.
 
 ### Avisos de Windows 11
 
@@ -163,10 +171,14 @@ proyecto). Windows puede reaccionar de dos formas:
 | Un caso quedó `reintentando` | Un worker se cayó a mitad; sus sub-tareas ya volvieron a la cola y las toma otro worker del pool en cuanto haya |
 | Un archivo termina `fallido` con error de ffmpeg | El archivo está corrupto o no es lo que dice su extensión; el resto del caso sigue y el caso cierra `parcial` |
 
-## 7. Apagar
+## 7. Encender y apagar node-1
 
-- **Un worker**: cerrar su ventana (Ctrl+C). Se despide del coordinador y sus sub-tareas en curso se
-  re-encolan de inmediato.
-- **Todo en node-1**: `scripts/stop-all.ps1` (coordinador y workers locales) y
-  `docker compose -f docker-compose.infra.yml down` (infra; los datos quedan en los volúmenes,
-  `down -v` los borra).
+- **Encender**: doble clic en `MediaCase.bat` (en la raíz del repo). Arranca Docker Desktop si
+  hace falta, levanta la infraestructura, detecta la IP de la laptop en el WiFi, abre el coordinador
+  y el worker local en dos ventanas minimizadas y abre el dashboard en el navegador. Al final
+  imprime la URL para pasarle a otras PCs. Si es la primera vez en esta máquina, correr una vez
+  `scriptsirewall-node1.ps1` como administrador (el lanzador avisa si falta la regla).
+- **Apagar todo**: doble clic en `MediaCase-detener.bat`. Cierra coordinador, worker local y túneles,
+  detiene los contenedores (los datos quedan) y cierra Docker Desktop para liberar memoria.
+- **Un worker en otra PC**: cerrar su ventana (Ctrl+C). Se despide del coordinador y sus sub-tareas
+  en curso se re-encolan de inmediato.

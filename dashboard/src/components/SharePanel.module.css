@@ -1,0 +1,126 @@
+.wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.sub, .muted, .others {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.others { margin-top: 4px; }
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+}
+
+.labelRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.urlBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    min-width: 0;
+}
+
+.url {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.url:hover { color: var(--accent); }
+
+.copyBtn, .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.copyBtn:hover, .btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+
+.btn { margin-left: auto; font-weight: 600; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btnGo { color: var(--text); border-color: var(--accent); background: rgba(99, 102, 241, .15); }
+.btnStop { border-color: var(--red); color: var(--red); }
+
+.badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--muted);
+}
+
+.st_on { background: var(--green); }
+.st_starting { background: var(--yellow); color: #1b1b1b; }
+.st_error { background: var(--red); }
+
+.error, .errBox {
+    font-size: 12px;
+    color: #fecaca;
+    background: rgba(239, 68, 68, .12);
+    border: 1px solid rgba(239, 68, 68, .4);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0;
+}
+
+.hint {
+    margin-top: 4px;
+    color: #fde68a;
+}
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+}
