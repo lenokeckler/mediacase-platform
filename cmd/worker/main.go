@@ -100,6 +100,7 @@ type progressUpdate struct {
 // ── Worker ───────────────────────────────────────────────────────────────────
 
 type worker struct {
+	hardware *monitoring.Collector // telemetría del nodo (Administrador de tareas)
 	cfg      workerConfig
 	instance string // aleatorio por proceso: le dice al coordinador si somos un arranque nuevo
 	storage  *storage.MinIOClient
@@ -115,6 +116,7 @@ func newWorker(cfg workerConfig, s *storage.MinIOClient) *worker {
 		instance: uuid.New().String(),
 		storage:  s,
 		jobCh:    make(chan jobAssignment, cfg.poolSize*2),
+		hardware: monitoring.NewCollector(),
 	}
 }
 
@@ -418,6 +420,7 @@ func (w *worker) register() error {
 		"hostname":     host, // solo informativo: el coordinador ya no necesita alcanzar al worker
 		"role":         w.cfg.role,
 		"capabilities": RoleCapabilities(w.cfg.role),
+		"hardware":     w.hardware.Hardware(), // CPU, RAM total, GPUs: lo fijo del nodo
 	}
 	body, _ := json.Marshal(payload)
 	resp, err := apiClient.Post(
@@ -448,11 +451,12 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 			active := w.active
 			w.mu.Unlock()
 
-			cpu, mem := monitoring.GetSystemStats()
+			m := w.hardware.Last()
 			payload := map[string]interface{}{
-				"cpu_percent": cpu,
-				"mem_percent": mem,
+				"cpu_percent": m.CPUPercent,
+				"mem_percent": m.MemPercent,
 				"active_jobs": active,
+				"metrics":     m, // CPU, memoria, disco y GPUs: lo variable, cada segundo
 			}
 			body, _ := json.Marshal(payload)
 			url := fmt.Sprintf("%s/workers/%s/heartbeat", w.cfg.coordinatorURL, w.cfg.workerID)
@@ -496,6 +500,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	go w.hardware.Run(ctx) // muestreo cada segundo; el heartbeat lee la última muestra
 	w.startPool(ctx)
 
 	for i := 0; i < 10; i++ {

@@ -55,6 +55,51 @@ type WorkerInfo struct {
 	CPUPercent   float64   `json:"cpu_percent"`
 	MemPercent   float64   `json:"mem_percent"`
 	LastSeen     time.Time `json:"last_seen"`
+
+	// Telemetría de hardware al estilo del Administrador de tareas. Hardware llega al
+	// registrarse; Metrics en cada heartbeat. nil = el worker no lo manda o no pudo medirlo.
+	Hardware *Hardware    `json:"hardware,omitempty"`
+	Metrics  *NodeMetrics `json:"metrics,omitempty"`
+}
+
+// Hardware es la parte fija de un nodo: CPU, RAM total y sus GPUs.
+type Hardware struct {
+	OS            string    `json:"os"`
+	Arch          string    `json:"arch"`
+	CPUModel      string    `json:"cpu_model"`
+	CPUCores      int       `json:"cpu_cores"`
+	CPUThreads    int       `json:"cpu_threads"`
+	MemTotalBytes uint64    `json:"mem_total_bytes"`
+	GPUs          []GPUInfo `json:"gpus"`
+}
+
+// GPUInfo describe una GPU; Index sigue el orden del sistema (GPU 0, GPU 1...).
+type GPUInfo struct {
+	Index          int    `json:"index"`
+	Name           string `json:"name"`
+	Vendor         string `json:"vendor"` // nvidia | amd | intel | other
+	Integrated     bool   `json:"integrated"`
+	VRAMTotalBytes uint64 `json:"vram_total_bytes,omitempty"`
+	Source         string `json:"source"` // nvidia-smi | directx+pdh | sysfs
+}
+
+// NodeMetrics es la parte variable, muestreada cada segundo en el worker.
+type NodeMetrics struct {
+	SampledAt     time.Time    `json:"sampled_at"`
+	CPUPercent    float64      `json:"cpu_percent"`
+	MemUsedBytes  uint64       `json:"mem_used_bytes"`
+	MemTotalBytes uint64       `json:"mem_total_bytes"`
+	MemPercent    float64      `json:"mem_percent"`
+	DiskPercent   *float64     `json:"disk_percent,omitempty"`
+	GPUs          []GPUMetrics `json:"gpus"`
+}
+
+// GPUMetrics son las lecturas de una GPU; nil = no disponible en esa máquina.
+type GPUMetrics struct {
+	Index         int      `json:"index"`
+	Percent       *float64 `json:"percent"`
+	VRAMUsedBytes *uint64  `json:"vram_used_bytes,omitempty"`
+	TempC         *float64 `json:"temp_c,omitempty"`
 }
 
 type JobEvent struct {

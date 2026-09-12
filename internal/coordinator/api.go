@@ -214,15 +214,16 @@ func (a *API) unregisterWorker(w http.ResponseWriter, r *http.Request) {
 func (a *API) workerHeartbeat(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var payload struct {
-		CPU        float64 `json:"cpu_percent"`
-		Mem        float64 `json:"mem_percent"`
-		ActiveJobs int     `json:"active_jobs"`
+		CPU        float64             `json:"cpu_percent"`
+		Mem        float64             `json:"mem_percent"`
+		ActiveJobs int                 `json:"active_jobs"`
+		Metrics    *models.NodeMetrics `json:"metrics"` // telemetría de hardware (opcional)
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
 	}
-	if !a.registry.Heartbeat(id, payload.CPU, payload.Mem, payload.ActiveJobs) {
+	if !a.registry.Heartbeat(id, payload.CPU, payload.Mem, payload.ActiveJobs, payload.Metrics) {
 		// Worker no estaba registrado — que se registre primero
 		http.Error(w, "worker not registered", http.StatusNotFound)
 		return

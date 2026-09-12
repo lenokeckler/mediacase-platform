@@ -2,6 +2,7 @@ package coordinator
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"strings"
 	"sync"
@@ -30,18 +31,24 @@ func NewRegistry(db *sql.DB) *Registry {
 // loadFromDB recupera workers registrados recientemente al arrancar.
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
-		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,'') FROM worker_registry
-		WHERE last_seen > NOW() - INTERVAL '1 minute'`)
+		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null')
+		FROM worker_registry WHERE last_seen > NOW() - INTERVAL '1 minute'`)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		w := &models.WorkerInfo{}
-		var caps string
-		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps)
+		var caps, hw string
+		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw)
 		if caps != "" {
 			w.Capabilities = strings.Split(caps, ",")
+		}
+		if hw != "" && hw != "null" {
+			var h models.Hardware
+			if json.Unmarshal([]byte(hw), &h) == nil {
+				w.Hardware = &h // el worker que sigue vivo no se re-registra: recuperar lo fijo de aquí
+			}
 		}
 		w.LastSeen = time.Now()
 		w.Status = "idle"
@@ -56,11 +63,12 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 	restarted = r.registerNoDB(w)
 
 	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
+	hw, _ := json.Marshal(w.Hardware) // "null" si el worker no lo manda
 	r.db.Exec(`
-		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities)
-		VALUES ($1, $2, NOW(), $3, $4)
-		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4`,
-		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","),
+		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware)
+		VALUES ($1, $2, NOW(), $3, $4, $5)
+		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5`,
+		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw),
 	)
 	return restarted
 }
@@ -78,7 +86,7 @@ func (r *Registry) registerNoDB(w *models.WorkerInfo) (restarted bool) {
 	return restarted
 }
 
-func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int) bool {
+func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int, metrics *models.NodeMetrics) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	w, ok := r.workers[id]
@@ -89,6 +97,9 @@ func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int) bool {
 	w.CPUPercent = cpu
 	w.MemPercent = mem
 	w.ActiveJobs = activeJobs
+	if metrics != nil {
+		w.Metrics = metrics
+	}
 	if activeJobs == 0 {
 		w.Status = "idle"
 	} else {

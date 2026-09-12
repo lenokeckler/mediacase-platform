@@ -18,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
+	"strconv"
 
 	"github.com/lenokeckler/mediacase-platform/internal/db"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
@@ -30,6 +31,16 @@ var (
 		"CPU del host de cada worker (0-100), según su último heartbeat", []string{"worker", "role"}, nil)
 	descWorkerMem = prometheus.NewDesc(metricsPrefix+"worker_mem_percent",
 		"Memoria usada del host de cada worker (0-100), según su último heartbeat", []string{"worker", "role"}, nil)
+	descWorkerMemBytes = prometheus.NewDesc(metricsPrefix+"worker_mem_bytes",
+		"Memoria del host de cada worker en bytes", []string{"worker", "role", "kind"}, nil) // kind = used | total
+	descWorkerDisk = prometheus.NewDesc(metricsPrefix+"worker_disk_percent",
+		"Uso del disco de trabajo de cada worker (0-100)", []string{"worker", "role"}, nil)
+	descWorkerGPU = prometheus.NewDesc(metricsPrefix+"worker_gpu_percent",
+		"Uso de cada GPU del worker (0-100), como el Administrador de tareas", []string{"worker", "role", "gpu", "name"}, nil)
+	descWorkerVRAM = prometheus.NewDesc(metricsPrefix+"worker_gpu_vram_bytes",
+		"VRAM de cada GPU del worker en bytes", []string{"worker", "role", "gpu", "name", "kind"}, nil)
+	descWorkerGPUTemp = prometheus.NewDesc(metricsPrefix+"worker_gpu_temp_celsius",
+		"Temperatura de cada GPU del worker", []string{"worker", "role", "gpu", "name"}, nil)
 	descWorkerActive = prometheus.NewDesc(metricsPrefix+"worker_active_jobs",
 		"Sub-tareas que el worker está ejecutando ahora", []string{"worker", "role"}, nil)
 	descWorkerUp = prometheus.NewDesc(metricsPrefix+"worker_up",
@@ -90,6 +101,33 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(descWorkerCPU, prometheus.GaugeValue, w.CPUPercent, w.ID, role)
 		ch <- prometheus.MustNewConstMetric(descWorkerMem, prometheus.GaugeValue, w.MemPercent, w.ID, role)
 		ch <- prometheus.MustNewConstMetric(descWorkerActive, prometheus.GaugeValue, float64(w.ActiveJobs), w.ID, role)
+		if m := w.Metrics; m != nil {
+			ch <- prometheus.MustNewConstMetric(descWorkerMemBytes, prometheus.GaugeValue, float64(m.MemUsedBytes), w.ID, role, "used")
+			ch <- prometheus.MustNewConstMetric(descWorkerMemBytes, prometheus.GaugeValue, float64(m.MemTotalBytes), w.ID, role, "total")
+			if m.DiskPercent != nil {
+				ch <- prometheus.MustNewConstMetric(descWorkerDisk, prometheus.GaugeValue, *m.DiskPercent, w.ID, role)
+			}
+			for _, g := range m.GPUs {
+				name := ""
+				if w.Hardware != nil {
+					for _, gi := range w.Hardware.GPUs {
+						if gi.Index == g.Index {
+							name = gi.Name
+						}
+					}
+				}
+				idx := strconv.Itoa(g.Index)
+				if g.Percent != nil {
+					ch <- prometheus.MustNewConstMetric(descWorkerGPU, prometheus.GaugeValue, *g.Percent, w.ID, role, idx, name)
+				}
+				if g.VRAMUsedBytes != nil {
+					ch <- prometheus.MustNewConstMetric(descWorkerVRAM, prometheus.GaugeValue, float64(*g.VRAMUsedBytes), w.ID, role, idx, name, "used")
+				}
+				if g.TempC != nil {
+					ch <- prometheus.MustNewConstMetric(descWorkerGPUTemp, prometheus.GaugeValue, *g.TempC, w.ID, role, idx, name)
+				}
+			}
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

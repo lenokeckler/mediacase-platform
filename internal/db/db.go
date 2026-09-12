@@ -83,6 +83,7 @@ func Migrate(db *sql.DB) error {
 	-- Pools especializados: qué atiende cada worker (sobrevive reinicios del coordinador)
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS role         TEXT NOT NULL DEFAULT '';
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capabilities TEXT NOT NULL DEFAULT '';
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS hardware     JSONB;
 	`)
 	return err
 }
