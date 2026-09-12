@@ -64,6 +64,12 @@ func (p *sysfsProbe) list() []GPUInfo {
 			g.Vendor, g.Name, g.Integrated = "intel", "Intel Graphics", true
 		case "0x10de":
 			g.Vendor, g.Name = "nvidia", "NVIDIA"
+		case "0x15ad":
+			g.Vendor, g.Name = "virtual", "VMware SVGA (virtual)" // VirtualBox y VMware
+		case "0x80ee":
+			g.Vendor, g.Name = "virtual", "VirtualBox Graphics (virtual)"
+		case "0x1234", "0x1b36":
+			g.Vendor, g.Name = "virtual", "QEMU (virtual)"
 		default:
 			g.Vendor, g.Name = "other", "GPU "+vendorID
 		}

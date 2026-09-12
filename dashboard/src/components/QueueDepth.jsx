@@ -1,51 +1,39 @@
 import styles from './QueueDepth.module.css'
 
-const COLORS = { high: '#ef4444', normal: '#6366f1', low: '#22c55e' }
+const POOLS = ['video', 'audio', 'metadata']
 
+// Cuántas sub-tareas esperan un worker, por pool: es la "saturación" que la consigna pide
+// observar. Si VIDEO crece y AUDIO está en cero, falta un nodo de video.
 export default function QueueDepth({ queue_depth }) {
-    const total = (queue_depth?.high ?? 0) + (queue_depth?.normal ?? 0) + (queue_depth?.low ?? 0)
-
-    // Load status logic
-    let status = { label: 'normal', color: 'var(--green)' }
-    if (total > 1000) {
-        status = { label: 'crítica', color: 'var(--red)' }
-    } else if (total > 200) {
-        status = { label: 'alta', color: 'var(--yellow)' }
-    }
     const byPool = queue_depth?.by_pool || {}
-    const pools = ['video', 'audio', 'metadata']
-    const maxPool = Math.max(1, ...pools.map(p => byPool[p] ?? 0))
+    const total = (queue_depth?.high ?? 0) + (queue_depth?.normal ?? 0) + (queue_depth?.low ?? 0)
+    const load = total > 1000 ? { label: 'crítica', tone: 'red' } : total > 200 ? { label: 'alta', tone: 'yellow' } : { label: 'normal', tone: 'green' }
+    const maxPool = Math.max(1, ...POOLS.map(p => byPool[p] ?? 0))
 
     return (
-        <div className={styles.wrap}>
+        <div className={`card ${styles.wrap}`}>
             <div className={styles.header}>
-                <div className={styles.titleGroup}>
-                    <span className={styles.title}>Colas de sub-tareas</span>
-                    <span className={styles.statusBadge} style={{ background: status.color }}>
-                        {status.label}
-                    </span>
-                </div>
-                <span className={styles.total}>{total} en espera</span>
-            </div>
-            <div className={styles.progressTrack}>
-                <div 
-                    className={styles.progressFill} 
-                    style={{ 
-                        width: `${Math.min(100, (total / 1500) * 100)}%`,
-                        background: status.color 
-                    }} 
-                />
+                <span className={`chip chip-${load.tone}`}>carga {load.label}</span>
+                <span className={styles.total}><b>{total}</b> en espera</span>
             </div>
             <div className={styles.pools}>
-                {pools.map(p => (
-                    <div key={p} className={styles.poolRow} title={`sub-tareas esperando un worker del pool ${p}`}>
-                        <span className={styles.poolName}>{p}</span>
-                        <div className={styles.poolTrack}>
-                            <div className={styles.poolFill} style={{ width: `${((byPool[p] ?? 0) / maxPool) * 100}%`, background: (byPool[p] ?? 0) > 0 ? 'var(--yellow)' : 'var(--border)' }} />
+                {POOLS.map(p => {
+                    const n = byPool[p] ?? 0
+                    return (
+                        <div key={p} className={styles.row} title={'sub-tareas esperando un worker del pool ' + p}>
+                            <span className={'chip pool pool-' + p}>{p}</span>
+                            <div className={styles.track}>
+                                <div className={styles.fill} style={{ width: `${(n / maxPool) * 100}%`, background: `var(--pool-${p})`, opacity: n > 0 ? 1 : 0 }} />
+                            </div>
+                            <span className={styles.count}>{n}</span>
                         </div>
-                        <span className={styles.poolCount}>{byPool[p] ?? 0}</span>
-                    </div>
-                ))}
+                    )
+                })}
+            </div>
+            <div className={styles.prio}>
+                <span>prioridad alta <b>{queue_depth?.high ?? 0}</b></span>
+                <span>normal <b>{queue_depth?.normal ?? 0}</b></span>
+                <span>baja <b>{queue_depth?.low ?? 0}</b></span>
             </div>
         </div>
     )

@@ -160,11 +160,11 @@ recibir trabajo. Estas rutas las usa `cmd/worker`, no un cliente humano.
 | Método y ruta | Body / respuesta |
 |---|---|
 | `POST /workers/register` | `{id, instance, hostname, role, capabilities[]}` → `200 {"status":"registered"}`. Si `id` ya existía con otra `instance` (proceso nuevo), sus sub-tareas en vuelo se re-encolan. |
-| `POST /workers/{id}/heartbeat` | `{cpu_percent, mem_percent, active_jobs}` cada 1 s → `200`; `404` si no está registrado (el worker se vuelve a registrar). |
+| `POST /workers/{id}/heartbeat` | `{cpu_percent, mem_percent, active_jobs, metrics}` cada 1 s → `200`; `404` si no está registrado (el worker se vuelve a registrar). `metrics` = `{sampled_at, cpu_percent, mem_used_bytes, mem_total_bytes, mem_percent, disk_percent, gpus:[{index, percent, vram_used_bytes, temp_c}]}`; los campos que la máquina no puede medir vienen en `null`. |
 | `GET /workers/{id}/stream` | WebSocket: el canal por el que bajan las sub-tareas. Mensajes `{"type":"assign","job":{…}}` ↓ y `{"type":"accept"\|"reject","job_id":…,"reason":…}` ↑, más `ping`/`pong`. Un `reject` (pool lleno) re-encola sin contar reintento. |
 | `POST /workers/{id}/unregister` | `{instance}`: despedida ordenada; sus sub-tareas vuelven a la cola de inmediato. |
 | `POST /jobs/{id}/progress` | `{progress, status, result_url?, error?}`. `status` = `running` (avance) · `completed` · `failed`. Es la **única** fuente de verdad del estado de una sub-tarea; un avance rezagado nunca regresa una terminada a `running`. Los reportes terminales se reintentan desde el worker hasta 15 min si el coordinador no responde. |
-| `GET /workers` | los workers vivos: `[{id, instance, hostname, role, capabilities, status, active_jobs, cpu_percent, mem_percent, last_seen}]` |
+| `GET /workers` | los workers vivos: `[{id, instance, hostname, role, capabilities, status, active_jobs, cpu_percent, mem_percent, last_seen, hardware, metrics}]`. `hardware` (del registro) = `{os, arch, cpu_model, cpu_cores, cpu_threads, mem_total_bytes, gpus:[{index, name, vendor, integrated, vram_total_bytes, source}]}`; `metrics` = el último heartbeat. |
 
 Un worker sin heartbeat por 15 s se expulsa y sus sub-tareas se re-encolan (el caso pasa a
 `retrying` hasta que alguna vuelva a correr). Una sub-tarea en `running` sin noticias durante
@@ -223,6 +223,11 @@ workers remotos no tienen puerto que Prometheus pueda scrapear.
 |---|---|---|---|
 | `mediacase_worker_cpu_percent` | gauge | worker, role | CPU del host del worker |
 | `mediacase_worker_mem_percent` | gauge | worker, role | memoria usada del host del worker |
+| `mediacase_worker_mem_bytes` | gauge | worker, role, kind=used\|total | memoria del host en bytes |
+| `mediacase_worker_disk_percent` | gauge | worker, role | uso del disco de trabajo |
+| `mediacase_worker_gpu_percent` | gauge | worker, role, gpu, name | uso de cada GPU (como el Administrador de tareas) |
+| `mediacase_worker_gpu_vram_bytes` | gauge | worker, role, gpu, name, kind=used | VRAM usada por GPU |
+| `mediacase_worker_gpu_temp_celsius` | gauge | worker, role, gpu, name | temperatura por GPU (cuando el driver la da) |
 | `mediacase_worker_active_jobs` | gauge | worker, role | sub-tareas en ejecución |
 | `mediacase_worker_up` | gauge | worker, role | 1 mientras está registrado y vivo |
 | `mediacase_queue_depth` | gauge | pool, priority | sub-tareas esperando worker |

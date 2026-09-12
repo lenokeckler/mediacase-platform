@@ -17,7 +17,7 @@ function CopyButton({ text }) {
         setTimeout(() => setDone(false), 1500)
     }
     return (
-        <button className={styles.copyBtn} onClick={copy} title="Copiar">
+        <button className="btn btn-sm" onClick={copy} title="Copiar">
             {done ? '✓ copiado' : 'Copiar'}
         </button>
     )
@@ -51,13 +51,8 @@ export default function SharePanel() {
     const others = (info?.lan_urls || []).filter(u => u !== lanUrl)
 
     return (
-        <div className={styles.wrap}>
-            <div className={styles.header}>
-                <span className={styles.title}>Compartir este coordinador</span>
-                <span className={styles.sub}>para que otra PC se sume como worker</span>
-            </div>
-
-            {err && <p className={styles.error}>{err}</p>}
+        <div className={`card ${styles.wrap}`}>
+            {err && <p className="alert alert-red">{err}</p>}
 
             <div className={styles.row}>
                 <div className={styles.label}>Mismo WiFi</div>
@@ -75,11 +70,11 @@ export default function SharePanel() {
             <div className={styles.row}>
                 <div className={styles.labelRow}>
                     <span className={styles.label}>Otra red (túnel)</span>
-                    <span className={`${styles.badge} ${styles['st_' + tunnel.status]}`}>
+                    <span className={`chip ${{ off: 'chip-gray', starting: 'chip-yellow', on: 'chip-green', error: 'chip-red' }[tunnel.status] || 'chip-gray'}`}>
                         {{ off: 'cerrado', starting: 'abriendo…', on: 'abierto', error: 'error' }[tunnel.status] || tunnel.status}
                     </span>
                     <button
-                        className={`${styles.btn} ${tunnel.status === 'on' ? styles.btnStop : styles.btnGo}`}
+                        className={`btn ${styles.action} ${tunnel.status === 'on' ? 'btn-danger' : 'btn-primary'}`}
                         onClick={toggle}
                         disabled={busy || (info && !info.cloudflared_installed && tunnel.status !== 'on')}
                     >
@@ -104,7 +99,7 @@ export default function SharePanel() {
                     <div className={styles.muted}>conectando con Cloudflare (hasta 45 s)…</div>
                 )}
                 {tunnel.status === 'error' && (
-                    <div className={styles.errBox}>
+                    <div className="alert alert-red">
                         <div>{tunnel.error}</div>
                         {tunnel.hint && <div className={styles.hint}>{tunnel.hint}</div>}
                     </div>

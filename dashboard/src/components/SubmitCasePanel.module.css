@@ -1,29 +1,27 @@
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.panel { composes: card from global; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
 .header { display: flex; align-items: center; justify-content: space-between; }
-.title { font-weight: 700; font-size: 1rem; }
-.closeBtn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
-.grid { display: grid; grid-template-columns: 1fr 140px; gap: 0.75rem; }
-.field { display: flex; flex-direction: column; gap: 0.3rem; }
-.label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.input, .select {
-    background: var(--bg); color: var(--text); border: 1px solid var(--border);
-    border-radius: 6px; padding: 0.45rem 0.6rem; font-size: 0.85rem;
-}
-.sources { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.title { font-weight: 700; font-size: 15px; color: var(--text); }
+.closeBtn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; }
+.closeBtn:hover { color: var(--text); }
+.grid { display: grid; grid-template-columns: 1fr 160px; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.input { composes: input from global; }
+.select { composes: select from global; }
+.sources { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 800px) { .sources, .grid { grid-template-columns: 1fr; } }
-.source { border: 1px dashed var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 120px; }
-.sourceTitle { font-size: 0.8rem; font-weight: 600; }
-.fileInput { font-size: 0.8rem; color: var(--muted); }
-.datasetList { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.2rem; }
-.datasetItem { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.2rem 0.3rem; border-radius: 4px; cursor: pointer; }
-.datasetItem:hover { background: #1e2236; }
-.chosen { display: flex; flex-direction: column; gap: 0.3rem; }
-.chosenRow { display: grid; grid-template-columns: 1fr 70px 190px 28px; gap: 0.5rem; align-items: center; font-size: 0.82rem; padding: 0.3rem 0.5rem; background: var(--bg); border-radius: 6px; }
-.type { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; }
+.source { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; background: var(--surface-2); }
+.sourceTitle { font-size: 13px; font-weight: 600; color: var(--text); }
+.fileInput { font-size: 12px; color: var(--muted); }
+.datasetList { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.datasetItem { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 6px; border-radius: 6px; cursor: pointer; color: var(--text-2); }
+.datasetItem:hover { background: var(--surface); }
+.chosen { display: flex; flex-direction: column; gap: 6px; }
+.chosenRow { display: grid; grid-template-columns: 1fr 70px 210px 28px; gap: 8px; align-items: center; font-size: 12px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.type { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 .rmBtn { background: none; border: none; color: var(--muted); cursor: pointer; }
 .rmBtn:hover { color: var(--red); }
-.footer { display: flex; align-items: center; gap: 0.75rem; }
-.submitBtn { background: var(--green); color: #052e16; border: none; border-radius: 6px; padding: 0.55rem 1.1rem; font-weight: 700; cursor: pointer; }
-.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-.hint { font-size: 0.78rem; color: var(--muted); }
-.error { color: var(--red); font-size: 0.82rem; white-space: pre-wrap; }
+.footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.submitBtn { composes: btn btn-primary from global; padding: 9px 16px; font-size: 13px; }
+.hint { font-size: 12px; color: var(--muted); }
+.error { composes: alert alert-red from global; white-space: pre-wrap; }

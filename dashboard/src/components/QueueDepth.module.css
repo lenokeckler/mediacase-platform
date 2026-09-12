@@ -1,58 +1,11 @@
-.wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
-}
-
-.titleGroup {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-}
-
-.statusBadge {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: white;
-}
-
-.total {
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.progressTrack {
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 12px;
-}
-
-.progressFill {
-    height: 100%;
-    transition: width 0.4s ease, background 0.4s ease;
-}
-.pools { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
-.poolRow { display: grid; grid-template-columns: 64px 1fr 32px; align-items: center; gap: 0.5rem; font-size: 0.74rem; }
-.poolName { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.poolTrack { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-.poolFill { height: 100%; transition: width 0.3s; }
-.poolCount { text-align: right; font-variant-numeric: tabular-nums; }
+.wrap { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.header { display: flex; justify-content: space-between; align-items: center; }
+.total { font-size: 12px; color: var(--muted); }
+.total b { color: var(--text); font-size: 14px; }
+.pools { display: flex; flex-direction: column; gap: 10px; }
+.row { display: grid; grid-template-columns: 90px 1fr 32px; align-items: center; gap: 10px; }
+.track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.fill { height: 100%; border-radius: 4px; transition: width .4s ease, opacity .3s; }
+.count { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.prio { display: flex; gap: 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; flex-wrap: wrap; }
+.prio b { color: var(--text-2); }

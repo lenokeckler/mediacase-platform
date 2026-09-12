@@ -1,106 +1,75 @@
 import { useState } from 'react'
+import { OPERATION_LABEL } from '../api'
+import StatusBadge from './StatusBadge'
 import styles from './JobTable.module.css'
 
-const STATUS_COLORS = {
-    pending: { bg: '#1e293b', text: '#94a3b8' },
-    assigned: { bg: '#1e3a5f', text: '#60a5fa' },
-    running: { bg: '#1c3829', text: '#4ade80' },
-    completed: { bg: '#14532d', text: '#86efac' },
-    failed: { bg: '#450a0a', text: '#fca5a5' },
-}
-
-function StatusBadge({ status }) {
-    const c = STATUS_COLORS[status] || { bg: '#1a1d2e', text: '#94a3b8' }
-    return (
-        <span className={styles.badge} style={{ background: c.bg, color: c.text }}>
-            {status}
-        </span>
-    )
-}
-
 function ProgressBar({ value, status }) {
-    if (status === 'pending' || status === 'assigned') return <span className={styles.muted}>—</span>
+    if (status === 'pending' || status === 'assigned') return <span className="muted">—</span>
     const color = status === 'failed' ? 'var(--red)' : status === 'completed' ? 'var(--green)' : 'var(--accent)'
     return (
-        <div className={styles.progressWrap}>
-            <div className={styles.progressTrack}>
-                <div className={styles.progressFill} style={{ width: `${value}%`, background: color }} />
-            </div>
-            <span className={styles.progressLabel}>{value}%</span>
+        <div className="bar">
+            <div className="track"><div className="fill" style={{ width: `${value}%`, background: color }} /></div>
+            <span className={styles.pct}>{value}%</span>
         </div>
     )
 }
 
-const FILTERS = ['all', 'pending', 'running', 'completed', 'failed']
-const FILTER_LABEL = { all: 'todas', pending: 'pendientes', running: 'en ejecución', completed: 'completadas', failed: 'fallidas' }
+const FILTERS = ['all', 'pending', 'assigned', 'running']
+const FILTER_LABEL = { all: 'todas', pending: 'pendientes', assigned: 'asignadas', running: 'en ejecución' }
 
+function shortFile(p) { return p ? (p.split(/[\\/]/).pop() || p) : '—' }
+
+// Sub-tareas vivas (pendientes, asignadas, en ejecución). Las terminadas están en Historial.
 export default function JobTable({ jobs }) {
     const [filter, setFilter] = useState('all')
     const [search, setSearch] = useState('')
 
+    const q = search.toLowerCase()
     const visible = jobs
         .filter(j => filter === 'all' || j.status === filter)
-        .filter(j => !search || j.id.includes(search) || j.operation.includes(search) || (j.worker_id || '').includes(search))
+        .filter(j => !q || j.id.includes(q) || (j.operation || '').includes(q) || (j.worker_id || '').toLowerCase().includes(q) || (j.file_path || '').toLowerCase().includes(q))
         .slice(0, 200)
 
     return (
         <div className={styles.wrap}>
             <div className={styles.toolbar}>
-                <div className={styles.filters}>
+                <div className="filters">
                     {FILTERS.map(f => (
-                        <button
-                            key={f}
-                            className={`${styles.filterBtn} ${filter === f ? styles.active : ''}`}
-                            onClick={() => setFilter(f)}
-                        >
-                            {FILTER_LABEL[f] || f}
-                        </button>
+                        <button key={f} className={`filter ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{FILTER_LABEL[f]}</button>
                     ))}
                 </div>
-                <input
-                    className={styles.search}
-                    placeholder="Buscar por id, operación, worker…"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                />
+                <input className={`input ${styles.search}`} placeholder="Buscar por id, archivo, operación o worker…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
-            <div className={styles.tableWrap}>
-                <table className={styles.table}>
+            <div className="tableWrap">
+                <table className="table">
                     <thead>
                         <tr>
-                            <th>Sub-tarea</th>
-                            <th>Operación</th>
-                            <th>Estado</th>
-                            <th>Progreso</th>
-                            <th>Worker</th>
-                            <th>Prioridad</th>
-                            <th>Creada</th>
+                            <th>Sub-tarea</th><th>Archivo</th><th>Operación</th><th>Pool</th><th>Estado</th>
+                            <th>Progreso</th><th>Worker</th><th>Prioridad</th><th>Creada</th>
                         </tr>
                     </thead>
                     <tbody>
                         {visible.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className={styles.empty}>Ninguna sub-tarea con ese filtro.</td>
-                            </tr>
+                            <tr><td colSpan={9} className="empty">Ninguna sub-tarea con ese filtro.</td></tr>
                         )}
                         {visible.map(job => (
-                            <tr key={job.id} className={styles.row}>
-                                <td className={styles.jobId}>{job.id.slice(0, 8)}…</td>
-                                <td>
-                                    <span className={styles.op}>{job.operation}</span>
-                                </td>
-                                <td><StatusBadge status={job.status} /></td>
+                            <tr key={job.id}>
+                                <td className="mono muted">{job.id.slice(0, 8)}</td>
+                                <td className={styles.file} title={job.file_path}>{shortFile(job.file_path)}</td>
+                                <td>{OPERATION_LABEL[job.operation] || job.operation}</td>
+                                <td>{job.pool ? <span className={`chip pool pool-${job.pool}`}>{job.pool}</span> : <span className="muted">—</span>}</td>
+                                <td><StatusBadge status={job.status} kind="job" /></td>
                                 <td><ProgressBar value={job.progress ?? 0} status={job.status} /></td>
-                                <td className={styles.muted}>{job.worker_id || '—'}</td>
-                                <td className={styles.muted}>{job.priority}</td>
-                                <td className={styles.muted}>{new Date(job.created_at).toLocaleTimeString()}</td>
+                                <td className="muted">{job.worker_id || '—'}</td>
+                                <td className="muted num">{job.priority}</td>
+                                <td className="muted num">{new Date(job.created_at).toLocaleTimeString()}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-            <div className={styles.count}>{visible.length} of {jobs.length} jobs</div>
+            <div className={styles.count}>{visible.length} de {jobs.length} sub-tareas</div>
         </div>
     )
 }

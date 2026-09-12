@@ -225,17 +225,30 @@ está saturado, sus sub-tareas esperan aunque `metadata` esté ocioso. Números 
 | Canal | Tecnología | Quién → quién | Para qué |
 |---|---|---|---|
 | Asignación de sub-tareas | WebSocket **saliente** del worker (`GET /workers/{id}/stream`) | worker abre → coordinador envía | `assign` ↓, `accept`/`reject` ↑, `ping`/`pong` |
-| Registro, heartbeat, progreso, despedida | HTTP JSON | worker → coordinador | estado del nodo y de cada sub-tarea |
+| Registro, heartbeat, progreso, despedida | HTTP JSON | worker → coordinador | estado del nodo y de cada sub-tarea; el registro lleva el **hardware** (CPU, RAM, GPUs) y cada heartbeat las **métricas** (CPU %, memoria, disco, % y VRAM por GPU) |
 | Casos y consultas | HTTP JSON (`/cases`, `/jobs`, `/stats`) | clientes → coordinador | enviar, seguir, reporte, cancelar |
 | Dashboard en vivo | WebSocket (`/ws`), snapshot cada 1 s | coordinador → navegador | workers, sub-tareas vivas, colas por pool, casos activos |
 | Archivos | S3 (MinIO) | workers y clientes ↔ MinIO | entradas y resultados |
 | Cola | Redis Streams | coordinador ↔ Redis | lo que falta ejecutar |
-| Métricas | HTTP (`/metrics`) | Prometheus → coordinador | CPU/mem/carga por worker, colas, casos |
+| Métricas | HTTP (`/metrics`) | Prometheus → coordinador | CPU/mem/disco/GPU por worker, colas, casos |
 
 **Por qué el canal es saliente.** El coordinador nunca se conecta a un worker: el worker abre la
 conexión y la mantiene viva (reconexión con espera exponencial). Así un worker no necesita puerto
 abierto, ni regla de firewall, ni IP alcanzable: corre detrás de cualquier router doméstico, y por
 un túnel (`wss://`) desde otra red. Es lo que permite el worker descargable de `/connect`.
+
+**Telemetría de hardware (monitoreo de recursos).** Cada worker detecta una vez su hardware y lo
+manda al registrarse (se persiste en `worker_registry.hardware` para sobrevivir reinicios del
+coordinador), y muestrea cada segundo lo variable, que viaja en el heartbeat. Fuentes
+(`internal/monitoring`): CPU, memoria y disco por gopsutil en todos los sistemas; en **Windows**
+las GPUs salen del registro de DirectX (`HKLM\SOFTWARE\Microsoft\DirectX`: nombre, LUID y VRAM
+por adaptador) y su uso de los contadores PDH `GPU Engine(*)\Utilization Percentage` y
+`GPU Adapter Memory(*)\Dedicated Usage` —exactamente lo que lee el Administrador de tareas: por
+LUID, sumando procesos y tomando el motor más ocupado—; las **NVIDIA** además por `nvidia-smi`
+(temperatura, VRAM); en **Linux** por `/sys/class/drm/cardN/device` (`gpu_busy_percent`,
+`mem_info_vram_*` en amdgpu). Lo que no se puede medir queda en `null` y el dashboard lo dice.
+Esto es lo que permite ver, por nodo, cómo trabajan CPU, GPU integrada y GPU dedicada durante una
+carga, y compararlo con la asignación por pool (Unidad 1, heterogeneidad de cómputo).
 
 ## 8. Almacenamiento y repositorio de resultados
 

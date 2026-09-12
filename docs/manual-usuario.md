@@ -8,37 +8,50 @@ Todo se maneja desde una sola dirección: **`http://<ip-de-node-1>:8080`** (en l
 
 ## 1. El dashboard
 
-![Pestaña Casos durante una carga](img/dashboard-casos-carga.png)
+![Monitor: nodos y rendimiento, tema oscuro](img/dashboard-monitor-rendimiento.png)
 
-Tres pestañas arriba: **Casos**, **Monitor** e **Historial**, más el enlace **Conectar esta PC**.
-El punto verde "En vivo" indica que el navegador recibe el estado en tiempo real; "Reconectando…"
-significa que el coordinador no responde (ver §6).
+Una barra lateral con tres secciones —**Casos**, **Monitor** e **Historial**—, los accesos
+**Conectar esta PC** y **Compartir**, y abajo el indicador "En vivo" (el navegador recibe el estado
+en tiempo real; "Reconectando…" significa que el coordinador no responde, ver §6), el conteo de
+nodos y el botón de **tema claro / oscuro** (se recuerda en el navegador; también sirve
+`?theme=light` o `?theme=dark` en la URL). Cada sección se abre por URL: `#casos`, `#monitor`,
+`#historial`, y `#caso=<id>` abre directamente un caso.
 
-### Pestaña Casos
+### Casos
 
 La lista de todos los casos, del más nuevo al más viejo, con estado, cantidad de sub-tareas,
 prioridad, hora de creación y duración. Los filtros de arriba dejan ver solo los de un estado
 (`en cola`, `procesando`, `reintentando`, `completados`, `parciales`, `fallidos`, `cancelados`).
-El número junto a "Casos" en la pestaña es cuántos siguen abiertos.
+El número junto a "Casos" en la barra lateral es cuántos siguen abiertos. **+ Nuevo caso** está
+arriba a la derecha.
 
-### Pestaña Monitor
+### Monitor
 
-![Pestaña Monitor durante una carga de 20 casos](img/dashboard-monitor-casos-activos.png)
+De arriba hacia abajo:
 
-- **Contadores** de sub-tareas por estado en todo el sistema.
-- **Nodos worker**: una tarjeta por máquina conectada con su rol (pool), CPU y RAM del host,
-  sub-tareas activas y hace cuánto se vio. Se pone "OCUPADO" cuando tiene trabajo.
-- **Colas de sub-tareas**: cuántas esperan un worker, por pool. Si `VIDEO` crece y `AUDIO` está en
-  cero, el pool de video está saturado: esa es la señal para conectar otra PC con rol video.
-- **Sub-tareas agrupadas por caso**: una barra por caso abierto (verde listas, azul en ejecución,
-  amarillo en espera, rojo fallidas). Clic en un caso lo abre en la pestaña Casos.
-- **Sub-tareas en curso**: la tabla de lo que está pendiente, asignado o corriendo, con el worker
-  que lo tiene y el progreso.
+- **Resumen**: contadores de sub-tareas por estado en todo el sistema.
+- **Nodos y rendimiento**: una tarjeta por máquina conectada, como la pestaña *Rendimiento* del
+  Administrador de tareas de Windows: nombre, pool (chip de color), estado LIBRE/OCUPADO, sistema
+  operativo y hace cuánto se vio; y adentro **CPU** (modelo, núcleos, %), **Memoria** (usada /
+  instalada y %), y **una tarjeta por GPU** —la integrada y la dedicada— con su nombre, %,
+  VRAM y temperatura, cada una con la gráfica de los últimos 60 segundos. Lo que esa máquina no
+  puede medir dice "no disponible" (p. ej. el % de una GPU virtual); nunca se muestra un cero
+  inventado. Abajo, las sub-tareas activas y el uso del disco.
 
-### Pestaña Historial
+  ![Tarjeta de un nodo con CPU, memoria y dos GPUs](img/dashboard-nodo-rendimiento.png)
+
+- **Colas por pool**: cuántas sub-tareas esperan un worker de cada pool. Si `VIDEO` crece y
+  `AUDIO` está en cero, el pool de video está saturado: esa es la señal para conectar otra PC con
+  rol video. El chip de carga pasa a *alta* con más de 200 en espera y a *crítica* con más de 1000.
+- **Compartir este coordinador**: la URL para otra PC en el mismo WiFi y el botón del túnel (§5).
+- **Casos activos**: una barra por caso abierto (verde listas, índigo en ejecución, ámbar en
+  espera, rojo fallidas). Clic en un caso lo abre en Casos.
+- **Sub-tareas en curso**: lo pendiente, asignado o corriendo, con archivo, pool, worker y progreso.
+
+### Historial
 
 Todas las sub-tareas, también las terminadas, con filtro y búsqueda. Clic en una fila para ver el
-detalle (archivo, operación, worker, tiempos, URL del resultado o error).
+detalle (id completo, archivo, caso, tiempos, reintentos, URL del resultado o error).
 
 ## 2. Enviar un caso
 

@@ -16,7 +16,7 @@ function durationOf(c) {
 
 // Lista de casos con su estado agregado. Los conteos de sub-tareas vienen del detalle
 // (GET /cases/{id}) solo para el caso abierto; en la lista se muestra total_jobs.
-export default function CasesPanel({ cases, error, selectedId, onOpen, onNew }) {
+export default function CasesPanel({ cases, error, selectedId, onOpen }) {
     const [filter, setFilter] = useState('')
 
     const visible = cases.filter(c => !filter || c.status === filter)
@@ -35,8 +35,6 @@ export default function CasesPanel({ cases, error, selectedId, onOpen, onNew }) 
                         </button>
                     ))}
                 </div>
-                <span className={styles.spacer} />
-                <button className={styles.newBtn} onClick={onNew}>+ Nuevo caso</button>
             </div>
 
             {error && <div className={styles.error}>No se pudo consultar los casos: {error}</div>}
@@ -56,7 +54,7 @@ export default function CasesPanel({ cases, error, selectedId, onOpen, onNew }) 
                     <tbody>
                         {visible.length === 0 && (
                             <tr><td colSpan={6} className={styles.empty}>
-                                {cases.length === 0 ? 'Todavía no hay casos. Creá uno con "+ Nuevo caso".' : 'Ningún caso con ese estado.'}
+                                {cases.length === 0 ? 'Todavía no hay casos. Cree uno con "+ Nuevo caso".' : 'Ningún caso con ese estado.'}
                             </td></tr>
                         )}
                         {visible.map(c => {
