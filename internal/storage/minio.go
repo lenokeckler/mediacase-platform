@@ -168,13 +168,13 @@ func (m *MinIOClient) Upload(ctx context.Context, jobID, localPath string) (stri
 	// El bucket tiene lectura pública, así que basta una URL directa. Se usa el endpoint
 	// público (no el interno) porque una URL firmada contra "minio:9000" no valida desde afuera.
 	pubEndpoint := getEnv("MINIO_PUBLIC_ENDPOINT", getEnv("MINIO_ENDPOINT", "minio:9000"))
-	return fmt.Sprintf("http://%s/%s/%s", pubEndpoint, m.bucket, objectName), nil
+	return fmt.Sprintf("%s://%s/%s/%s", scheme(), pubEndpoint, m.bucket, objectName), nil
 }
 
 // Ping verifica la conectividad con MinIO.
 func (m *MinIOClient) Ping(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("http://%s/minio/health/live",
+		fmt.Sprintf("%s://%s/minio/health/live", scheme(),
 			getEnv("MINIO_ENDPOINT", "minio:9000")), nil)
 	if err != nil {
 		return err
@@ -188,6 +188,15 @@ func (m *MinIOClient) Ping(ctx context.Context) error {
 		return fmt.Errorf("minio health: %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// scheme es el esquema con el que se habla con MinIO: https cuando el worker llega por un túnel
+// con TLS (MINIO_USE_SSL=true en su worker.env), http en la LAN.
+func scheme() string {
+	if getEnv("MINIO_USE_SSL", "false") == "true" {
+		return "https"
+	}
+	return "http"
 }
 
 func getEnv(key, fallback string) string {

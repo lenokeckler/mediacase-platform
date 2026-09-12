@@ -1,25 +1,80 @@
-﻿# Publica el coordinador (puerto 8080) en internet con un "quick tunnel" de Cloudflare, sin abrir
-# puertos ni tener cuenta. Imprime la URL https://xxx.trycloudflare.com; con ella, una PC en OTRA
-# red abre el dashboard, baja el ZIP de /connect (que queda apuntando al tunel) y se conecta por wss.
+﻿# Publica el coordinador (8080) y MinIO (9000) en internet con dos "quick tunnels" de Cloudflare,
+# sin abrir puertos ni tener cuenta. Con la URL del coordinador, una PC en OTRA red abre el
+# dashboard y baja el ZIP de /connect: el coordinador ve que llego por https (X-Forwarded-Proto)
+# y escribe un worker.env con COORDINATOR_URL=https://... (el worker abre wss://) y
+# MINIO_ENDPOINT=<tunel de MinIO> con MINIO_USE_SSL=true, leyendo infra/env/tunnel.env,
+# que este script escribe y borra al cerrar.
 #
 # Requiere cloudflared:  winget install --id Cloudflare.cloudflared
-# Uso:  scripts\tunnel.ps1          (Ctrl+C para cerrar el tunel)
+# Uso:  scripts\tunnel.ps1          (Ctrl+C para cerrar los dos tuneles)
 #
-# Limite conocido: los workers remotos tambien necesitan MinIO (9000) para bajar entradas y subir
-# resultados; el tunel solo cubre el 8080. Ver docs/informe-pruebas.md, seccion "tunel".
+# Limite conocido: Cloudflare corta peticiones con cuerpo > 100 MB; los resultados se suben en
+# un PUT (o en partes de 16 MB si el archivo es grande), asi que en la practica no molesta.
+# Las URLs cambian en cada arranque: el ZIP hay que bajarlo con el tunel ya abierto.
 $cf = Get-Command cloudflared -ErrorAction SilentlyContinue
+if (-not $cf) {
+    # Recien instalado con winget, el PATH nuevo no llega a las consolas ya abiertas.
+    $cf = Get-Command "$env:ProgramFiles (x86)\cloudflared\cloudflared.exe", "$env:ProgramFiles\cloudflared\cloudflared.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+}
 if (-not $cf) {
     Write-Error "Falta cloudflared. Instalar con:  winget install --id Cloudflare.cloudflared"
     exit 1
 }
-Write-Host "Abriendo tunel hacia http://localhost:8080 ... (Ctrl+C para cerrar)"
-& $cf.Source tunnel --url http://localhost:8080 2>&1 | ForEach-Object {
-    if ($_ -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
-        Write-Host ""
-        Write-Host "  URL publica: $($Matches[0])" -ForegroundColor Green
-        Write-Host "  Dashboard:   $($Matches[0])/"
-        Write-Host "  Conectar PC: $($Matches[0])/connect"
-        Write-Host ""
+$root = Join-Path $PSScriptRoot '..'
+$envFile = Join-Path $root 'infra\env\tunnel.env'
+$logDir = Join-Path $env:TEMP 'mediacase-tunnel'
+New-Item -ItemType Directory -Force $logDir | Out-Null
+
+function Start-Tunnel([string]$name, [int]$port) {
+    $log = Join-Path $logDir "$name.log"
+    if (Test-Path $log) { Remove-Item $log -Force }
+    # cloudflared escribe la URL en stderr; se captura a archivo para poder leerla desde aqui.
+    # --protocol http2: el transporte por defecto (QUIC, UDP 7844) lo bloquean muchos WiFi; http2 va por TCP 443.
+    $p = Start-Process -FilePath $cf.Source -ArgumentList "tunnel --protocol http2 --url http://localhost:$port" `
+        -RedirectStandardError $log -NoNewWindow -PassThru
+    $url = $null
+    for ($i = 0; $i -lt 60 -and -not $url; $i++) {
+        Start-Sleep -Milliseconds 500
+        if (Test-Path $log) {
+            $m = Select-String -Path $log -Pattern 'https://[a-z0-9-]+\.trycloudflare\.com' | Select-Object -First 1
+            if ($m) { $url = $m.Matches[0].Value }
+        }
+        if ($p.HasExited) { break }
     }
-    $_
+    if (-not $url) {
+        Write-Error "cloudflared no dio URL para el puerto $port (ver $log)"
+        if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+        exit 1
+    }
+    return @{ Process = $p; Url = $url }
+}
+
+Write-Host "Abriendo tuneles hacia localhost:8080 (coordinador) y localhost:9000 (MinIO)..."
+$coord = Start-Tunnel 'coordinator' 8080
+$minio = Start-Tunnel 'minio' 9000
+$minioHost = ([uri]$minio.Url).Host
+
+@(
+    "# Escrito por scripts/tunnel.ps1 (se borra al cerrar el tunel). Lo lee el coordinador al generar el ZIP.",
+    "COORDINATOR_TUNNEL_URL=$($coord.Url)",
+    "MINIO_TUNNEL_HOST=$minioHost"
+) | Set-Content -Path $envFile -Encoding ascii
+
+Write-Host ""
+Write-Host "  Dashboard:   $($coord.Url)/" -ForegroundColor Green
+Write-Host "  Conectar PC: $($coord.Url)/connect" -ForegroundColor Green
+Write-Host "  MinIO:       $($minio.Url)"
+Write-Host ""
+Write-Host "  $envFile escrito. Ctrl+C cierra los dos tuneles."
+Write-Host ""
+
+try {
+    while (-not $coord.Process.HasExited -and -not $minio.Process.HasExited) { Start-Sleep 2 }
+    Write-Warning "un tunel se cerro solo (ver $logDir)"
+} finally {
+    foreach ($t in @($coord, $minio)) {
+        if (-not $t.Process.HasExited) { Stop-Process -Id $t.Process.Id -Force -ErrorAction SilentlyContinue }
+    }
+    Remove-Item $envFile -Force -ErrorAction SilentlyContinue
+    Write-Host "tuneles cerrados."
 }

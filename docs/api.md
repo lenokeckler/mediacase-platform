@@ -241,7 +241,7 @@ Prometheus (`infra/prometheus.yml`) scrapea solo `host.docker.internal:8080`; Gr
 | Método y ruta | Qué hace |
 |---|---|
 | `GET /connect` | página HTML con instrucciones y los enlaces de descarga |
-| `GET /download/worker?os=windows\|linux` | ZIP con el binario del worker, ffmpeg (Windows) y un `worker.env` ya apuntando a este coordinador (URL tomada del `Host` de la petición, así funciona por IP de LAN o por túnel) |
+| `GET /download/worker?os=windows\|linux` | ZIP con el binario del worker, ffmpeg (Windows) y un `worker.env` ya apuntando a este coordinador (URL y esquema tomados de `Host` y `X-Forwarded-Proto`: por IP de LAN da `http://`, por túnel da `https://` y MinIO por el túnel que dejó `scripts/tunnel.ps1` en `infra/env/tunnel.env`) |
 
 ## Clientes que ya usan esta API
 

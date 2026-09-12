@@ -324,7 +324,7 @@ Los archivos reales están en `infra/env/*.env` (no versionados; los `.example` 
 | **Prometheus + Grafana** | estándar; el coordinador re-exporta el heartbeat de los workers porque los remotos no tienen puerto que scrapear |
 | **Docker solo para la infra de node-1** | Postgres/Redis/MinIO/Prometheus/Grafana en contenedores es lo cómodo; coordinador y workers son procesos nativos porque deben correr en máquinas sin Docker |
 | **Vagrant + VirtualBox** | dos nodos Linux reales con IP propia en la laptop de Leno, reproducibles con `vagrant up` |
-| **Cloudflare quick tunnel** | exponer el 8080 sin abrir puertos: un worker desde otra red se conecta por `wss://` |
+| **Cloudflare quick tunnel** | exponer el 8080 y el 9000 sin abrir puertos ni cuenta: un worker desde otra red se conecta por `wss://` y habla S3 por TLS; probado con un caso completo (informe §7) |
 
 ## 11. Temas del curso que aparecen en el código
 

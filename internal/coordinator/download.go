@@ -44,7 +44,36 @@ const connectHTML = `<!doctype html>
 
 func (a *API) connectPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(w, connectHTML, "http://"+r.Host)
+	fmt.Fprintf(w, connectHTML, requestScheme(r)+"://"+r.Host)
+}
+
+// requestScheme dice cómo llegó el navegador: directo (http) o por un túnel/proxy con TLS
+// (cloudflared y cualquier reverse proxy ponen X-Forwarded-Proto). Con https el worker abre wss.
+func requestScheme(r *http.Request) string {
+	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+		return "https"
+	}
+	return "http"
+}
+
+// minioTunnelEndpoint devuelve el host del túnel de MinIO que dejó scripts/tunnel.ps1 en
+// TUNNEL_ENV_FILE (por defecto infra/env/tunnel.env), o "" si no hay túnel abierto. Se lee en
+// cada descarga porque el túnel nace y muere sin reiniciar el coordinador.
+func minioTunnelEndpoint() string {
+	path := os.Getenv("TUNNEL_ENV_FILE")
+	if path == "" {
+		path = filepath.Join("infra", "env", "tunnel.env")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if k, v, ok := strings.Cut(strings.TrimSpace(line), "="); ok && k == "MINIO_TUNNEL_HOST" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
 }
 
 // downloadWorker arma el ZIP al vuelo para el SO pedido.
@@ -66,7 +95,7 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env := workerEnvFor(r.Host)
+	env := workerEnvFor(r.Host, requestScheme(r), minioTunnelEndpoint())
 
 	// El servidor corta cualquier respuesta a los 10 s (WriteTimeout). Un ZIP de ~85 MB por WiFi
 	// tarda más: esta respuesta recibe su propio plazo sin relajar el del resto de la API.
@@ -100,13 +129,16 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 		}
 		addText(zw, "start-worker.sh", startWorkerSH, 0o755)
 	}
-	log.Printf("[download] worker para %s entregado a %s (coordinador anunciado: http://%s)", osName, r.RemoteAddr, r.Host)
+	log.Printf("[download] worker para %s entregado a %s (coordinador anunciado: %s://%s)", osName, r.RemoteAddr, requestScheme(r), r.Host)
 }
 
-// workerEnvFor genera el worker.env: el coordinador es la dirección con la que llegó el
-// navegador; MinIO vive en el mismo host, puerto 9000 (salvo que MINIO_PUBLIC_ENDPOINT diga otra cosa).
-func workerEnvFor(host string) string {
-	coordURL := "http://" + host
+// workerEnvFor genera el worker.env: el coordinador es la dirección (y esquema) con la que
+// llegó el navegador; MinIO vive en el mismo host, puerto 9000, salvo que MINIO_PUBLIC_ENDPOINT
+// diga otra cosa. Si el navegador llegó por el túnel (https) y hay túnel de MinIO, el worker
+// remoto habla S3 por TLS contra ese túnel; si no lo hay, se avisa en el archivo: el 9000 de
+// la LAN no es alcanzable desde otra red.
+func workerEnvFor(host, scheme, minioTunnel string) string {
+	coordURL := scheme + "://" + host
 	minioPub := os.Getenv("MINIO_PUBLIC_ENDPOINT")
 	if minioPub == "" || strings.HasPrefix(minioPub, "localhost") || strings.HasPrefix(minioPub, "127.") {
 		h := host
@@ -115,10 +147,20 @@ func workerEnvFor(host string) string {
 		}
 		minioPub = net.JoinHostPort(h, "9000")
 	}
+	useSSL, aviso := "false", ""
+	if scheme == "https" {
+		if minioTunnel != "" {
+			minioPub, useSSL = minioTunnel, "true"
+		} else {
+			aviso = "# AVISO: llegaste por un tunel pero MinIO no tiene tunel abierto (scripts/tunnel.ps1 abre los dos);\n" +
+				"# desde otra red este worker no va a poder bajar entradas ni subir resultados.\n"
+		}
+	}
 	return fmt.Sprintf(`# Generado por el coordinador. Solo hace falta saber donde esta el coordinador.
 COORDINATOR_URL=%s
-MINIO_ENDPOINT=%s
+%sMINIO_ENDPOINT=%s
 MINIO_PUBLIC_ENDPOINT=%s
+MINIO_USE_SSL=%s
 MINIO_ACCESS_KEY=%s
 MINIO_SECRET_KEY=%s
 MINIO_BUCKET=%s
@@ -126,7 +168,7 @@ WORKER_ROLE=all
 WORKER_POOL_SIZE=2
 # WORKER_ID vacio = el lanzador usa el nombre de esta maquina
 WORKER_ID=
-`, coordURL, minioPub, minioPub,
+`, coordURL, aviso, minioPub, minioPub, useSSL,
 		envOr("MINIO_ACCESS_KEY", "minioadmin"), envOr("MINIO_SECRET_KEY", "minioadmin"), envOr("MINIO_BUCKET", "results"))
 }
 

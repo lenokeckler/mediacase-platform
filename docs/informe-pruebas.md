@@ -244,6 +244,35 @@ Ubuntu en ~6 min, más que el `boot_timeout` de 300 s de Vagrant; se subió a 90
 Y dos comandos `vagrant` en paralelo en Windows fallan con `powershell_error`: hay que levantar los
 nodos de uno en uno.
 
+**2026-09-11, 18:21 — worker desde otra red por túnel (Cloudflare quick tunnel + WARP)**:
+`scripts/tunnel.ps1` abrió dos túneles (`https://bool-arab-….trycloudflare.com` → 8080 y
+`https://cheque-….trycloudflare.com` → 9000) y dejó `infra/env/tunnel.env`. Por la URL del túnel: el
+dashboard y `GET /api/workers` responden 200, el ZIP de Windows (85 MB) bajó completo y su
+`worker.env` salió con `COORDINATOR_URL=https://…`, `MINIO_ENDPOINT=<túnel de MinIO>` y
+`MINIO_USE_SSL=true`. El worker `remoto` arrancado con ese ZIP se registró por `wss://`, y con el
+worker de video local apagado se envió el caso `hito-tunel` (`pesado.mp4` 29 MB → convert,
+`prueba.mp4` → extract_audio, `prueba.wav` → convert_audio):
+
+| sub-tarea | worker | duración | resultado |
+|---|---|---:|---|
+| `pesado.mp4` convert | **remoto** (por túnel) | 20.2 s | `https://cheque-….trycloudflare.com/results/jobs/…/pesado_….mp4` (21 MB, descargable desde afuera a ~4 MB/s) |
+| `prueba.mp4` extract_audio | **remoto** (por túnel) | 5.8 s | `https://…/results/jobs/…/prueba_….mp3` |
+| `prueba.wav` convert_audio | node2 (VM, LAN) | 2.8 s | `http://192.168.56.1:9000/results/jobs/…` |
+
+Caso `completed` en 20.2 s, 3/3. Todo el tráfico de `remoto` (canal WebSocket, descarga de la
+entrada y subida del resultado por S3) salió a internet y volvió por Cloudflare.
+
+![Monitor con el worker remoto conectado por el túnel](img/monitor-worker-por-tunel.png)
+
+Observaciones: (1) el WiFi del TEC (`itcr.ac.cr`) corta el handshake TLS de cloudflared hacia el
+edge en el puerto 7844 (QUIC y http2 por igual: 42 errores, 0 conexiones registradas); con
+Cloudflare WARP activo en node-1 conectó a la primera. El script fuerza `--protocol http2` porque
+el QUIC/UDP lo bloquean más redes. (2) La URL de resultado de cada sub-tarea la escribe el worker
+que la procesó con su propio `MINIO_PUBLIC_ENDPOINT`: el de `remoto` apunta al túnel y el de
+`node2` a la IP de la LAN; ambos válidos desde donde corre cada uno. (3) Cloudflare limita el
+cuerpo de una petición a 100 MB; los resultados de este dataset están por debajo y minio-go parte
+en multipart los archivos grandes, así que no se alcanzó el límite.
+
 **Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
 con los roles repartidos entre las tres laptops físicas.
 

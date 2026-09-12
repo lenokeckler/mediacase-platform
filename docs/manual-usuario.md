@@ -125,6 +125,17 @@ WORKER_POOL_SIZE=2       # sub-tareas simultáneas: 2 en una laptop normal, 4 si
 WORKER_ID=laptop-jenn    # nombre que se ve en el dashboard (vacío = nombre de la máquina)
 ```
 
+### Desde otra red (túnel)
+
+Si la PC no está en el mismo WiFi que node-1, Leno abre un túnel: `scripts	unnel.ps1` publica el
+coordinador y MinIO en dos URLs `https://….trycloudflare.com` (sin abrir puertos ni tener cuenta) y
+pasa la URL del dashboard. Los pasos son los mismos de arriba usando esa URL en vez de la IP: el
+ZIP descargado por el túnel ya trae `COORDINATOR_URL=https://…` (el worker se conecta por `wss://`)
+y `MINIO_ENDPOINT=<túnel de MinIO>` con `MINIO_USE_SSL=true`. Las URLs cambian cada vez que se abre
+el túnel, así que el ZIP hay que bajarlo con el túnel ya abierto. Requisitos del lado de Leno:
+`winget install --id Cloudflare.cloudflared` y una red que deje salir a Cloudflare (el WiFi del TEC
+lo bloquea; con **Cloudflare WARP** activo, o desde una casa, funciona).
+
 ### Avisos de Windows 11
 
 El ejecutable **no está firmado** (un certificado de firma cuesta dinero y está fuera del alcance del
