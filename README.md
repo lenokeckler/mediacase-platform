@@ -74,8 +74,9 @@ Abrir `http://localhost:8080`. Una vez, como administrador: `scripts\firewall-no
   el dashboard en segundos. Rol y tamaño del pool se cambian en `worker.env`.
 - **VMs node-2 y node-3** (Vagrant + VirtualBox, en node-1): `cd infra/vagrant && vagrant up`;
   tras recompilar, `bash redeploy.sh`.
-- **Desde otra red**: `scripts\tunnel.ps1` publica el 8080 con un túnel de Cloudflare; el ZIP
-  descargado por esa URL apunta al túnel.
+- **Desde otra red**: `scripts\tunnel.ps1` publica el 8080 y el 9000 con dos túneles de Cloudflare
+  (`--protocol http2`; si la red bloquea el puerto 7844, como el WiFi del TEC, activar WARP en
+  node-1); el ZIP descargado por esa URL sale con `https://`/`wss://` y MinIO por TLS.
 
 Guía paso a paso, avisos de Windows 11 y diagnóstico en
 [`docs/manual-usuario.md`](docs/manual-usuario.md).
