@@ -109,7 +109,8 @@ que instalar nada ni abrir puertos: el worker se conecta **hacia** el coordinado
    Windows) y un `worker.env` ya apuntando al coordinador.
 3. Descomprimir en cualquier carpeta.
 4. **Windows:** doble clic en `start-worker.bat`. **Linux:** `bash start-worker.sh`
-   (si falta ffmpeg: `sudo apt install ffmpeg`, o `sudo pacman -S ffmpeg` en Arch).
+   (si falta ffmpeg: `sudo apt install ffmpeg`, o `sudo pacman -S ffmpeg` en Arch; el ZIP ya se
+   probó en Ubuntu 24.04 y en Arch).
 5. En unos segundos la máquina aparece en **Monitor → Nodos worker** con el nombre de la PC y
    empieza a recibir sub-tareas. Dejar la ventana abierta; cerrarla desconecta el worker y sus
    sub-tareas en curso vuelven a la cola para otro nodo.

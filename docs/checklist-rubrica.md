@@ -31,7 +31,7 @@ Qué evidencia hay de cada rubro de la consigna v2.0 y dónde está. Escala 0-5 
 
 - [x] 7.1 `vagrant up` (node2 audio, node3 metadata) + `tests/pools_scenario.sh` con node1 host → 3 máquinas. `HITO OK` 2026-09-11.
 - [x] 7.2 Túnel Cloudflare y un worker desde otra red. `completed` 3/3 por el túnel, 2026-09-11 (informe §7).
-- [ ] 7.3 Binario en la VM Arch.
+- [x] 7.3 Binario en la VM Arch: `completed` 4/4, 2026-09-11 (informe §7).
 - [ ] 7.4 Laptops de Jennifer y Jonathan con `tests/pools_scenario.sh` y captura del dashboard con 3 hostnames; agregar a `docs/informe-pruebas.md` §7.
 - [ ] 6.6 Un compañero levanta un worker solo con el manual; anotar qué preguntó.
 - [ ] Primer `git push` y colaboradores en GitHub.

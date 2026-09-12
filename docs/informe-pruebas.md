@@ -273,6 +273,19 @@ que la procesó con su propio `MINIO_PUBLIC_ENDPOINT`: el de `remoto` apunta al 
 cuerpo de una petición a 100 MB; los resultados de este dataset están por debajo y minio-go parte
 en multipart los archivos grandes, así que no se alcanzó el límite.
 
+**2026-09-11, 18:39 — Arch Linux (VM VirtualBox, NAT, kernel 7.2.3, ffmpeg 9.0.1 de pacman)**:
+siguiendo solo el manual §5 desde adentro de la VM: `curl` del ZIP de Linux a
+`http://10.0.2.2:8080/download/worker?os=linux` (10.0.2.2 = el host visto desde NAT), `unzip`,
+`bash start-worker.sh`. Se registró y con `node2`/`node3` apagadas recibió el caso `hito-arch`
+(4 archivos: 2 audios, 1 imagen, 1 video): `completed` 4/4 en 7 s, las cuatro sub-tareas en la VM
+(`convert_audio` 2.7 s y 0.5 s, `thumbnail` 0.4 s, `convert` 3.3 s), resultados en MinIO. Se reinició
+el coordinador con el worker corriendo: `canal cerrado; reconectando` → `canal abierto` 5 s después,
+sin intervención. Defecto encontrado: Arch mínimo no trae `hostname` (paquete `inetutils`), el
+lanzador caía al ID por defecto `worker-1`; `start-worker.sh` pasó a usar `uname -n` y la VM
+aparece como `archlinux`.
+
+![Monitor con el worker de Arch](img/monitor-worker-arch.png)
+
 **Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
 con los roles repartidos entre las tres laptops físicas.
 

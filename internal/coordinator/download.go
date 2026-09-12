@@ -189,9 +189,10 @@ const startWorkerBAT = "@echo off\r\n" +
 
 const startWorkerSH = `#!/usr/bin/env bash
 cd "$(dirname "$0")"
-command -v ffmpeg >/dev/null || { echo "Falta ffmpeg: sudo apt install ffmpeg"; exit 1; }
+command -v ffmpeg >/dev/null || { echo "Falta ffmpeg: sudo apt install ffmpeg  (Arch: sudo pacman -S ffmpeg)"; exit 1; }
 set -a; source ./worker.env; set +a
-export WORKER_ID="${WORKER_ID:-$(hostname)}"
+# uname -n y no hostname: Arch minimo no trae el paquete inetutils.
+export WORKER_ID="${WORKER_ID:-$(uname -n)}"
 echo "MediaCase worker '$WORKER_ID' -> $COORDINATOR_URL  (Ctrl+C para desconectar)"
 exec ./worker
 `
