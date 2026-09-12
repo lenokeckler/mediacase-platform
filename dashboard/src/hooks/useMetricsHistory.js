@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Historial de 60 muestras por nodo y métrica (cpu, mem, gpu0, gpu1…) para las mini-gráficas
-// tipo Administrador de tareas. Se alimenta con cada snapshot del WebSocket (~1/s); si un
+// Historial de 300 muestras (~5 min a 1/s) por nodo y métrica (cpu, mem, gpu0, gpu1…): las
+// tarjetas muestran los últimos 60 s y la vista ampliada los 5 min completos. Se alimenta con cada snapshot del WebSocket (~1/s); si un
 // heartbeat trae la misma muestra (sampled_at igual) no se duplica.
-const MAX = 60
+const MAX = 300
 
 export function useMetricsHistory(workers) {
     const ref = useRef({}) // { [workerId]: { lastSampledAt, series: { cpu: [], mem: [], gpu0: [] } } }
@@ -36,5 +36,8 @@ export function useMetricsHistory(workers) {
         if (changed) force(n => n + 1)
     }, [workers])
 
-    return (workerId, key) => ref.current[workerId]?.series[key] || []
+    return (workerId, key, last = MAX) => {
+        const s = ref.current[workerId]?.series[key] || []
+        return last >= s.length ? s : s.slice(s.length - last)
+    }
 }

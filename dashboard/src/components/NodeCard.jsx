@@ -38,7 +38,7 @@ function Metric({ label, device, percent, secondary, series, color, unavailable 
     )
 }
 
-export default function NodeCard({ worker, history }) {
+export default function NodeCard({ worker, history, onOpen }) {
     const w = worker
     const hw = w.hardware
     const m = w.metrics
@@ -58,7 +58,8 @@ export default function NodeCard({ worker, history }) {
     const gpuMetric = (i) => (m?.gpus || []).find(g => g.index === i)
 
     return (
-        <article className={`${styles.card} ${busy ? styles.busy : ''}`}>
+        <article className={`${styles.card} ${busy ? styles.busy : ''} ${onOpen ? styles.clickable : ''}`}
+            onClick={onOpen ? () => onOpen(w.id) : undefined} title={onOpen ? 'Clic para ver el rendimiento en grande' : undefined}>
             <header className={styles.head}>
                 <div className={styles.title}>
                     <span className={`${styles.dot} ${busy ? styles.dotBusy : styles.dotIdle}`} />
@@ -81,9 +82,9 @@ export default function NodeCard({ worker, history }) {
             </div>
 
             <div className={styles.grid}>
-                <Metric label="CPU" device={cpuDevice} percent={cpuPct} series={history(w.id, 'cpu')} color="var(--metric-cpu)" />
+                <Metric label="CPU" device={cpuDevice} percent={cpuPct} series={history(w.id, 'cpu', 60)} color="var(--metric-cpu)" />
                 <Metric label="Memoria" device={hw ? fmtGB(hw.mem_total_bytes) + ' instalados' : undefined} percent={memPct}
-                    secondary={memSecondary} series={history(w.id, 'mem')} color="var(--metric-mem)" />
+                    secondary={memSecondary} series={history(w.id, 'mem', 60)} color="var(--metric-mem)" />
                 {gpus.length === 0 && (
                     <Metric label="GPU" percent={null} unavailable series={[]} color="var(--metric-gpu)" />
                 )}
@@ -99,7 +100,7 @@ export default function NodeCard({ worker, history }) {
                             device={`${g.name}${g.integrated ? ' (integrada)' : ''}`}
                             percent={gm?.percent ?? null} unavailable={gm?.percent == null}
                             secondary={parts.join(' · ') || undefined}
-                            series={history(w.id, `gpu${g.index}`)} color="var(--metric-gpu)" />
+                            series={history(w.id, `gpu${g.index}`, 60)} color="var(--metric-gpu)" />
                     )
                 })}
             </div>

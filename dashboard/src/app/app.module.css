@@ -3,7 +3,9 @@
     min-height: 100vh;
     display: grid;
     grid-template-columns: 232px minmax(0, 1fr);
+    transition: grid-template-columns .2s ease;
 }
+.collapsed { grid-template-columns: 68px minmax(0, 1fr); }
 
 .sidebar {
     position: sticky;
@@ -17,7 +19,32 @@
     gap: 22px;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; position: relative; }
+.brandText { min-width: 0; }
+.collapseBtn {
+    margin-left: auto;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.collapseBtn:hover { color: var(--text); border-color: var(--accent); }
+
+/* Plegada: solo iconos; los textos se ocultan y el botón de plegar baja debajo del logo. */
+.collapsed .sidebar { padding: 20px 10px; }
+.collapsed .brand { flex-direction: column; gap: 8px; padding: 0; }
+.collapsed .brandText, .collapsed .navLabel, .collapsed .navItem span, .collapsed .sideStat, .collapsed .themeBtn span, .collapsed .live span:last-child { display: none; }
+.collapsed .collapseBtn { margin-left: 0; }
+.collapsed .navItem { justify-content: center; padding: 10px 0; }
+.collapsed .navBadge { display: none; }
+.collapsed .live { padding: 6px; }
+.collapsed .themeBtn { justify-content: center; padding: 8px; }
+.collapsed .sideFoot { align-items: center; }
+
 .brandMark {
     width: 34px; height: 34px;
     display: grid; place-items: center;

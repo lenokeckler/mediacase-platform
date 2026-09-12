@@ -13,6 +13,7 @@ import CasesPanel from '../components/CasesPanel'
 import SubmitCasePanel from '../components/SubmitCasePanel'
 import CaseDetail from '../components/CaseDetail'
 import SharePanel from '../components/SharePanel'
+import NodeDetail from '../components/NodeDetail'
 import styles from './app.module.css'
 
 // Navegación: una entrada por pestaña; el hash de la URL la fija (http://…:8080/#monitor).
@@ -43,6 +44,15 @@ export default function App() {
     const { theme, toggle } = useTheme()
     const [tab, setTab] = useState(() => NAV.find(n => n.hash === window.location.hash)?.key || 'Casos')
     const [showNew, setShowNew] = useState(() => window.location.hash === '#nuevo') // #nuevo abre el formulario
+    // Barra lateral plegada (solo iconos): se recuerda en el navegador.
+    const [collapsed, setCollapsed] = useState(() => {
+        const q = new URLSearchParams(window.location.search).get('sidebar')
+        if (q === 'collapsed' || q === 'open') return q === 'collapsed'
+        try { return localStorage.getItem('mediacase.sidebar') === 'collapsed' } catch { return false }
+    })
+    const toggleSidebar = () => setCollapsed(c => { try { localStorage.setItem('mediacase.sidebar', c ? 'open' : 'collapsed') } catch { /* privado */ } return !c })
+    // Nodo abierto en grande (#nodo=<id> también lo abre).
+    const [openNode, setOpenNode] = useState(() => (window.location.hash.match(/^#nodo=(.+)$/) || [])[1] || null)
 
     // #caso=<id> abre directamente ese caso (enlaces desde el informe, Grafana o un compañero).
     useEffect(() => {
@@ -59,15 +69,18 @@ export default function App() {
     const busyNodes = workers.filter(w => w.status === 'busy' || w.active_jobs > 0).length
 
     return (
-        <div className={styles.shell}>
+        <div className={`${styles.shell} ${collapsed ? styles.collapsed : ''}`}>
             {/* ── Barra lateral ── */}
             <aside className={styles.sidebar}>
                 <div className={styles.brand}>
                     <span className={styles.brandMark}>⚡</span>
-                    <div>
+                    <div className={styles.brandText}>
                         <div className={styles.brandName}>MediaCase</div>
                         <div className={styles.brandSub}>Procesamiento por casos</div>
                     </div>
+                    <button className={styles.collapseBtn} onClick={toggleSidebar} title={collapsed ? 'Mostrar la barra lateral' : 'Ocultar la barra lateral'} aria-label="Plegar barra lateral">
+                        {collapsed ? <ChevronRight /> : <ChevronLeft />}
+                    </button>
                 </div>
 
                 <nav className={styles.nav} aria-label="Secciones">
@@ -92,7 +105,7 @@ export default function App() {
 
                 <div className={styles.sideFoot}>
                     <div className={`${styles.live} ${connected ? styles.liveOk : styles.liveErr}`}>
-                        <span className={styles.liveDot} />{connected ? 'En vivo' : 'Reconectando…'}
+                        <span className={styles.liveDot} /><span>{connected ? 'En vivo' : 'Reconectando…'}</span>
                     </div>
                     <div className={styles.sideStat}>
                         <b>{workers.length}</b> nodo{workers.length === 1 ? '' : 's'} · <b>{busyNodes}</b> ocupado{busyNodes === 1 ? '' : 's'}
@@ -157,7 +170,7 @@ export default function App() {
                                 </p>
                             ) : (
                                 <div className={styles.nodeGrid}>
-                                    {workers.map(w => <NodeCard key={w.id} worker={w} history={history} />)}
+                                    {workers.map(w => <NodeCard key={w.id} worker={w} history={history} onOpen={(id) => { setOpenNode(id); window.location.hash = '#nodo=' + id }} />)}
                                 </div>
                             )}
                         </Section>
@@ -187,6 +200,11 @@ export default function App() {
                     </Section>
                 )}
             </main>
+
+            {openNode && (
+                <NodeDetail worker={workers.find(w => w.id === openNode)} history={history} jobs={jobs}
+                    onClose={() => { setOpenNode(null); if (window.location.hash.startsWith('#nodo=')) window.location.hash = '#monitor' }} />
+            )}
         </div>
     )
 }
@@ -199,4 +217,6 @@ function HistoryIcon() { return <I><circle cx="12" cy="12" r="9" /><path d="M12 
 function LinkIcon() { return <I><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></I> }
 function ShareIcon() { return <I><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></I> }
 function SunIcon() { return <I><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></I> }
+function ChevronLeft() { return <I><path d="M15 6l-6 6 6 6" /></I> }
+function ChevronRight() { return <I><path d="M9 6l6 6-6 6" /></I> }
 function MoonIcon() { return <I><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></I> }
