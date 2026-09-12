@@ -55,6 +55,7 @@ type WorkerInfo struct {
 	CPUPercent   float64   `json:"cpu_percent"`
 	MemPercent   float64   `json:"mem_percent"`
 	LastSeen     time.Time `json:"last_seen"`
+	RegisteredAt time.Time `json:"registered_at"` // primera vez que llegó: fija el orden en el dashboard
 
 	// Telemetría de hardware al estilo del Administrador de tareas. Hardware llega al
 	// registrarse; Metrics en cada heartbeat. nil = el worker no lo manda o no pudo medirlo.

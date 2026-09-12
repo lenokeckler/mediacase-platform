@@ -94,7 +94,9 @@ export function useSystemState() {
                 )
 
                 setState({
-                    workers: Array.isArray(data.workers) ? data.workers : [],
+                    // Orden de llegada (registered_at) y por id si empatan: las tarjetas no se mueven.
+                    workers: (Array.isArray(data.workers) ? [...data.workers] : []).sort((a, b) =>
+                        (a.registered_at || '').localeCompare(b.registered_at || '') || a.id.localeCompare(b.id, 'es')),
                     jobs: liveJobs,
                     stats,
                     queue_depth,

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -31,7 +32,8 @@ func NewRegistry(db *sql.DB) *Registry {
 // loadFromDB recupera workers registrados recientemente al arrancar.
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
-		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null')
+		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null'),
+		       COALESCE(registered_at, last_seen)
 		FROM worker_registry WHERE last_seen > NOW() - INTERVAL '1 minute'`)
 	if err != nil {
 		return
@@ -40,7 +42,7 @@ func (r *Registry) loadFromDB() {
 	for rows.Next() {
 		w := &models.WorkerInfo{}
 		var caps, hw string
-		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw)
+		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw, &w.RegisteredAt)
 		if caps != "" {
 			w.Capabilities = strings.Split(caps, ",")
 		}
@@ -64,11 +66,12 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 
 	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
 	hw, _ := json.Marshal(w.Hardware) // "null" si el worker no lo manda
+	// registered_at solo se fija al insertar: un re-registro no cambia el orden de llegada.
 	r.db.Exec(`
-		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware)
-		VALUES ($1, $2, NOW(), $3, $4, $5)
+		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at)
+		VALUES ($1, $2, NOW(), $3, $4, $5, $6)
 		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5`,
-		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw),
+		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw), w.RegisteredAt,
 	)
 	return restarted
 }
@@ -77,8 +80,15 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 func (r *Registry) registerNoDB(w *models.WorkerInfo) (restarted bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if prev, ok := r.workers[w.ID]; ok && prev.Instance != "" && w.Instance != "" && prev.Instance != w.Instance {
+	prev, known := r.workers[w.ID]
+	if known && prev.Instance != "" && w.Instance != "" && prev.Instance != w.Instance {
 		restarted = true
+	}
+	// El orden de llegada se conserva aunque el worker se reinicie o se re-registre.
+	if known && !prev.RegisteredAt.IsZero() {
+		w.RegisteredAt = prev.RegisteredAt
+	} else if w.RegisteredAt.IsZero() {
+		w.RegisteredAt = time.Now()
 	}
 	w.LastSeen = time.Now()
 	w.Status = "idle"
@@ -163,6 +173,14 @@ func (r *Registry) All() []*models.WorkerInfo {
 		cp := *w
 		list = append(list, &cp)
 	}
+	// Orden de llegada (y por id si empatan): un mapa de Go itera al azar y el dashboard, que
+	// recibe esta lista cada segundo, movía las tarjetas de lugar.
+	sort.Slice(list, func(i, j int) bool {
+		if !list[i].RegisteredAt.Equal(list[j].RegisteredAt) {
+			return list[i].RegisteredAt.Before(list[j].RegisteredAt)
+		}
+		return list[i].ID < list[j].ID
+	})
 	return list
 }
 

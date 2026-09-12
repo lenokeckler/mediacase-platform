@@ -84,6 +84,7 @@ func Migrate(db *sql.DB) error {
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS role         TEXT NOT NULL DEFAULT '';
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capabilities TEXT NOT NULL DEFAULT '';
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS hardware     JSONB;
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 	`)
 	return err
 }
