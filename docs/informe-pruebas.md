@@ -128,6 +128,30 @@ nodo esperado, corrido tres veces hoy). El worker de video hizo 534 minutos de C
 sesión; cuando se sumó un segundo worker de video (node4) tomó 119 sub-tareas en 20 minutos sin
 tocar la configuración: el scheduler reparte por *least-loaded* dentro del pool.
 
+### 4.1 Afinidad + ayuda entre nodos (planificador final, 2026-09-11)
+
+Lo anterior es el modo de pools puros (`SCHEDULER_STRICT_POOLS=true`). El planificador final usa
+el pool como **preferencia**: primero un nodo del pool (afinidad); si está ocupado o saturado
+(RAM ≥ 90 % o CPU ≥ 95 % según sus métricas) y hay otro nodo libre, ese ayuda. Dos corridas:
+
+**`demo-mixto-18`** (6 videos, 6 audios, 4 imágenes + 2 extracciones de audio; nodos: `node1` rol
+video en la laptop, `ugarte_16` rol `all` en la PC de un compañero). Caso `completed` 18/18 en
+70 s: las 8 sub-tareas de video se repartieron entre los dos nodos por menos carga (`node1` 5,
+`ugarte_16` 3); audio y miniaturas fueron todas a `ugarte_16` porque en ese momento el modo era
+estricto y `node1` no tenía esos pools: la laptop quedó ociosa mientras el compañero hacía 13. Ese
+fue el disparador del cambio.
+
+**`demo-formatos`** (10 sub-tareas con destinos explícitos: `mkv → WEBM`, `mov → MKV`,
+`mp4 → FLAC` (extracción), `wav → OGG`, `flac → MP3`, `aac → FLAC`, `png → WEBP 640`, `jpg → JPG`
+y dos `→ JSON` de metadatos), con **solo `node1` (rol video)** conectado y el planificador nuevo:
+`partially_completed` 8/10 en 106 s. Los dos videos los tomó por *afinidad* (64.7 s y 105.4 s); los
+tres audios, las dos miniaturas y los metadatos los tomó por *ayuda* (1.6 s a 70.5 s) en vez de
+dejarlos en cola. Las 2 fallidas son `hito_corrupto.mp4`, el archivo dañado a propósito del dataset
+(`moov atom not found`), reportadas con el error completo. El resumen del reporte quedó:
+*"de 10 archivos — 1 audio convertido a FLAC, 1 audio convertido a MP3, 1 audio convertido a OGG,
+1 archivo con metadatos extraídos, 1 miniatura generada a JPG, 1 miniatura generada a WEBP,
+1 video convertido a MKV, 1 video convertido a WEBM, 2 fallidos (…)"*.
+
 ## 5. Casos heterogéneos y comportamiento ante fallos
 
 ### 5.1 Caso heterogéneo con archivo corrupto → `partially_completed`

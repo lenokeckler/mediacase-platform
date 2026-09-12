@@ -181,16 +181,23 @@ flowchart LR
     AH[jobs:audio:high] --- AN[jobs:audio:normal] --- AL[jobs:audio:low]
     MH[jobs:metadata:high] --- MN[jobs:metadata:normal] --- ML[jobs:metadata:low]
   end
-  S[Scheduler<br/>cada 200 ms recorre los pools] -->|solo si hay worker del pool con capacidad| redis
+  S[Scheduler<br/>cada 200 ms recorre los pools] -->|si alguien puede atender el pool| redis
   redis -->|high antes que normal antes que low| S
-  S -->|least-loaded: menos activas, luego menos CPU| W[(worker del pool)]
+  S -->|1. afinidad: worker del pool<br/>2. ayuda: cualquier worker libre<br/>en ambos: no saturado, menos activas, menos CPU| W[(worker elegido)]
 ```
 
 - **Nueve colas = pool × prioridad.** Prioridad 8-10 → `high`, 4-7 → `normal`, 1-3 → `low`.
   Dentro de un pool se vacía `high` antes que `normal` antes que `low` (planificación multinivel).
-- **No se saca nada de una cola si no hay quién lo atienda**: el scheduler lee `jobs:video:*` solo
-  cuando hay un worker del pool `video` con canal abierto y capacidad. Si el pool está saturado, la
-  profundidad de esa cola crece y **eso es lo que muestra el dashboard** (`by_pool`) y Grafana.
+- **Afinidad, ayuda y carga (`Registry.PickFor`)**: para cada pool el scheduler elige primero un
+  worker cuyo pool principal coincida (*afinidad*); si ese nodo está ocupado o saturado y hay otro
+  nodo libre de cualquier pool, se lo da a ese (*ayuda*, work stealing). "Saturado" sale de las
+  métricas reales del heartbeat: RAM ≥ 90 % o CPU ≥ 95 %. Dentro de cada grupo gana el no
+  saturado con menos sub-tareas activas y menos CPU. Cada sub-tarea guarda cómo se asignó
+  (`assignment = afinidad | ayuda`) y el dashboard lo muestra. `SCHEDULER_STRICT_POOLS=true`
+  vuelve al modelo de pools puros (sin ayuda), útil para demostrar la separación.
+- **No se saca nada de una cola si nadie puede atenderla**: si ningún nodo vivo puede tomar un
+  pool (en modo estricto, ninguno de ese pool), la profundidad de esa cola crece y **eso es lo que
+  muestra el dashboard** (`by_pool`) y Grafana.
 - **Backpressure**: el worker tiene un pool fijo de goroutines (`WORKER_POOL_SIZE`); si está lleno
   responde `reject` y la sub-tarea vuelve a la cola sin contar como reintento.
 - **Tolerancia a fallos**: heartbeat cada 1 s; sin heartbeat por 15 s el worker se expulsa y sus
@@ -210,15 +217,18 @@ distinto y conviene atenderla en el nodo que mejor la resuelve:
 
 | Pool | Operaciones | Perfil | Nodo |
 |---|---|---|---|
-| `video` | `convert` (H.264), `extract_audio`, `thumbnail` de video | CPU intensivo y sostenido: un pesado de 250 MB tarda ~3 min | node-1, el más potente (Ryzen 7, 6C/12T) |
-| `audio` | `convert_audio` | CPU moderado: segundos a un minuto | node-2 (2 vCPU) |
-| `metadata` | `thumbnail` de imágenes, metadatos | Liviano: ~3 s | node-3 (1 vCPU) |
+| `video` | `convert` (→ mp4/mkv/webm), `extract_audio` (→ mp3/wav/flac/aac) | CPU intensivo y sostenido: un pesado de 250 MB tarda ~3 min | node-1, el más potente (Ryzen 7, 6C/12T) |
+| `audio` | `convert_audio` (→ flac/mp3/wav/aac/ogg) | CPU moderado: segundos a un minuto | node-2 (2 vCPU) |
+| `metadata` | `thumbnail` (→ jpg/png/webp, 320-1280 px), `metadata` (ffprobe → json) | Liviano: < 3 s | node-3 (1 vCPU) |
 
-Con workers genéricos, una sub-tarea de video podía caer en el nodo más débil y **retrasar el
-cierre de todo el caso** (el barrier espera a la más lenta). Con pools, el trabajo pesado va siempre
-al nodo que lo termina antes. El costo aceptado: entre pools no hay robo de trabajo — si `video`
-está saturado, sus sub-tareas esperan aunque `metadata` esté ocioso. Números reales en
-[`informe-pruebas.md`](informe-pruebas.md).
+Con workers genéricos puros, una sub-tarea de video podía caer en el nodo más débil y **retrasar
+el cierre de todo el caso** (el barrier espera a la más lenta). Con pools puros, el trabajo pesado
+iba siempre al nodo que lo termina antes, pero un nodo ocioso no ayudaba a otro pool saturado. La
+versión final usa la especialización como **preferencia** (afinidad) y no como pared: el video va
+primero al nodo con GPU, y un nodo libre toma trabajo de otro pool antes que quedarse parado,
+siempre evitando los nodos saturados según sus métricas reales (§5). Es la lectura de la Unidad 1
+que se defiende en el informe: heterogeneidad de cómputo aprovechada sin desperdiciar capacidad.
+Números reales en [`informe-pruebas.md`](informe-pruebas.md).
 
 ## 7. Comunicación entre procesos
 

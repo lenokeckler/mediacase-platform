@@ -24,7 +24,9 @@ sub-tareas y las encola. El caso se acepta entero o se rechaza entero.
   "files": [
     { "key": "video_medium_14.mkv" },
     { "key": "image_8.jpg" },
-    { "key": "video_medium_14.mkv", "operation": "extract_audio" }
+    { "key": "video_medium_14.mkv", "operation": "extract_audio", "target": "flac" },
+    { "key": "image_8.jpg", "operation": "thumbnail", "target": "webp", "width": 640 },
+    { "key": "audio_2.aiff", "operation": "metadata" }
   ]
 }
 ```
@@ -35,15 +37,22 @@ sub-tareas y las encola. El caso se acepta entero o se rechaza entero.
 | `priority` | int 1-10 | 8-10 → cola `high`, 4-7 → `normal`, 1-3 → `low`; omitido = 5 |
 | `files[].key` | string | clave del objeto en `dataset/` |
 | `files[].operation` | string, opcional | sugerencia del cliente; solo se acepta si aplica al tipo detectado (ver routing) |
+| `files[].target` | string, opcional | formato de salida; solo se acepta si aplica a la operación (ver tabla). Omitido = el primero de la lista |
+| `files[].width` | int, opcional | ancho de la miniatura: 320 (default), 640 o 1280; se ignora en otras operaciones |
 
 Routing por tipo (`internal/cases/router.go`): la extensión decide el tipo; la primera operación
 de la lista es la que se elige si el cliente no pide ninguna.
 
-| Tipo | Extensiones | Operaciones válidas | Pool |
-|---|---|---|---|
-| video | mp4 mkv avi mov webm … | `convert` · `extract_audio` · `thumbnail` | `video` |
-| audio | mp3 wav flac aac ogg … | `convert_audio` · `thumbnail` (forma de onda) | `audio` |
-| image | jpg png webp … | `thumbnail` | `metadata` |
+| Tipo | Extensiones | Operaciones válidas (→ salidas; la primera es la default) |
+|---|---|---|
+| video | mp4 mkv avi mov webm m4v flv wmv ts mts 3gp mpg mpeg | `convert` → mp4 mkv webm · `extract_audio` → mp3 wav flac aac · `thumbnail` → jpg png webp · `metadata` → json |
+| audio | mp3 wav flac aac ogg m4a opus wma aiff aif dsf dff | `convert_audio` → flac mp3 wav aac ogg · `thumbnail` (forma de onda) · `metadata` |
+| image | jpg jpeg png gif webp bmp tif tiff | `thumbnail` → jpg png webp · `metadata` |
+
+El pool lo decide la operación: `convert` y `extract_audio` → `video`; `convert_audio` → `audio`;
+`thumbnail` y `metadata` (livianas) → `metadata`. Cada sub-tarea devuelve `target`, `width` y,
+una vez asignada, `assignment` (`afinidad` si la tomó un worker de su pool, `ayuda` si la tomó un
+nodo libre de otro pool). `GET /catalog` devuelve estas tablas en JSON.
 
 Respuesta `201 Created`: el caso con sus sub-tareas (misma forma que `GET /cases/{id}`, todas en
 `pending`). Errores: `400` si el body es inválido, `files` está vacío, supera 2000 archivos, una
@@ -247,6 +256,7 @@ Prometheus (`infra/prometheus.yml`) scrapea solo `host.docker.internal:8080`; Gr
 |---|---|
 | `GET /connect` | página HTML con instrucciones y los enlaces de descarga |
 | `GET /download/worker?os=windows\|linux` | ZIP con el binario del worker, ffmpeg (Windows) y un `worker.env` ya apuntando a este coordinador (URL y esquema tomados de `Host` y `X-Forwarded-Proto`: por IP de LAN da `http://`, por túnel da `https://` y MinIO por el túnel que dejó `scripts/tunnel.ps1` en `infra/env/tunnel.env`) |
+| `GET /catalog` | operaciones y formatos que acepta el coordinador: `ops_by_type`, `targets_by_op`, `pool_by_op`, `thumbnail_widths`, `extensions`. Lo usa el formulario del dashboard |
 | `GET /share` | cómo llegar a este coordinador desde otra máquina: `primary_url` (la IP anunciada a los workers), `lan_urls`, `tunnel` (`status` off/starting/on/error, `coordinator_url`, `minio_url`, `error`, `hint`) y `cloudflared_installed` |
 | `POST /tunnel` | abre dos quick tunnels de Cloudflare (coordinador y MinIO) como procesos hijos; responde 202 `starting` y el estado se consulta en `/share`. Si la red bloquea el 7844, en ≤45 s pasa a `error` con la pista de encender WARP |
 | `DELETE /tunnel` | cierra los túneles |

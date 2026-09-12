@@ -62,8 +62,20 @@ detalle (id completo, archivo, caso, tiempos, reintentos, URL del resultado o er
    - **Subir** archivos desde su computadora (video, audio o imágenes; varios a la vez).
    - **Elegir del dataset**: los archivos que ya están en el sistema (los 492 del dataset de prueba).
 3. Nombre del caso y prioridad (1-10; 8 o más va a la cola alta).
-4. **Enviar**. El coordinador decide la operación de cada archivo por su tipo: video → convertir a
-   MP4, audio → convertir a WAV, imagen → miniatura. No hay que indicarla.
+4. Por cada archivo el formulario muestra lo que el coordinador va a hacer, como `mkv → MP4`. No
+   hay que tocar nada, pero se puede cambiar la **operación** y el **formato de salida**:
+
+   | Tipo | Operación (la primera es la automática) | Salidas |
+   |---|---|---|
+   | video | **convertir video** · extraer audio · miniatura · metadatos | MP4 · MKV · WebM / MP3 · WAV · FLAC · AAC / JPG · PNG · WebP (320, 640 o 1280 px) / JSON |
+   | audio | **convertir audio** · miniatura (forma de onda) · metadatos | FLAC · MP3 · WAV · AAC · OGG / JPG · PNG · WebP / JSON |
+   | imagen | **miniatura** · metadatos | JPG · PNG · WebP / JSON |
+
+   *Metadatos* consulta el archivo con ffprobe y entrega un JSON con contenedor, duración, tamaño,
+   bitrate, cada pista (códec, resolución, fps, canales, muestreo) y etiquetas. Entradas aceptadas:
+   mp4, mkv, mov, webm, avi, m4v, flv, wmv, ts, mpg · mp3, wav, flac, aac, ogg, m4a, opus, wma,
+   aiff, dsf, dff · jpg, png, gif, webp, bmp, tiff.
+5. **Enviar**.
 
 Un caso con archivos de un solo tipo es **homogéneo**; con mezcla es **heterogéneo** y sus
 sub-tareas corren en paralelo en pools distintos. Si algún archivo no es válido (extensión
@@ -132,8 +144,12 @@ que instalar nada ni abrir puertos: el worker se conecta **hacia** el coordinado
 
 ### Elegir el rol (pool)
 
-Por defecto el worker descargado es genérico (`WORKER_ROLE=all`): atiende video, audio e imágenes.
-Para especializarlo, editar `worker.env` antes de arrancar:
+El rol es el **pool principal** del nodo: lo que atiende primero. Por defecto el worker descargado es
+genérico (`WORKER_ROLE=all`). Un nodo con rol `video` recibe los videos por *afinidad*, pero si
+está libre y hay audio o miniaturas esperando, también los toma (*ayuda*): nadie se queda parado
+mientras haya trabajo. El coordinador además evita cargar un nodo con la RAM sobre 90 % o la CPU
+sobre 95 % mientras haya otro descansado. En el Monitor cada tarjeta dice "ayuda en …" y cada
+sub-tarea marca si llegó por ayuda. Para especializarlo, editar `worker.env` antes de arrancar:
 
 ```
 WORKER_ROLE=audio        # video | audio | metadata | all
