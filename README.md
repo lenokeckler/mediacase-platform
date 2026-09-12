@@ -5,7 +5,7 @@
 IC-6600 Principios de Sistemas Operativos · Instituto Tecnológico de Costa Rica, Campus San Carlos ·
 II Semestre 2026 · Proyecto Programado I (consigna v2.0).
 
-**Equipo:** Magdaleno Gómez Díaz · Jennifer Yajaira Lopez Miranda · Jonathan Sancho Loaiza
+**Equipo:** Magdaleno Gómez Díaz · Jennifer Yajaira López Miranda · Jonathan Sancho Loaiza
 
 ---
 
