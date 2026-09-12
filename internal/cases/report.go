@@ -2,6 +2,7 @@ package cases
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -19,6 +20,9 @@ type SubTaskResult struct {
 	File            string           `json:"file"`
 	FileType        models.FileType  `json:"file_type"`
 	Operation       models.Operation `json:"operation"`
+	SourceExt       string           `json:"source_ext,omitempty"` // formato de entrada (mkv, flac…)
+	Assignment      string           `json:"assignment,omitempty"` // afinidad | ayuda
+	Target          string           `json:"target,omitempty"`     // formato de salida (mp4, mp3, json…)
 	Status          models.JobStatus `json:"status"`
 	WorkerID        string           `json:"worker_id,omitempty"`
 	StartedAt       *time.Time       `json:"started_at,omitempty"`
@@ -31,6 +35,7 @@ type SubTaskResult struct {
 type GroupCount struct {
 	FileType  models.FileType  `json:"file_type"`
 	Operation models.Operation `json:"operation"`
+	Target    string           `json:"target,omitempty"`
 	Completed int              `json:"completed"`
 	Failed    int              `json:"failed"`
 	Cancelled int              `json:"cancelled"`
@@ -57,12 +62,14 @@ type Report struct {
 	Summary            string            `json:"summary"`
 }
 
-// Etiquetas para el resumen: singular y plural por operación.
+// Etiquetas para el resumen: singular y plural por operación; el destino se agrega después
+// ("videos convertidos a MP4", "audios extraídos a FLAC").
 var opLabels = map[models.Operation][2]string{
 	models.OpConvert:      {"video convertido", "videos convertidos"},
 	models.OpConvertAudio: {"audio convertido", "audios convertidos"},
 	models.OpExtractAudio: {"audio extraído", "audios extraídos"},
 	models.OpThumbnail:    {"miniatura generada", "miniaturas generadas"},
+	models.OpMetadata:     {"archivo con metadatos extraídos", "archivos con metadatos extraídos"},
 }
 
 // BuildReport arma el reporte a partir del caso y sus sub-tareas. Es una función pura.
@@ -80,6 +87,7 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 	for _, j := range jobs {
 		st := SubTaskResult{
 			JobID: j.ID, File: j.FilePath, FileType: j.FileType, Operation: j.Operation,
+			SourceExt: strings.TrimPrefix(strings.ToLower(filepath.Ext(j.FilePath)), "."), Target: j.Target, Assignment: j.Assignment,
 			Status: j.Status, WorkerID: j.WorkerID, StartedAt: j.StartedAt, CompletedAt: j.CompletedAt,
 			ResultURL: j.ResultURL, Error: j.ErrorMsg,
 		}
@@ -89,10 +97,10 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 		r.SubTasks = append(r.SubTasks, st)
 		r.Totals.Total++
 
-		key := string(j.FileType) + "/" + string(j.Operation)
+		key := string(j.FileType) + "/" + string(j.Operation) + "/" + j.Target
 		g, ok := groups[key]
 		if !ok {
-			g = &GroupCount{FileType: j.FileType, Operation: j.Operation}
+			g = &GroupCount{FileType: j.FileType, Operation: j.Operation, Target: j.Target}
 			groups[key] = g
 		}
 		switch j.Status {
@@ -121,7 +129,10 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 		if a.FileType != b.FileType {
 			return a.FileType < b.FileType
 		}
-		return a.Operation < b.Operation
+		if a.Operation != b.Operation {
+			return a.Operation < b.Operation
+		}
+		return a.Target < b.Target
 	})
 	r.Summary = Summary(r)
 	return r
@@ -139,7 +150,11 @@ func Summary(r *Report) string {
 		if !ok {
 			lbl = [2]string{string(g.Operation), string(g.Operation)}
 		}
-		parts = append(parts, plural(g.Completed, lbl[0], lbl[1]))
+		part := plural(g.Completed, lbl[0], lbl[1])
+		if g.Target != "" && g.Operation != models.OpMetadata {
+			part += " a " + strings.ToUpper(g.Target)
+		}
+		parts = append(parts, part)
 	}
 	if r.Totals.Failed > 0 {
 		reason := ""

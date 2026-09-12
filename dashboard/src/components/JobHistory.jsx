@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api, OPERATION_LABEL } from '../api'
+import { api, OPERATION_LABEL, opArrow } from '../api'
 import StatusBadge from './StatusBadge'
 import styles from './JobHistory.module.css'
 
@@ -88,10 +88,10 @@ function JobRows({ job, expanded, onToggle }) {
             <tr className={`${styles.row} ${expanded ? styles.rowExpanded : ''}`} onClick={onToggle} title="Clic para ver el detalle">
                 <td className="mono muted">{job.id.slice(0, 8)}</td>
                 <td className={styles.file} title={job.file_path}>{shortFile(job.file_path)}</td>
-                <td>{OPERATION_LABEL[job.operation] || job.operation}</td>
+                <td title={OPERATION_LABEL[job.operation] || job.operation}><span className="mono">{opArrow(job)}</span> <span className="muted">{OPERATION_LABEL[job.operation]}</span></td>
                 <td><StatusBadge status={job.status} kind="job" /></td>
                 <td className="muted num">{job.status === 'pending' || job.status === 'assigned' ? '—' : `${job.progress ?? 0}%`}</td>
-                <td className="muted">{job.worker_id || '—'}</td>
+                <td className="muted">{job.worker_id || '—'}{job.assignment === 'ayuda' && <span className="chip chip-yellow" style={{ marginLeft: 6 }} title="Un nodo de otro pool la tomó porque estaba libre">ayuda</span>}</td>
                 <td className="muted num">{job.priority}</td>
                 <td className="muted num">{fmtTime(job.created_at)}</td>
                 <td className="muted num">{calcDuration(job.started_at, job.completed_at)}</td>

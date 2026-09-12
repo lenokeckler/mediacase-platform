@@ -84,3 +84,25 @@ func TestSummary_CanceladasNoCuentanComoFallidas(t *testing.T) {
 		t.Errorf("resumen con cancelada: %q", r.Summary)
 	}
 }
+
+func TestBuildReport_DestinoEnResumenYGrupos(t *testing.T) {
+	base := time.Date(2026, 9, 11, 21, 0, 0, 0, time.UTC)
+	c := &models.Case{ID: "C2", Name: "mixto", Status: models.CaseCompleted, TotalJobs: 4, CreatedAt: base}
+	jobs := []*models.Job{
+		{ID: "j1", FilePath: "a.mkv", FileType: models.FileVideo, Operation: models.OpConvert, Target: "mp4", Status: models.StatusCompleted},
+		{ID: "j2", FilePath: "b.mov", FileType: models.FileVideo, Operation: models.OpConvert, Target: "webm", Status: models.StatusCompleted},
+		{ID: "j3", FilePath: "c.aiff", FileType: models.FileAudio, Operation: models.OpConvertAudio, Target: "flac", Status: models.StatusCompleted},
+		{ID: "j4", FilePath: "d.mp4", FileType: models.FileVideo, Operation: models.OpMetadata, Target: "json", Status: models.StatusCompleted},
+	}
+	r := BuildReport(c, jobs)
+	want := "de 4 archivos — 1 audio convertido a FLAC, 1 video convertido a MP4, 1 video convertido a WEBM, 1 archivo con metadatos extraídos"
+	if r.Summary != want {
+		t.Fatalf("resumen:\n got: %s\nwant: %s", r.Summary, want)
+	}
+	if len(r.ByTypeAndOperation) != 4 {
+		t.Fatalf("un grupo por tipo/operación/destino: %+v", r.ByTypeAndOperation)
+	}
+	if r.SubTasks[0].SourceExt != "mkv" || r.SubTasks[0].Target != "mp4" || r.SubTasks[2].SourceExt != "aiff" {
+		t.Errorf("cada sub-tarea lleva origen → destino: %+v", r.SubTasks)
+	}
+}

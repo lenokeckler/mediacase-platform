@@ -20,6 +20,8 @@ import (
 type caseFileReq struct {
 	Key       string           `json:"key"`                 // clave del objeto en el bucket de entradas
 	Operation models.Operation `json:"operation,omitempty"` // opcional: si falta, decide el coordinador
+	Target    string           `json:"target,omitempty"`    // opcional: formato de salida (mp4, flac, jpg…)
+	Width     int              `json:"width,omitempty"`     // opcional: ancho de la miniatura
 }
 
 type submitCaseReq struct {
@@ -62,7 +64,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "files["+itoa(i)+"]: falta key", http.StatusBadRequest)
 			return
 		}
-		d, err := cases.Route(f.Key, f.Operation)
+		d, err := cases.RouteWith(f.Key, f.Operation, f.Target, f.Width)
 		if err != nil {
 			http.Error(w, "archivo "+f.Key+": "+err.Error(), http.StatusBadRequest)
 			return
@@ -87,6 +89,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		job := &models.Job{
 			ID: uuid.New().String(), CaseID: c.ID, FileID: f.Key, FilePath: f.Key,
 			FileType: decisions[i].FileType, Operation: decisions[i].Operation, Pool: decisions[i].Pool,
+			Target: decisions[i].Target, Width: decisions[i].Width,
 			Priority: req.Priority, Status: models.StatusPending, MaxRetries: 3, CreatedAt: time.Now(),
 		}
 		if err := db.InsertJob(a.db, job); err != nil {

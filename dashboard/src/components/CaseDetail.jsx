@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fmtSeconds, fmtTime, isTerminal, OPERATION_LABEL } from '../api'
+import { fmtSeconds, fmtTime, isTerminal, OPERATION_LABEL, opArrow } from '../api'
 import StatusBadge from './StatusBadge'
 import styles from './CaseDetail.module.css'
 
@@ -78,7 +78,7 @@ export default function CaseDetail({ c, report, onCancel, onClose }) {
                     <div className={styles.groups}>
                         {report.by_type_and_operation.map(g => (
                             <span key={`${g.file_type}/${g.operation}`} className={styles.group}>
-                                {g.file_type} · {OPERATION_LABEL[g.operation] || g.operation}: {g.completed} ok
+                                {g.file_type} · {OPERATION_LABEL[g.operation] || g.operation}{g.target && g.operation !== 'metadata' ? ` → ${g.target.toUpperCase()}` : ''}: {g.completed} ok
                                 {g.failed ? `, ${g.failed} fallida${g.failed === 1 ? '' : 's'}` : ''}
                                 {g.cancelled ? `, ${g.cancelled} cancelada${g.cancelled === 1 ? '' : 's'}` : ''}
                             </span>
@@ -104,11 +104,11 @@ export default function CaseDetail({ c, report, onCancel, onClose }) {
                                 <tr key={j.id}>
                                     <td className={styles.file}>{j.file_path}</td>
                                     <td>{j.file_type}</td>
-                                    <td>{OPERATION_LABEL[j.operation] || j.operation}</td>
+                                    <td title={OPERATION_LABEL[j.operation] || j.operation}><span className="mono">{opArrow(j)}</span> <span className="muted">{OPERATION_LABEL[j.operation]}</span></td>
                                     <td><span className={styles.pool}>{j.pool}</span></td>
                                     <td><StatusBadge status={j.status} kind="job" /></td>
                                     <td><Progress job={j} /></td>
-                                    <td>{j.worker_id || <span className={styles.muted}>—</span>}</td>
+                                    <td>{j.worker_id || <span className={styles.muted}>—</span>}{j.assignment === 'ayuda' && <span className="chip chip-yellow" style={{ marginLeft: 6 }} title="Un nodo de otro pool la tomó porque estaba libre">ayuda</span>}</td>
                                     <td className={styles.muted}>{fmtTime(j.started_at)}</td>
                                     <td className={styles.muted}>{d == null ? '—' : fmtSeconds(d)}</td>
                                     <td>

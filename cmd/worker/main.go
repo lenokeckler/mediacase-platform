@@ -78,6 +78,8 @@ type jobAssignment struct {
 	JobID     string `json:"id"`
 	FilePath  string `json:"file_path"`
 	Operation string `json:"operation"`
+	Target    string `json:"target"` // formato de salida decidido por el coordinador
+	Width     int    `json:"width"`  // ancho de miniatura
 	Priority  int    `json:"priority"`
 }
 
@@ -224,10 +226,10 @@ func (w *worker) serveStream(ctx context.Context, conn *websocket.Conn) {
 			continue
 		}
 		job := jobAssignment{JobID: m.Job.ID, FilePath: m.Job.FilePath,
-			Operation: string(m.Job.Operation), Priority: m.Job.Priority}
+			Operation: string(m.Job.Operation), Target: m.Job.Target, Width: m.Job.Width, Priority: m.Job.Priority}
 		select {
 		case w.jobCh <- job:
-			log.Printf("[assign] job %s aceptado (op=%s)", job.JobID, job.Operation)
+			log.Printf("[assign] job %s aceptado (op=%s → %s)", job.JobID, job.Operation, job.Target)
 			send(wsMsg{Type: "accept", JobID: job.JobID})
 		default:
 			log.Printf("[assign] pool lleno, rechazando job %s", job.JobID)
@@ -280,15 +282,32 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 		w.reportProgress(job.JobID, pct, string(models.StatusRunning), "", "")
 	}
 
+	// El destino lo decidió el coordinador (routing); si un coordinador viejo no lo manda, el
+	// default de cada operación.
+	target := job.Target
 	switch job.Operation {
 	case string(models.OpConvert):
-		resultPath, opErr = multimedia.Convert(ctx, localInput, progressCB)
+		if target == "" {
+			target = "mp4"
+		}
+		resultPath, opErr = multimedia.ConvertTo(ctx, localInput, target, progressCB)
 	case string(models.OpExtractAudio):
-		resultPath, opErr = multimedia.ExtractAudio(ctx, localInput, progressCB)
+		if target == "" {
+			target = "mp3"
+		}
+		resultPath, opErr = multimedia.ExtractAudioTo(ctx, localInput, target, progressCB)
 	case string(models.OpThumbnail):
-		resultPath, opErr = multimedia.Thumbnail(ctx, localInput, progressCB)
+		if target == "" {
+			target = "jpg"
+		}
+		resultPath, opErr = multimedia.ThumbnailTo(ctx, localInput, target, job.Width, progressCB)
 	case string(models.OpConvertAudio):
-		resultPath, opErr = multimedia.ConvertAudio(ctx, localInput, progressCB)
+		if target == "" {
+			target = "flac"
+		}
+		resultPath, opErr = multimedia.ConvertAudioTo(ctx, localInput, target, progressCB)
+	case string(models.OpMetadata):
+		resultPath, opErr = multimedia.Metadata(ctx, localInput, progressCB)
 	default:
 		opErr = fmt.Errorf("operación desconocida: %s", job.Operation)
 	}

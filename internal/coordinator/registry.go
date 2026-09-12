@@ -125,9 +125,8 @@ func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int, metric
 // LeastLoaded elige el worker vivo con menos carga, sin filtrar por pool.
 func (r *Registry) LeastLoaded() *models.WorkerInfo { return r.LeastLoadedFor("") }
 
-// LeastLoadedFor elige, entre los workers vivos que atienden el pool, el de menos sub-tareas
-// activas (empate: menor CPU). Es el balanceo "least-loaded" dentro de cada pool.
-// pool == "" no filtra. Un worker sin capabilities declaradas se considera genérico.
+// LeastLoadedFor elige, entre los workers vivos de un pool, el que tiene menos sub-tareas
+// activas (empate: menor CPU). nil si no hay ninguno. Es el selector estricto; ver PickFor.
 func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -136,21 +135,96 @@ func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 		if !r.isAlive(w) || (pool != "" && !hasCapability(w, pool)) {
 			continue
 		}
-		if best == nil {
-			best = w
-			continue
-		}
-		if w.ActiveJobs < best.ActiveJobs {
-			best = w
-		} else if w.ActiveJobs == best.ActiveJobs && w.CPUPercent < best.CPUPercent {
+		if best == nil || lessLoaded(w, best) {
 			best = w
 		}
 	}
 	return best
 }
 
-// Remove da de baja un worker que se despidió. Devuelve false si no estaba (o si la instancia
-// no coincide: un proceso viejo despidiéndose no debe borrar al nuevo).
+// Cómo se asignó una sub-tarea: por afinidad (el pool principal del nodo coincide) o por ayuda
+// (un nodo libre de otro pool la tomó para no quedarse de brazos cruzados).
+const (
+	AssignAffinity = "afinidad"
+	AssignHelp     = "ayuda"
+)
+
+// Umbrales de saturación: un nodo por encima de esto va de último en la elección (pero no se
+// excluye: si todos están saturados, igual se reparte).
+const (
+	overloadedMemPercent = 90
+	overloadedCPUPercent = 95
+)
+
+// PickFor elige el worker para una sub-tarea del pool dado.
+//
+// Orden de preferencia: (1) afinidad —nodos cuyo pool principal coincide—, (2) si no hay o
+// están todos ocupados/saturados, ayuda —cualquier nodo con canal abierto—. Dentro de cada
+// grupo: primero los no saturados (RAM < 90 %, CPU < 95 % según sus métricas reales), luego
+// menos sub-tareas activas, luego menos CPU. Es la conexión con la Unidad 1: la
+// heterogeneidad se usa como preferencia (video a la máquina con GPU) y no como pared.
+//
+// strict = true vuelve al modelo de pools puros (solo afinidad). connected dice qué workers
+// tienen el canal WebSocket abierto ahora mismo.
+func (r *Registry) PickFor(pool string, strict bool, connected func(id string) bool) (*models.WorkerInfo, string) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var bestAff, bestHelp *models.WorkerInfo
+	for _, w := range r.workers {
+		if !r.isAlive(w) || (connected != nil && !connected(w.ID)) {
+			continue
+		}
+		if hasCapability(w, pool) {
+			if bestAff == nil || lessLoaded(w, bestAff) {
+				bestAff = w
+			}
+		} else if !strict {
+			if bestHelp == nil || lessLoaded(w, bestHelp) {
+				bestHelp = w
+			}
+		}
+	}
+	if bestAff != nil && (strict || bestHelp == nil || !shouldPreferHelp(bestAff, bestHelp)) {
+		return bestAff, AssignAffinity
+	}
+	if bestHelp != nil {
+		return bestHelp, AssignHelp
+	}
+	return nil, ""
+}
+
+// shouldPreferHelp: el nodo afín está ocupado o saturado y el de ayuda está libre y sano.
+func shouldPreferHelp(aff, help *models.WorkerInfo) bool {
+	return (aff.ActiveJobs > 0 || isOverloaded(aff)) && help.ActiveJobs == 0 && !isOverloaded(help)
+}
+
+func isOverloaded(w *models.WorkerInfo) bool {
+	cpu, mem := w.CPUPercent, w.MemPercent
+	if w.Metrics != nil {
+		cpu, mem = w.Metrics.CPUPercent, w.Metrics.MemPercent
+	}
+	return mem >= overloadedMemPercent || cpu >= overloadedCPUPercent
+}
+
+// lessLoaded ordena: no saturado antes que saturado, menos activas, menos CPU.
+func lessLoaded(a, b *models.WorkerInfo) bool {
+	oa, ob := isOverloaded(a), isOverloaded(b)
+	if oa != ob {
+		return !oa
+	}
+	if a.ActiveJobs != b.ActiveJobs {
+		return a.ActiveJobs < b.ActiveJobs
+	}
+	ca, cb := a.CPUPercent, b.CPUPercent
+	if a.Metrics != nil {
+		ca = a.Metrics.CPUPercent
+	}
+	if b.Metrics != nil {
+		cb = b.Metrics.CPUPercent
+	}
+	return ca < cb
+}
+
 func (r *Registry) Remove(id, instance string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()

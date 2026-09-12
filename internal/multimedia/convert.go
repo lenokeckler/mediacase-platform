@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -130,47 +129,7 @@ func outputPath(inputPath, ext string) string {
 	return filepath.Join(dir, fmt.Sprintf("%s_%s_%s%s", base, ts, seq, ext))
 }
 
-// Convert convierte inputPath a MP4 usando H.264 + AAC.
-// Retorna la ruta del archivo de salida y cualquier error.
+// Convert convierte a MP4 (H.264 + AAC), el destino por defecto. Ver ConvertTo.
 func Convert(ctx context.Context, inputPath string, cb progressFn) (string, error) {
-	if has, err := probeHasStream(ctx, inputPath, "v"); err != nil {
-		return "", fmt.Errorf("convert: %w", err)
-	} else if !has {
-		return "", fmt.Errorf("convert: input has no video stream — use an audio operation instead")
-	}
-
-	out := outputPath(inputPath, ".mp4")
-	log.Printf("[convert] %s → %s", inputPath, out)
-
-	args := []string{
-		"-y",
-		"-i", inputPath,
-		"-c:v", "libx264",
-		"-preset", "fast",
-		"-crf", "23",
-		"-c:a", "aac",
-		"-b:a", "128k",
-		"-movflags", "+faststart",
-		"-progress", "pipe:2",
-		"-nostats",
-		out,
-	}
-
-	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
-	lowerPriority(cmd) // ffmpeg por debajo de los procesos de control (ver priority_*.go)
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return "", fmt.Errorf("stderr pipe: %w", err)
-	}
-	if err := cmd.Start(); err != nil {
-		return "", fmt.Errorf("ffmpeg start: %w", err)
-	}
-	lowerPriorityStarted(cmd)
-
-	go streamProgress(stderr, cb)
-
-	if err := cmd.Wait(); err != nil {
-		return "", fmt.Errorf("ffmpeg convert: %w", err)
-	}
-	return out, nil
+	return ConvertTo(ctx, inputPath, "mp4", cb)
 }

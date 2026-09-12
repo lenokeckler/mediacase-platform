@@ -165,3 +165,66 @@ func TestOutputPath_Unicidad(t *testing.T) {
 		t.Error("outputPath debe generar nombres únicos en cada llamada")
 	}
 }
+
+func TestConvertTo_WebMYMKV(t *testing.T) {
+	input := makeSyntheticVideo(t, "mp4")
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	for _, target := range []string{"webm", "mkv"} {
+		out, err := ConvertTo(ctx, input, target, func(int) {})
+		if err != nil {
+			t.Fatalf("%s: %v", target, err)
+		}
+		if !strings.HasSuffix(out, "."+target) {
+			t.Errorf("%s: salida %s", target, out)
+		}
+		if fi, _ := os.Stat(out); fi == nil || fi.Size() == 0 {
+			t.Errorf("%s: salida vacía", target)
+		}
+		os.Remove(out)
+	}
+	if _, err := ConvertTo(ctx, input, "mp3", func(int) {}); err == nil {
+		t.Error("mp3 no es destino de video")
+	}
+}
+
+func TestConvertAudioTo_FormatosYMetadatos(t *testing.T) {
+	input := makeSyntheticAudio(t, "wav")
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	for _, target := range []string{"flac", "mp3", "aac", "ogg"} {
+		out, err := ConvertAudioTo(ctx, input, target, func(int) {})
+		if err != nil {
+			t.Fatalf("%s: %v", target, err)
+		}
+		if fi, _ := os.Stat(out); fi == nil || fi.Size() == 0 {
+			t.Errorf("%s: salida vacía", target)
+		}
+		os.Remove(out)
+	}
+	out, err := Metadata(ctx, input, func(int) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(out)
+	s := string(b)
+	for _, want := range []string{`"container": "wav"`, `"duration_seconds": 3`, `"type": "audio"`, `"codec": "pcm_s16le"`, `"sample_rate": "44100"`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("metadatos sin %s:\n%s", want, s[:min(len(s), 600)])
+		}
+	}
+	os.Remove(out)
+}
+
+func TestThumbnailTo_PNG640(t *testing.T) {
+	input := makeSyntheticVideo(t, "mp4")
+	ctx := context.Background()
+	out, err := ThumbnailTo(ctx, input, "png", 640, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(out, ".png") {
+		t.Errorf("salida %s", out)
+	}
+	os.Remove(out)
+}

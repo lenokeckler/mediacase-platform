@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { OPERATION_LABEL } from '../api'
+import { OPERATION_LABEL, opArrow } from '../api'
 import StatusBadge from './StatusBadge'
 import styles from './JobTable.module.css'
 
@@ -57,11 +57,11 @@ export default function JobTable({ jobs }) {
                             <tr key={job.id}>
                                 <td className="mono muted">{job.id.slice(0, 8)}</td>
                                 <td className={styles.file} title={job.file_path}>{shortFile(job.file_path)}</td>
-                                <td>{OPERATION_LABEL[job.operation] || job.operation}</td>
+                                <td title={OPERATION_LABEL[job.operation] || job.operation}><span className="mono">{opArrow(job)}</span> <span className="muted">{OPERATION_LABEL[job.operation]}</span></td>
                                 <td>{job.pool ? <span className={`chip pool pool-${job.pool}`}>{job.pool}</span> : <span className="muted">—</span>}</td>
                                 <td><StatusBadge status={job.status} kind="job" /></td>
                                 <td><ProgressBar value={job.progress ?? 0} status={job.status} /></td>
-                                <td className="muted">{job.worker_id || '—'}</td>
+                                <td className="muted">{job.worker_id || '—'}{job.assignment === 'ayuda' && <span className="chip chip-yellow" style={{ marginLeft: 6 }} title="Un nodo de otro pool la tomó porque estaba libre">ayuda</span>}</td>
                                 <td className="muted num">{job.priority}</td>
                                 <td className="muted num">{new Date(job.created_at).toLocaleTimeString()}</td>
                             </tr>

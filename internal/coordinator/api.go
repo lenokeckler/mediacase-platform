@@ -88,6 +88,7 @@ func (a *API) Router() http.Handler {
 	mux.HandleFunc("GET /download/worker", a.downloadWorker)
 
 	// Compartir node-1: URLs de la LAN y túnel hacia internet manejado desde el dashboard
+	mux.HandleFunc("GET /catalog", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, cases.GetCatalog()) })
 	mux.HandleFunc("GET /share", a.getShare)
 	mux.HandleFunc("POST /tunnel", a.startTunnel)
 	mux.HandleFunc("DELETE /tunnel", a.stopTunnel)
@@ -113,7 +114,7 @@ func (a *API) submitJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Routing por tipo también aquí: el coordinador valida/decide la operación y el pool.
-	d, err := cases.Route(req.FilePath, req.Operation)
+	d, err := cases.Route(req.FilePath, req.Operation) // destino por defecto de la operación
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

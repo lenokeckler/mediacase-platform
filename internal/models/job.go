@@ -20,6 +20,7 @@ const (
 	OpExtractAudio Operation = "extract_audio"
 	OpThumbnail    Operation = "thumbnail"
 	OpConvertAudio Operation = "convert_audio"
+	OpMetadata     Operation = "metadata" // ffprobe → JSON con duración, códecs, resolución, etiquetas
 )
 
 type Job struct {
@@ -30,6 +31,9 @@ type Job struct {
 	FileType    FileType   `json:"file_type"` // decidido por el coordinador (routing por tipo)
 	Pool        string     `json:"pool"`      // pool de workers que la ejecuta
 	Operation   Operation  `json:"operation"`
+	Target      string     `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
+	Assignment  string     `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
+	Width       int        `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
 	OutputPath  string     `json:"output_path"`
 	Status      JobStatus  `json:"status"`
 	Priority    int        `json:"priority"`

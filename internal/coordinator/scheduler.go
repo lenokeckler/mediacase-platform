@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/lenokeckler/mediacase-platform/internal/cases"
@@ -20,10 +21,19 @@ type Scheduler struct {
 	workerHub *WorkerHub
 	db        *sql.DB
 	barrier   *cases.Barrier
+	// strictPools = true: cada pool solo lo atienden sus workers (modelo puro, para la demo).
+	// false (default): afinidad primero y, si el nodo afín está ocupado, cualquier nodo libre ayuda.
+	strictPools bool
 }
 
 func NewScheduler(q *queue.Queue, reg *Registry, workerHub *WorkerHub, db *sql.DB, barrier *cases.Barrier) *Scheduler {
-	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db, barrier: barrier}
+	strict := os.Getenv("SCHEDULER_STRICT_POOLS") == "true"
+	if strict {
+		log.Println("[scheduler] SCHEDULER_STRICT_POOLS=true: pools estrictos, sin ayuda entre nodos")
+	} else {
+		log.Println("[scheduler] afinidad por pool + ayuda entre nodos + conciencia de carga")
+	}
+	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db, barrier: barrier, strictPools: strict}
 }
 
 // Run is the main loop - it runs indefinitely in its own goroutine.
@@ -65,16 +75,16 @@ func (s *Scheduler) Run(ctx context.Context) {
 	}
 }
 
-// dispatch recorre los pools: para cada uno, si hay un worker de ese pool con canal abierto,
-// saca UNA sub-tarea de su cola y se la asigna (least-loaded dentro del pool). Si un pool no
-// tiene workers, sus sub-tareas esperan en la cola — visible en el dashboard como by_pool.
+// dispatch recorre los pools: para cada uno elige un worker (afinidad → ayuda → carga, ver
+// Registry.PickFor), saca UNA sub-tarea de su cola y se la asigna. Si nadie puede atender un
+// pool, sus sub-tareas esperan en la cola — visible en el dashboard como by_pool.
 func (s *Scheduler) dispatch(ctx context.Context) error {
 	dispatched := false
 	anyWorker := false
 	for _, pool := range queue.Pools {
-		worker := s.registry.LeastLoadedFor(pool)
-		if worker == nil || !s.workerHub.IsConnected(worker.ID) {
-			continue // sin worker vivo para este pool
+		worker, how := s.registry.PickFor(pool, s.strictPools, s.workerHub.IsConnected)
+		if worker == nil {
+			continue // nadie vivo puede atender este pool
 		}
 		anyWorker = true
 		job, msgID, err := s.queue.Dequeue(ctx, "coordinator", pool)
@@ -86,6 +96,7 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 			continue // cola de este pool vacía
 		}
 		dispatched = true
+		job.Assignment = how
 		s.assign(ctx, worker, job, msgID)
 	}
 	if !anyWorker {
@@ -111,13 +122,14 @@ func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *
 		return
 	}
 
-	log.Printf("[scheduler] assigning job %s (%s/%s) to worker %s", job.ID, job.Pool, job.Operation, worker.ID)
+	log.Printf("[scheduler] assigning job %s (%s/%s) to worker %s (%s)", job.ID, job.Pool, job.Operation, worker.ID, job.Assignment)
 
 	if err := s.updateJobStatus(job.ID, models.StatusAssigned, worker.ID); err != nil {
 		log.Printf("[scheduler] db update failed, skipping job %s: %v", job.ID, err)
 		return // el mensaje queda pendiente en el stream; se reintenta
 	}
 
+	s.setAssignment(job.ID, job.Assignment)
 	if err := s.sendToWorker(ctx, worker, job); err != nil {
 		if errors.Is(err, ErrWorkerBusy) {
 			log.Printf("[scheduler] worker %s is full, re-queueing job %s without incrementing retries", worker.ID, job.ID)
@@ -267,4 +279,12 @@ func (s *Scheduler) updateJobStatus(jobID string, status models.JobStatus, worke
 		status, workerID, jobID,
 	)
 	return err
+}
+
+// setAssignment guarda cómo se eligió el worker (afinidad / ayuda) para el reporte y el dashboard.
+func (s *Scheduler) setAssignment(jobID, how string) {
+	if how == "" {
+		return
+	}
+	s.db.Exec(`UPDATE jobs SET assignment=$1 WHERE id=$2`, how, jobID)
 }

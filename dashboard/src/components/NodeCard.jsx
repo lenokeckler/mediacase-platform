@@ -44,7 +44,9 @@ export default function NodeCard({ worker, history }) {
     const m = w.metrics
     const busy = w.status === 'busy' || w.active_jobs > 0
     const role = (w.role || 'all').toLowerCase()
-    const pools = w.capabilities?.length ? w.capabilities : ['video', 'audio', 'metadata']
+    const ALL_POOLS = ['video', 'audio', 'metadata']
+    const pools = w.capabilities?.length ? w.capabilities : ALL_POOLS
+    const helps = ALL_POOLS.filter(p => !pools.includes(p)) // pools en los que ayuda si está libre
 
     const cpuPct = m ? m.cpu_percent : w.cpu_percent
     const memPct = m ? m.mem_percent : w.mem_percent
@@ -67,14 +69,14 @@ export default function NodeCard({ worker, history }) {
                 </div>
                 <div className={styles.chips}>
                     {pools.map(p => (
-                        <span key={p} className={styles.pool} style={{ '--c': POOL_COLOR[p] || 'var(--accent)' }}>{p}</span>
+                        <span key={p} className={styles.pool} style={{ '--c': POOL_COLOR[p] || 'var(--accent)' }} title="pool principal">{p}</span>
                     ))}
                     <span className={`${styles.status} ${busy ? styles.statusBusy : styles.statusIdle}`}>{busy ? 'ocupado' : 'libre'}</span>
                 </div>
             </header>
             <div className={styles.meta}>
                 {hw?.os && <span>{hw.os}</span>}
-                {role !== 'all' && <span>rol {role}</span>}
+                {helps.length > 0 && <span title="Si está libre, toma sub-tareas de estos pools">ayuda en {helps.join(', ')}</span>}
                 <span className={styles.seen}>visto {timeAgo(w.last_seen)}</span>
             </div>
 

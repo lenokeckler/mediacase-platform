@@ -61,3 +61,60 @@ func TestLeastLoadedFor_FiltraPorPool(t *testing.T) {
 		t.Fatalf("worker sin capabilities debe atender cualquier pool, fue %v", w)
 	}
 }
+
+func f(v float64) *float64 { return &v }
+
+func TestPickFor_AfinidadPrimeroLuegoAyuda(t *testing.T) {
+	r := &Registry{workers: make(map[string]*models.WorkerInfo)}
+	r.registerNoDB(&models.WorkerInfo{ID: "v1", Capabilities: []string{"video"}, ActiveJobs: 0})
+	r.registerNoDB(&models.WorkerInfo{ID: "a1", Capabilities: []string{"audio"}, ActiveJobs: 0})
+	all := func(string) bool { return true }
+
+	// Hay worker de audio libre: afinidad.
+	w, how := r.PickFor("audio", false, all)
+	if w == nil || w.ID != "a1" || how != AssignAffinity {
+		t.Fatalf("got %v %q", w, how)
+	}
+	// El de audio está ocupado y el de video libre: ayuda (work stealing).
+	r.workers["a1"].ActiveJobs = 2
+	w, how = r.PickFor("audio", false, all)
+	if w == nil || w.ID != "v1" || how != AssignHelp {
+		t.Fatalf("got %v %q; el nodo libre debe ayudar aunque no sea su pool", w, how)
+	}
+	// En modo estricto nunca ayuda: vuelve al de audio aunque esté ocupado.
+	w, how = r.PickFor("audio", true, all)
+	if w == nil || w.ID != "a1" || how != AssignAffinity {
+		t.Fatalf("estricto: got %v %q", w, how)
+	}
+	// Sin nadie con el pool y estricto: nil.
+	if w, _ := r.PickFor("metadata", true, all); w != nil {
+		t.Fatalf("estricto sin pool: got %v", w)
+	}
+	// Sin estricto, metadata lo toma el menos cargado de todos.
+	if w, how := r.PickFor("metadata", false, all); w == nil || w.ID != "v1" || how != AssignHelp {
+		t.Fatalf("ayuda a metadata: got %v %q", w, how)
+	}
+}
+
+func TestPickFor_EvitaNodosSaturadosYRespetaConexion(t *testing.T) {
+	r := &Registry{workers: make(map[string]*models.WorkerInfo)}
+	r.registerNoDB(&models.WorkerInfo{ID: "v1", Capabilities: []string{"video"}, ActiveJobs: 0,
+		Metrics: &models.NodeMetrics{CPUPercent: 40, MemPercent: 94}}) // RAM al 94 %: saturado
+	r.registerNoDB(&models.WorkerInfo{ID: "v2", Capabilities: []string{"video"}, ActiveJobs: 1,
+		Metrics: &models.NodeMetrics{CPUPercent: 30, MemPercent: 50}})
+	all := func(string) bool { return true }
+	// v1 tiene menos activas pero está saturado: gana v2.
+	if w, _ := r.PickFor("video", false, all); w == nil || w.ID != "v2" {
+		t.Fatalf("got %v; el nodo con RAM > 90 %% va de último", w)
+	}
+	// Si todos están saturados, igual se asigna (no se deja la cola parada).
+	r.workers["v2"].Metrics.MemPercent = 95
+	if w, _ := r.PickFor("video", false, all); w == nil {
+		t.Fatal("con todos saturados se asigna al menos cargado igual")
+	}
+	// Un worker sin canal abierto no cuenta.
+	onlyV1 := func(id string) bool { return id == "v1" }
+	if w, _ := r.PickFor("video", false, onlyV1); w == nil || w.ID != "v1" {
+		t.Fatalf("got %v; solo v1 tiene canal", w)
+	}
+}

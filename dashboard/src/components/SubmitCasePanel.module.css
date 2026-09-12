@@ -17,7 +17,12 @@
 .datasetItem { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 6px; border-radius: 6px; cursor: pointer; color: var(--text-2); }
 .datasetItem:hover { background: var(--surface); }
 .chosen { display: flex; flex-direction: column; gap: 6px; }
-.chosenRow { display: grid; grid-template-columns: 1fr 70px 210px 28px; gap: 8px; align-items: center; font-size: 12px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.chosenHead { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; padding: 0 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.chosenRow { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; align-items: center; font-size: 12px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.chosenFile { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.chosenName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.targetCell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 900px) { .chosenHead { display: none; } .chosenRow { grid-template-columns: 1fr; } }
 .type { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 .rmBtn { background: none; border: none; color: var(--muted); cursor: pointer; }
 .rmBtn:hover { color: var(--red); }

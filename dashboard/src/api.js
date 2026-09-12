@@ -42,6 +42,7 @@ export const api = {
     listWorkers: () => request('GET', '/workers'),
 
     // ── Compartir node-1: URLs de la LAN y túnel a internet ──
+    getCatalog: () => request('GET', '/catalog'),
     getShare: () => request('GET', '/share'),
     startTunnel: () => request('POST', '/tunnel'),
     stopTunnel: () => request('DELETE', '/tunnel'),
@@ -68,25 +69,57 @@ export const JOB_STATUS_LABEL = {
     cancelled: 'cancelada',
 }
 
+// Operaciones: nombre corto, verbo para tablas y descripción para el formulario.
 export const OPERATION_LABEL = {
-    convert: 'convertir a MP4',
+    convert: 'convertir video',
     convert_audio: 'convertir audio',
     extract_audio: 'extraer audio',
     thumbnail: 'miniatura',
+    metadata: 'metadatos',
+}
+export const OPERATION_HELP = {
+    convert: 'Transcodifica el video a otro contenedor/códec (MP4 H.264, MKV o WebM VP9).',
+    convert_audio: 'Convierte el audio a otro formato (FLAC sin pérdida, MP3, WAV, AAC u OGG).',
+    extract_audio: 'Saca solo la pista de audio del video.',
+    thumbnail: 'Genera una imagen pequeña: primer fotograma del video/imagen o forma de onda del audio.',
+    metadata: 'Consulta con ffprobe: duración, códecs, resolución, bitrate y etiquetas → JSON.',
 }
 
-// Misma tabla que internal/cases/router.go: la primera operación es la que decide el coordinador.
-export const OPS_BY_TYPE = {
-    video: ['convert', 'extract_audio', 'thumbnail'],
-    audio: ['convert_audio', 'thumbnail'],
-    image: ['thumbnail'],
+// Catálogo por defecto (misma tabla que internal/cases/router.go). El coordinador sirve la versión
+// autoritativa en GET /catalog; esto solo cubre el arranque y el caso sin red.
+export const DEFAULT_CATALOG = {
+    ops_by_type: {
+        video: ['convert', 'extract_audio', 'thumbnail', 'metadata'],
+        audio: ['convert_audio', 'thumbnail', 'metadata'],
+        image: ['thumbnail', 'metadata'],
+    },
+    targets_by_op: {
+        convert: ['mp4', 'mkv', 'webm'],
+        extract_audio: ['mp3', 'wav', 'flac', 'aac'],
+        convert_audio: ['flac', 'mp3', 'wav', 'aac', 'ogg'],
+        thumbnail: ['jpg', 'png', 'webp'],
+        metadata: ['json'],
+    },
+    pool_by_op: { convert: 'video', extract_audio: 'video', convert_audio: 'audio', thumbnail: 'metadata', metadata: 'metadata' },
+    thumbnail_widths: [320, 640, 1280],
 }
+export const OPS_BY_TYPE = DEFAULT_CATALOG.ops_by_type
+
+// "mkv → MP4": cómo se muestra una sub-tarea en tablas y reportes.
+export function opArrow(job) {
+    const src = extOf(job.file_path || job.file || '')
+    const dst = job.target || ''
+    if (!dst) return OPERATION_LABEL[job.operation] || job.operation
+    return `${src || '?'} → ${dst.toUpperCase()}`
+}
+export function extOf(name) { return (name || '').toLowerCase().split('.').pop() }
 
 const EXT_TYPE = {
-    mp4: 'video', mkv: 'video', avi: 'video', mov: 'video', webm: 'video',
-    mp3: 'audio', wav: 'audio', flac: 'audio', aac: 'audio', ogg: 'audio', m4a: 'audio',
-    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image', bmp: 'image',
+    mp4: 'video', mkv: 'video', avi: 'video', mov: 'video', webm: 'video', m4v: 'video', flv: 'video', wmv: 'video', ts: 'video', mts: 'video', '3gp': 'video', mpg: 'video', mpeg: 'video',
+    mp3: 'audio', wav: 'audio', flac: 'audio', aac: 'audio', ogg: 'audio', m4a: 'audio', opus: 'audio', wma: 'audio', aiff: 'audio', aif: 'audio', dsf: 'audio', dff: 'audio',
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image', bmp: 'image', tif: 'image', tiff: 'image',
 }
+export const ACCEPT_EXTENSIONS = Object.keys(EXT_TYPE).map(e => '.' + e).join(',')
 
 export function fileTypeOf(name) {
     const ext = (name || '').toLowerCase().split('.').pop()

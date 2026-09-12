@@ -83,6 +83,9 @@ func Migrate(db *sql.DB) error {
 	-- Pools especializados: qué atiende cada worker (sobrevive reinicios del coordinador)
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS role         TEXT NOT NULL DEFAULT '';
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capabilities TEXT NOT NULL DEFAULT '';
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS target TEXT NOT NULL DEFAULT '';
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS width  INT  NOT NULL DEFAULT 0;
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assignment TEXT NOT NULL DEFAULT '';
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS hardware     JSONB;
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 	`)
@@ -92,17 +95,17 @@ func Migrate(db *sql.DB) error {
 // jobColumns es la lista de columnas que scanJob espera, en ese orden.
 const jobColumns = `id, file_path, operation, status, priority,
 		worker_id, progress, error_msg, result_url, retries, max_retries,
-		created_at, started_at, completed_at, case_id, file_type, pool`
+		created_at, started_at, completed_at, case_id, file_type, pool, target, width, assignment`
 
 // InsertJob stores a new job in PostgreSQL.
 func InsertJob(db *sql.DB, job *models.Job) error {
 	_, err := db.Exec(`
 		INSERT INTO jobs (id, file_id, file_path, operation, status, priority, max_retries,
-		                  created_at, case_id, file_type, pool)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, ''), $10, $11)`,
+		                  created_at, case_id, file_type, pool, target, width)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, ''), $10, $11, $12, $13)`,
 		job.ID, job.FileID, job.FilePath, job.Operation,
 		job.Status, job.Priority, job.MaxRetries, job.CreatedAt,
-		job.CaseID, job.FileType, job.Pool,
+		job.CaseID, job.FileType, job.Pool, job.Target, job.Width,
 	)
 	return err
 }
@@ -184,7 +187,7 @@ func scanJob(row interface {
 		&j.ID, &j.FilePath, &j.Operation, &j.Status, &j.Priority,
 		&workerID, &j.Progress, &errorMsg, &resultURL,
 		&j.Retries, &j.MaxRetries, &j.CreatedAt, &j.StartedAt, &j.CompletedAt,
-		&caseID, &j.FileType, &j.Pool,
+		&caseID, &j.FileType, &j.Pool, &j.Target, &j.Width, &j.Assignment,
 	)
 	if err != nil {
 		return nil, err

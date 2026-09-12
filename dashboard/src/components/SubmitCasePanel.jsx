@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, fileTypeOf, fmtBytes, OPS_BY_TYPE, OPERATION_LABEL } from '../api'
+import { api, fileTypeOf, fmtBytes, extOf, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
 import styles from './SubmitCasePanel.module.css'
 
 const PRIORITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -16,10 +16,15 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     const [search, setSearch] = useState('')
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState(null)
+    // Catálogo autoritativo del coordinador: qué operaciones y formatos acepta por tipo.
+    const [catalog, setCatalog] = useState(DEFAULT_CATALOG)
 
     useEffect(() => {
         api.listDataset().then(setDataset).catch(e => setError(e.message))
+        api.getCatalog().then(setCatalog).catch(() => {})
     }, [])
+    const opsFor = (type) => catalog.ops_by_type[type] || []
+    const targetsFor = (op) => catalog.targets_by_op[op] || []
 
     const datasetFiltered = useMemo(
         () => dataset.filter(d => d.type !== 'other' && d.key.toLowerCase().includes(search.toLowerCase())),
@@ -51,8 +56,15 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         setChosen(prev => prev.filter((_, k) => k !== i))
     }
 
+    // Al cambiar la operación se vuelve al destino por defecto de esa operación.
     function setOp(i, op) {
-        setChosen(prev => prev.map((c, k) => k === i ? { ...c, operation: op || undefined } : c))
+        setChosen(prev => prev.map((c, k) => k === i ? { ...c, operation: op || undefined, target: undefined, width: undefined } : c))
+    }
+    function setTarget(i, target) {
+        setChosen(prev => prev.map((c, k) => k === i ? { ...c, target: target || undefined } : c))
+    }
+    function setWidth(i, width) {
+        setChosen(prev => prev.map((c, k) => k === i ? { ...c, width: width ? Number(width) : undefined } : c))
     }
 
     async function submit() {
@@ -67,6 +79,8 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
             const files = chosen.map(c => ({
                 key: c.source === 'local' ? uploadedKeys[c.key] : c.key,
                 ...(c.operation ? { operation: c.operation } : {}),
+                ...(c.target ? { target: c.target } : {}),
+                ...(c.width ? { width: c.width } : {}),
             }))
             const created = await api.submitCase(name.trim(), priority, files)
             onCreated(created.id)
@@ -102,8 +116,8 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                 <div className={styles.source}>
                     <span className={styles.sourceTitle}>Subir desde esta PC</span>
                     <input className={styles.fileInput} type="file" multiple onChange={addLocal}
-                        accept=".mp4,.mkv,.avi,.mov,.webm,.mp3,.wav,.flac,.aac,.ogg,.m4a,.jpg,.jpeg,.png,.gif,.webp,.bmp" />
-                    <span className={styles.hint}>Video, audio o imagen. Se suben al repositorio de entradas al enviar el caso.</span>
+                        accept={ACCEPT_EXTENSIONS} />
+                    <span className={styles.hint}>Video (mp4, mkv, mov, webm, avi…), audio (mp3, wav, flac, aac, ogg, aiff, dsf…) o imagen (jpg, png, webp…). Se suben al enviar el caso.</span>
                 </div>
                 <div className={styles.source}>
                     <span className={styles.sourceTitle}>Elegir del dataset ({dataset.length})</span>
@@ -127,18 +141,43 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
 
             {chosen.length > 0 && (
                 <div className={styles.chosen}>
-                    <span className={styles.label}>Archivos del caso ({chosen.length}) — operación que va a decidir el coordinador</span>
-                    {chosen.map((c, i) => (
-                        <div key={`${c.source}-${c.key}-${i}`} className={styles.chosenRow}>
-                            <span>{c.key} <span className={styles.hint}>{fmtBytes(c.size)}{c.source === 'local' ? ' · esta PC' : ''}</span></span>
-                            <span className={styles.type}>{c.type}</span>
-                            <select className={styles.select} value={c.operation || ''} onChange={e => setOp(i, e.target.value)}>
-                                <option value="">automática: {OPERATION_LABEL[OPS_BY_TYPE[c.type][0]]}</option>
-                                {OPS_BY_TYPE[c.type].map(op => <option key={op} value={op}>{OPERATION_LABEL[op]}</option>)}
-                            </select>
-                            <button className={styles.rmBtn} onClick={() => remove(i)} title="Quitar">✕</button>
-                        </div>
-                    ))}
+                    <span className={styles.label}>Archivos del caso ({chosen.length}) — el coordinador decide la operación por tipo; puede cambiarla</span>
+                    <div className={styles.chosenHead}><span>Archivo</span><span>Operación</span><span>Salida</span><span /></div>
+                    {chosen.map((c, i) => {
+                        const ops = opsFor(c.type)
+                        const op = c.operation || ops[0]
+                        const targets = targetsFor(op)
+                        const target = c.target || targets[0]
+                        const isThumb = op === 'thumbnail'
+                        return (
+                            <div key={`${c.source}-${c.key}-${i}`} className={styles.chosenRow} title={OPERATION_HELP[op]}>
+                                <span className={styles.chosenFile}>
+                                    <span className={`chip pool pool-${catalog.pool_by_op[op] || 'metadata'}`}>{c.type}</span>
+                                    <span className={styles.chosenName}>{c.key}</span>
+                                    <span className={styles.hint}>{fmtBytes(c.size)}{c.source === 'local' ? ' · esta PC' : ''}</span>
+                                </span>
+                                <select className={styles.select} value={c.operation || ''} onChange={e => setOp(i, e.target.value)} title="Operación">
+                                    <option value="">{OPERATION_LABEL[ops[0]]} (automática)</option>
+                                    {ops.slice(1).map(o => <option key={o} value={o}>{OPERATION_LABEL[o]}</option>)}
+                                </select>
+                                <span className={styles.targetCell}>
+                                    <span className="mono">{extOf(c.key)} →</span>
+                                    {targets.length > 1 ? (
+                                        <select className={styles.select} value={c.target || ''} onChange={e => setTarget(i, e.target.value)} title="Formato de salida">
+                                            <option value="">{targets[0].toUpperCase()} (automático)</option>
+                                            {targets.slice(1).map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                                        </select>
+                                    ) : <span className="mono">{(target || '').toUpperCase()}</span>}
+                                    {isThumb && (
+                                        <select className={styles.select} value={c.width || ''} onChange={e => setWidth(i, e.target.value)} title="Ancho de la miniatura">
+                                            {catalog.thumbnail_widths.map((w, k) => <option key={w} value={k === 0 ? '' : w}>{w} px</option>)}
+                                        </select>
+                                    )}
+                                </span>
+                                <button className={styles.rmBtn} onClick={() => remove(i)} title="Quitar">✕</button>
+                            </div>
+                        )
+                    })}
                 </div>
             )}
 
