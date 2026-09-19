@@ -1,0 +1,9 @@
+.chips { display: inline-flex; gap: 4px; flex-wrap: wrap; margin-left: 6px; vertical-align: middle; }
+.chip {
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 10px; font-weight: 600; line-height: 16px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    white-space: nowrap;
+}

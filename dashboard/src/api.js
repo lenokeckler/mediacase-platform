@@ -76,6 +76,8 @@ export const OPERATION_LABEL = {
     extract_audio: 'extraer audio',
     thumbnail: 'miniatura',
     metadata: 'metadatos',
+    enrich_audio: 'enriquecer',
+    enrich_video: 'enriquecer',
 }
 export const OPERATION_HELP = {
     convert: 'Transcodifica el video a otro contenedor/códec (MP4 H.264, MKV o WebM VP9).',
@@ -83,14 +85,19 @@ export const OPERATION_HELP = {
     extract_audio: 'Saca solo la pista de audio del video.',
     thumbnail: 'Genera una imagen pequeña: primer fotograma del video/imagen o forma de onda del audio.',
     metadata: 'Consulta con ffprobe: duración, códecs, resolución, bitrate y etiquetas → JSON.',
+    enrich_audio: 'Integra dentro del mismo archivo una portada (forma de onda), etiquetas (título, artista, álbum, fecha) y la letra. No recodifica si el formato lo permite.',
+    enrich_video: 'Integra dentro del mismo archivo una portada (fotograma), etiquetas (título, artista, álbum, fecha) y una descripción. No recodifica si el formato lo permite.',
 }
+// Operaciones que integran recursos asociados; el formulario les despliega el editor.
+export const ENRICH_OPS = ['enrich_audio', 'enrich_video']
+export const isEnrichOp = (op) => ENRICH_OPS.includes(op)
 
 // Catálogo por defecto (misma tabla que internal/cases/router.go). El coordinador sirve la versión
 // autoritativa en GET /catalog; esto solo cubre el arranque y el caso sin red.
 export const DEFAULT_CATALOG = {
     ops_by_type: {
-        video: ['convert', 'extract_audio', 'thumbnail', 'metadata'],
-        audio: ['convert_audio', 'thumbnail', 'metadata'],
+        video: ['convert', 'extract_audio', 'thumbnail', 'metadata', 'enrich_video'],
+        audio: ['convert_audio', 'thumbnail', 'metadata', 'enrich_audio'],
         image: ['thumbnail', 'metadata'],
     },
     targets_by_op: {
@@ -99,11 +106,15 @@ export const DEFAULT_CATALOG = {
         convert_audio: ['flac', 'mp3', 'wav', 'aac', 'ogg'],
         thumbnail: ['jpg', 'png', 'webp'],
         metadata: ['json'],
+        enrich_audio: ['mp3', 'flac', 'ogg', 'm4a'],
+        enrich_video: ['mp4', 'mkv'],
     },
-    pool_by_op: { convert: 'video', extract_audio: 'video', convert_audio: 'audio', thumbnail: 'metadata', metadata: 'metadata' },
+    pool_by_op: { convert: 'video', extract_audio: 'video', convert_audio: 'audio', thumbnail: 'metadata', metadata: 'metadata', enrich_audio: 'metadata', enrich_video: 'metadata' },
     thumbnail_widths: [320, 640, 1280],
     // En las conversiones el formato de origen no se ofrece (mp4 → mp4 no es una conversión).
     identity_excluded_ops: ['convert', 'convert_audio'],
+    // Al enriquecer, el default es el formato de origen si el contenedor admite portada y etiquetas.
+    identity_preferred_ops: ['enrich_audio', 'enrich_video'],
     ext_aliases: { jpeg: 'jpg', tiff: 'tif', aiff: 'aif', m4a: 'aac', mpeg: 'mpg' },
 }
 
@@ -117,6 +128,16 @@ export function targetsFor(catalog, op, filename) {
     const norm = (e) => aliases[e] || e
     const src = norm(extOf(filename))
     return all.filter(t => norm(t) !== src)
+}
+
+// Formato que el coordinador elige si el usuario no pide ninguno (misma regla que DefaultTargetFor).
+export function defaultTargetFor(catalog, op, filename) {
+    const valid = targetsFor(catalog, op, filename)
+    if ((catalog.identity_preferred_ops || []).includes(op)) {
+        const src = extOf(filename)
+        if (valid.includes(src)) return src
+    }
+    return valid[0]
 }
 export const OPS_BY_TYPE = DEFAULT_CATALOG.ops_by_type
 

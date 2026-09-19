@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, fileTypeOf, fmtBytes, extOf, targetsFor as catalogTargetsFor, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
+import { api, fileTypeOf, fmtBytes, extOf, targetsFor as catalogTargetsFor, defaultTargetFor, isEnrichOp, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
+import EnrichmentEditor from './EnrichmentEditor'
 import styles from './SubmitCasePanel.module.css'
 
 const PRIORITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -56,10 +57,24 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         setChosen(prev => prev.filter((_, k) => k !== i))
     }
 
-    // Al cambiar la operación se vuelve al destino por defecto de esa operación.
+    // Al cambiar la operación se vuelve al destino por defecto de esa operación; los recursos
+    // asociados se conservan por si vuelve a "enriquecer".
     function setOp(i, op) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, operation: op || undefined, target: undefined, width: undefined } : c))
     }
+    function setEnrichment(i, patch) {
+        setChosen(prev => prev.map((c, k) => k === i ? { ...c, enrichment: { ...(c.enrichment || {}), ...patch } } : c))
+    }
+    // Artista, álbum y fecha suelen ser los mismos para todo el caso: se copian a los demás enriquecidos.
+    function applyEnrichmentToAll(i) {
+        const src = chosen[i].enrichment || {}
+        const shared = { artist: src.artist, album: src.album, date: src.date }
+        setChosen(prev => prev.map((c, k) => {
+            if (k === i || !isEnrichOp(c.operation)) return c
+            return { ...c, enrichment: { ...(c.enrichment || {}), ...shared } }
+        }))
+    }
+    const enrichCount = chosen.filter(c => isEnrichOp(c.operation)).length
     function setTarget(i, target) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, target: target || undefined } : c))
     }
@@ -81,6 +96,7 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                 ...(c.operation ? { operation: c.operation } : {}),
                 ...(c.target ? { target: c.target } : {}),
                 ...(c.width ? { width: c.width } : {}),
+                ...(isEnrichOp(c.operation) && hasEnrichment(c.enrichment) ? { enrichment: cleanEnrichment(c.enrichment) } : {}),
             }))
             const created = await api.submitCase(name.trim(), priority, files)
             onCreated(created.id)
@@ -147,10 +163,12 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                         const ops = opsFor(c.type)
                         const op = c.operation || ops[0]
                         const targets = targetsFor(op, c.key)
-                        const target = c.target || targets[0]
+                        const autoTarget = defaultTargetFor(catalog, op, c.key)
+                        const target = c.target || autoTarget
                         const isThumb = op === 'thumbnail'
+                        const isEnrich = isEnrichOp(op)
                         return (
-                            <div key={`${c.source}-${c.key}-${i}`} className={styles.chosenRow} title={OPERATION_HELP[op]}>
+                            <div key={`${c.source}-${c.key}-${i}`} className={`${styles.chosenRow} ${isEnrich ? styles.chosenRowOpen : ''}`} title={OPERATION_HELP[op]}>
                                 <span className={styles.chosenFile}>
                                     <span className={`chip pool pool-${catalog.pool_by_op[op] || 'metadata'}`}>{c.type}</span>
                                     <span className={styles.chosenName}>{c.key}</span>
@@ -164,8 +182,8 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                                     <span className="mono">{extOf(c.key)} →</span>
                                     {targets.length > 1 ? (
                                         <select className={styles.select} value={c.target || ''} onChange={e => setTarget(i, e.target.value)} title="Formato de salida">
-                                            <option value="">{targets[0].toUpperCase()} (automático)</option>
-                                            {targets.slice(1).map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+                                            <option value="">{autoTarget.toUpperCase()} (automático)</option>
+                                            {targets.filter(t => t !== autoTarget).map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
                                         </select>
                                     ) : <span className="mono">{(target || '').toUpperCase()}</span>}
                                     {isThumb && (
@@ -175,6 +193,18 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                                     )}
                                 </span>
                                 <button className={styles.rmBtn} onClick={() => remove(i)} title="Quitar">✕</button>
+                                {isEnrich && (
+                                    <EnrichmentEditor
+                                        value={c.enrichment || {}}
+                                        kind={c.type}
+                                        filename={c.key}
+                                        caseName={name}
+                                        sameFormat={target === extOf(c.key)}
+                                        target={target}
+                                        onChange={patch => setEnrichment(i, patch)}
+                                        onApplyToAll={enrichCount > 1 ? () => applyEnrichmentToAll(i) : null}
+                                    />
+                                )}
                             </div>
                         )
                     })}
@@ -191,4 +221,11 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
             </div>
         </div>
     )
+}
+
+function hasEnrichment(e) { return !!e && Object.values(e).some(v => (v || '').trim() !== '') }
+function cleanEnrichment(e) {
+    const out = {}
+    for (const [k, v] of Object.entries(e)) if ((v || '').trim() !== '') out[k] = v.trim()
+    return out
 }

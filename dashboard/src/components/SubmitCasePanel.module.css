@@ -19,6 +19,7 @@
 .chosen { display: flex; flex-direction: column; gap: 6px; }
 .chosenHead { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; padding: 0 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 .chosenRow { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; align-items: center; font-size: 12px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+.chosenRowOpen { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent); }
 .chosenFile { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .chosenName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .targetCell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }

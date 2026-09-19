@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { fmtSeconds, fmtTime, isTerminal, OPERATION_LABEL, opArrow } from '../api'
 import StatusBadge from './StatusBadge'
+import EnrichmentChips from './EnrichmentChips'
 import styles from './CaseDetail.module.css'
 
 function Progress({ job }) {
@@ -104,7 +105,7 @@ export default function CaseDetail({ c, report, onCancel, onClose }) {
                                 <tr key={j.id}>
                                     <td className={styles.file}>{j.file_path}</td>
                                     <td>{j.file_type}</td>
-                                    <td title={OPERATION_LABEL[j.operation] || j.operation}><span className="mono">{opArrow(j)}</span> <span className="muted">{OPERATION_LABEL[j.operation]}</span></td>
+                                    <td title={OPERATION_LABEL[j.operation] || j.operation}><span className="mono">{opArrow(j)}</span> <span className="muted">{OPERATION_LABEL[j.operation]}</span><EnrichmentChips job={j} /></td>
                                     <td><span className={styles.pool}>{j.pool}</span></td>
                                     <td><StatusBadge status={j.status} kind="job" /></td>
                                     <td><Progress job={j} /></td>

@@ -1,0 +1,45 @@
+/* Ocupa todo el ancho de la fila del archivo (la fila es un grid de 4 columnas). */
+.box {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px -4px 0;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    animation: open .18s ease-out;
+}
+@keyframes open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.head { display: flex; align-items: center; gap: 10px; }
+.badge {
+    width: 26px; height: 26px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 13px; font-weight: 700;
+}
+.headText { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.title { font-size: 12px; font-weight: 700; color: var(--text); }
+.sub { font-size: 11px; color: var(--muted); }
+.applyBtn { composes: btn btn-sm from global; flex: none; }
+
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wide { grid-column: span 2; }
+.full { grid-column: 1 / -1; }
+.label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.input { composes: input from global; padding: 6px 9px; font-size: 12px; }
+.textarea {
+    composes: input from global;
+    padding: 7px 9px; font-size: 12px; line-height: 1.45;
+    resize: vertical; min-height: 34px;
+}
+@media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .wide { grid-column: 1 / -1; }
+}
