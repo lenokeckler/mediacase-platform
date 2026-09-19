@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, fileTypeOf, fmtBytes, extOf, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
+import { api, fileTypeOf, fmtBytes, extOf, targetsFor as catalogTargetsFor, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
 import styles from './SubmitCasePanel.module.css'
 
 const PRIORITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -24,7 +24,7 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         api.getCatalog().then(setCatalog).catch(() => {})
     }, [])
     const opsFor = (type) => catalog.ops_by_type[type] || []
-    const targetsFor = (op) => catalog.targets_by_op[op] || []
+    const targetsFor = (op, filename) => catalogTargetsFor(catalog, op, filename)
 
     const datasetFiltered = useMemo(
         () => dataset.filter(d => d.type !== 'other' && d.key.toLowerCase().includes(search.toLowerCase())),
@@ -146,7 +146,7 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                     {chosen.map((c, i) => {
                         const ops = opsFor(c.type)
                         const op = c.operation || ops[0]
-                        const targets = targetsFor(op)
+                        const targets = targetsFor(op, c.key)
                         const target = c.target || targets[0]
                         const isThumb = op === 'thumbnail'
                         return (

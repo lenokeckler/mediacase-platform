@@ -102,6 +102,21 @@ export const DEFAULT_CATALOG = {
     },
     pool_by_op: { convert: 'video', extract_audio: 'video', convert_audio: 'audio', thumbnail: 'metadata', metadata: 'metadata' },
     thumbnail_widths: [320, 640, 1280],
+    // En las conversiones el formato de origen no se ofrece (mp4 → mp4 no es una conversión).
+    identity_excluded_ops: ['convert', 'convert_audio'],
+    ext_aliases: { jpeg: 'jpg', tiff: 'tif', aiff: 'aif', m4a: 'aac', mpeg: 'mpg' },
+}
+
+// Formatos de salida válidos para una operación sobre un archivo concreto: la lista del catálogo
+// menos el formato de origen cuando la operación es una conversión (misma regla que el
+// coordinador en internal/cases/router.go, TargetsFor).
+export function targetsFor(catalog, op, filename) {
+    const all = catalog.targets_by_op[op] || []
+    if (!(catalog.identity_excluded_ops || []).includes(op)) return all
+    const aliases = catalog.ext_aliases || {}
+    const norm = (e) => aliases[e] || e
+    const src = norm(extOf(filename))
+    return all.filter(t => norm(t) !== src)
 }
 export const OPS_BY_TYPE = DEFAULT_CATALOG.ops_by_type
 

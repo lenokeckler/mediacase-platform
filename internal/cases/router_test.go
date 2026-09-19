@@ -41,7 +41,7 @@ func TestRoute_ElCoordinadorDecideSiElClienteNoPide(t *testing.T) {
 		if err != nil || d.Operation != tc.op || d.Pool != tc.pool {
 			t.Errorf("%s: %+v err=%v; quería op=%s pool=%s", tc.file, d, err, tc.op, tc.pool)
 		}
-		if d.Target != DefaultTarget(tc.op) || d.Target == "" {
+		if d.Target != DefaultTargetFor(tc.op, tc.file) || d.Target == "" {
 			t.Errorf("%s: sin destino por defecto: %+v", tc.file, d)
 		}
 	}
@@ -124,5 +124,53 @@ func TestPoolFor_CubreTodosLosTipos(t *testing.T) {
 		if PoolFor(ft) == "" {
 			t.Errorf("tipo %s sin pool", ft)
 		}
+	}
+}
+
+// Convertir un archivo al formato que ya tiene no es una conversión: el formato de origen no se
+// ofrece ni se elige por defecto en convert y convert_audio. En miniatura sí (es un cambio de
+// tamaño, no de formato: png → png 320 px conserva la transparencia).
+func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
+	tests := []struct {
+		file    string
+		op      models.Operation
+		wantDef string
+		absent  string
+	}{
+		{"v.mp4", models.OpConvert, "mkv", "mp4"},
+		{"v.mkv", models.OpConvert, "mp4", "mkv"},
+		{"a.flac", models.OpConvertAudio, "mp3", "flac"},
+		{"a.mp3", models.OpConvertAudio, "flac", "mp3"},
+		{"a.m4a", models.OpConvertAudio, "flac", "aac"}, // m4a es aac en contenedor mp4
+	}
+	for _, tc := range tests {
+		d, err := Route(tc.file, tc.op)
+		if err != nil || d.Target != tc.wantDef {
+			t.Errorf("%s %s: target=%q err=%v; quería %q", tc.file, tc.op, d.Target, err, tc.wantDef)
+		}
+		for _, x := range TargetsFor(tc.op, tc.file) {
+			if x == tc.absent {
+				t.Errorf("%s %s: TargetsFor ofrece el formato de origen %q", tc.file, tc.op, x)
+			}
+		}
+		if _, err := RouteWith(tc.file, tc.op, tc.absent, 0); err == nil {
+			t.Errorf("%s %s → %s: debía rechazarse (mismo formato)", tc.file, tc.op, tc.absent)
+		}
+	}
+	// Miniatura y extracción de audio no filtran: el origen nunca coincide o la operación no es
+	// una conversión de formato.
+	if d, err := Route("i.png", models.OpThumbnail); err != nil || d.Target != "jpg" {
+		t.Errorf("png thumbnail: %+v err=%v", d, err)
+	}
+	if d, err := RouteWith("i.png", models.OpThumbnail, "png", 0); err != nil || d.Target != "png" {
+		t.Errorf("png → png miniatura debe aceptarse: %+v err=%v", d, err)
+	}
+	if got := TargetsFor(models.OpExtractAudio, "v.mp4"); len(got) != 4 {
+		t.Errorf("extract_audio no debía filtrar: %v", got)
+	}
+	// El catálogo dice qué operaciones excluyen el origen para que el dashboard filtre igual.
+	c := GetCatalog()
+	if len(c.IdentityExcludedOps) != 2 || c.ExtAliases["m4a"] != "aac" {
+		t.Errorf("catálogo sin la info de exclusión: %+v", c)
 	}
 }

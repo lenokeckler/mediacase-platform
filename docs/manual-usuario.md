@@ -71,6 +71,11 @@ detalle (id completo, archivo, caso, tiempos, reintentos, URL del resultado o er
    | audio | **convertir audio** · miniatura (forma de onda) · metadatos | FLAC · MP3 · WAV · AAC · OGG / JPG · PNG · WebP / JSON |
    | imagen | **miniatura** · metadatos | JPG · PNG · WebP / JSON |
 
+   En las conversiones el formato que el archivo ya tiene no aparece en la lista (un `.mp4`
+   ofrece MKV o WebM, un `.flac` ofrece MP3, WAV, AAC u OGG): convertir mp4 a mp4 no es una
+   conversión. En *miniatura* sí puede repetirse el formato (`png → PNG`), porque ahí lo que
+   cambia es el tamaño, no el formato.
+
    *Metadatos* consulta el archivo con ffprobe y entrega un JSON con contenedor, duración, tamaño,
    bitrate, cada pista (códec, resolución, fps, canales, muestreo) y etiquetas. Entradas aceptadas:
    mp4, mkv, mov, webm, avi, m4v, flv, wmv, ts, mpg · mp3, wav, flac, aac, ogg, m4a, opus, wma,

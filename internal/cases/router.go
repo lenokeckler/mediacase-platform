@@ -49,6 +49,15 @@ var targetsByOp = map[models.Operation][]string{
 // Anchos válidos de miniatura; el primero es el default.
 var ThumbnailWidths = []int{320, 640, 1280}
 
+// Operaciones que cambian el formato del archivo: ofrecer el formato de origen como salida no
+// tiene sentido (mp4 → mp4), así que se omite de la lista y del default. Miniatura no está
+// aquí a propósito: png → png a 320 px es un cambio de tamaño, no de formato, y conserva la
+// transparencia.
+var identityExcludedOps = []models.Operation{models.OpConvert, models.OpConvertAudio}
+
+// Extensiones distintas del mismo formato, para que .jpeg → JPG o .m4a → AAC tampoco se ofrezcan.
+var extAliases = map[string]string{"jpeg": "jpg", "tiff": "tif", "aiff": "aif", "m4a": "aac", "mpeg": "mpg"}
+
 // Pool de workers por operación (ver docs/architecture.md, "Modelo de asignación"): transcodificar
 // video es lo pesado (pool video), audio va aparte, y miniaturas y metadatos son livianos (pool
 // metadata). Con el planificador por afinidad cualquier nodo puede ayudar en otro pool.
@@ -85,8 +94,44 @@ func DetectFileType(filename string) (models.FileType, error) {
 // DefaultOperation es la operación que el coordinador elige para un tipo si el cliente no pide una.
 func DefaultOperation(ft models.FileType) models.Operation { return opsByType[ft][0] }
 
-// DefaultTarget es el formato de salida por defecto de una operación.
-func DefaultTarget(op models.Operation) string { return targetsByOp[op][0] }
+// TargetsFor son los formatos de salida válidos de una operación sobre un archivo concreto:
+// los de targetsByOp menos el formato de origen cuando la operación es una conversión.
+func TargetsFor(op models.Operation, filename string) []string {
+	all := targetsByOp[op]
+	if !excludesIdentity(op) {
+		return all
+	}
+	src := normExt(strings.TrimPrefix(filepath.Ext(filename), "."))
+	out := make([]string, 0, len(all))
+	for _, t := range all {
+		if normExt(t) != src {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// DefaultTargetFor es el formato de salida que el coordinador elige para op sobre filename.
+func DefaultTargetFor(op models.Operation, filename string) string {
+	return TargetsFor(op, filename)[0]
+}
+
+func normExt(ext string) string {
+	ext = strings.ToLower(ext)
+	if a, ok := extAliases[ext]; ok {
+		return a
+	}
+	return ext
+}
+
+func excludesIdentity(op models.Operation) bool {
+	for _, o := range identityExcludedOps {
+		if o == op {
+			return true
+		}
+	}
+	return false
+}
 
 // PoolFor decide qué pool de workers ejecuta una operación. Se mantiene la firma por tipo
 // para el default (la operación por defecto de ese tipo).
@@ -113,11 +158,16 @@ func RouteWith(filename string, requested models.Operation, target string, width
 		return RouteDecision{}, fmt.Errorf("la operación %q no aplica a %s (%s)", op, ft, filename)
 	}
 	target = strings.ToLower(strings.TrimPrefix(target, "."))
+	valid := TargetsFor(op, filename)
 	if target == "" {
-		target = DefaultTarget(op)
-	} else if !targetApplies(op, target) {
+		target = valid[0]
+	} else if !contains(valid, target) {
+		if excludesIdentity(op) && targetApplies(op, target) {
+			return RouteDecision{}, fmt.Errorf("%s ya está en %s: convertirlo a %s no cambia el formato; válidos: %s",
+				filename, target, target, strings.Join(valid, ", "))
+		}
 		return RouteDecision{}, fmt.Errorf("el formato %q no aplica a %s (%s); válidos: %s",
-			target, op, filename, strings.Join(targetsByOp[op], ", "))
+			target, op, filename, strings.Join(valid, ", "))
 	}
 	if op == models.OpThumbnail {
 		if width == 0 {
@@ -139,6 +189,10 @@ type Catalog struct {
 	PoolByOp    map[models.Operation]string            `json:"pool_by_op"`
 	ThumbWidths []int                                  `json:"thumbnail_widths"`
 	Extensions  []string                               `json:"extensions"`
+	// Operaciones en las que el formato de origen no se ofrece como salida, y las extensiones
+	// que cuentan como el mismo formato; el dashboard filtra con esto igual que RouteWith.
+	IdentityExcludedOps []models.Operation `json:"identity_excluded_ops"`
+	ExtAliases          map[string]string  `json:"ext_aliases"`
 }
 
 func GetCatalog() Catalog {
@@ -146,7 +200,8 @@ func GetCatalog() Catalog {
 	for e := range extToType {
 		exts = append(exts, e)
 	}
-	return Catalog{OpsByType: opsByType, TargetsByOp: targetsByOp, PoolByOp: poolByOp, ThumbWidths: ThumbnailWidths, Extensions: exts}
+	return Catalog{OpsByType: opsByType, TargetsByOp: targetsByOp, PoolByOp: poolByOp, ThumbWidths: ThumbnailWidths, Extensions: exts,
+		IdentityExcludedOps: identityExcludedOps, ExtAliases: extAliases}
 }
 
 func operationApplies(ft models.FileType, op models.Operation) bool {
@@ -158,9 +213,11 @@ func operationApplies(ft models.FileType, op models.Operation) bool {
 	return false
 }
 
-func targetApplies(op models.Operation, target string) bool {
-	for _, t := range targetsByOp[op] {
-		if t == target {
+func targetApplies(op models.Operation, target string) bool { return contains(targetsByOp[op], target) }
+
+func contains(list []string, x string) bool {
+	for _, t := range list {
+		if t == x {
 			return true
 		}
 	}
