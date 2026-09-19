@@ -177,6 +177,7 @@ func cmdCases(args []string) {
 	priority := fs.Int("priority", 5, "prioridad de los casos (1-10)")
 	limit := fs.Int("limit", 0, "máximo de casos a crear (0 = todos)")
 	dryRun := fs.Bool("dry-run", false, "solo mostrar la agrupación, no crear casos")
+	enrich := fs.Bool("enrich", false, "audios y videos como enrich_* con los recursos del manifest (usuario → artista, evento → álbum)")
 	coord := fs.String("coordinator", env("COORDINATOR_URL", "http://localhost:8080"), "URL del coordinador")
 	fs.Parse(args)
 
@@ -194,7 +195,7 @@ func cmdCases(args []string) {
 		}
 		id := "-"
 		if !*dryRun {
-			c, err := postCase(*coord, g.ToRequest(*priority))
+			c, err := postCase(*coord, g.ToRequestWith(*priority, *enrich))
 			if err != nil {
 				id = "ERROR: " + err.Error()
 			} else {
@@ -216,6 +217,7 @@ func cmdLoad(args []string) {
 	conc := fs.Int("concurrency", 5, "envíos en paralelo")
 	priority := fs.Int("priority", 5, "prioridad")
 	wait := fs.Bool("wait", false, "esperar a que todos cierren e imprimir el resumen por estado")
+	enrich := fs.Bool("enrich", false, "audios y videos como enrich_* con los recursos del manifest")
 	coord := fs.String("coordinator", env("COORDINATOR_URL", "http://localhost:8080"), "URL del coordinador")
 	fs.Parse(args)
 
@@ -227,7 +229,7 @@ func cmdLoad(args []string) {
 	reqs := make([]ingest.CaseRequest, 0, *nCases)
 	for i := 0; i < *nCases; i++ {
 		g := groups[i%len(groups)]
-		r := g.ToRequest(*priority)
+		r := g.ToRequestWith(*priority, *enrich)
 		r.Name = fmt.Sprintf("carga-%02d-%s", i+1, g.Name())
 		reqs = append(reqs, r)
 	}

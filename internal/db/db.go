@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/lenokeckler/mediacase-platform/internal/models"
@@ -86,6 +87,8 @@ func Migrate(db *sql.DB) error {
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS target TEXT NOT NULL DEFAULT '';
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS width  INT  NOT NULL DEFAULT 0;
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assignment TEXT NOT NULL DEFAULT '';
+	-- Recursos asociados de las sub-tareas enrich_* (título, artista, álbum, letra…)
+	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS enrichment JSONB;
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS hardware     JSONB;
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 	`)
@@ -95,19 +98,31 @@ func Migrate(db *sql.DB) error {
 // jobColumns es la lista de columnas que scanJob espera, en ese orden.
 const jobColumns = `id, file_path, operation, status, priority,
 		worker_id, progress, error_msg, result_url, retries, max_retries,
-		created_at, started_at, completed_at, case_id, file_type, pool, target, width, assignment`
+		created_at, started_at, completed_at, case_id, file_type, pool, target, width, assignment, enrichment`
 
 // InsertJob stores a new job in PostgreSQL.
 func InsertJob(db *sql.DB, job *models.Job) error {
 	_, err := db.Exec(`
 		INSERT INTO jobs (id, file_id, file_path, operation, status, priority, max_retries,
-		                  created_at, case_id, file_type, pool, target, width)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, ''), $10, $11, $12, $13)`,
+		                  created_at, case_id, file_type, pool, target, width, enrichment)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, ''), $10, $11, $12, $13, $14)`,
 		job.ID, job.FileID, job.FilePath, job.Operation,
 		job.Status, job.Priority, job.MaxRetries, job.CreatedAt,
-		job.CaseID, job.FileType, job.Pool, job.Target, job.Width,
+		job.CaseID, job.FileType, job.Pool, job.Target, job.Width, enrichmentJSON(job.Enrichment),
 	)
 	return err
+}
+
+// enrichmentJSON serializa los recursos asociados para la columna JSONB (NULL si no hay).
+func enrichmentJSON(e *models.Enrichment) any {
+	if e == nil {
+		return nil
+	}
+	b, err := json.Marshal(e)
+	if err != nil {
+		return nil
+	}
+	return string(b)
 }
 
 // GetJob returns a job by ID.
@@ -183,14 +198,21 @@ func scanJob(row interface {
 }) (*models.Job, error) {
 	j := &models.Job{}
 	var workerID, errorMsg, resultURL, caseID sql.NullString
+	var enrichment []byte
 	err := row.Scan(
 		&j.ID, &j.FilePath, &j.Operation, &j.Status, &j.Priority,
 		&workerID, &j.Progress, &errorMsg, &resultURL,
 		&j.Retries, &j.MaxRetries, &j.CreatedAt, &j.StartedAt, &j.CompletedAt,
-		&caseID, &j.FileType, &j.Pool, &j.Target, &j.Width, &j.Assignment,
+		&caseID, &j.FileType, &j.Pool, &j.Target, &j.Width, &j.Assignment, &enrichment,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if len(enrichment) > 0 {
+		var e models.Enrichment
+		if json.Unmarshal(enrichment, &e) == nil {
+			j.Enrichment = &e
+		}
 	}
 	j.WorkerID = workerID.String
 	j.ErrorMsg = errorMsg.String

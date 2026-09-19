@@ -16,20 +16,21 @@ import (
 // del caso y de cada sub-tarea, worker responsable de cada una, y un resumen agregado.
 
 type SubTaskResult struct {
-	JobID           string           `json:"job_id"`
-	File            string           `json:"file"`
-	FileType        models.FileType  `json:"file_type"`
-	Operation       models.Operation `json:"operation"`
-	SourceExt       string           `json:"source_ext,omitempty"` // formato de entrada (mkv, flac…)
-	Assignment      string           `json:"assignment,omitempty"` // afinidad | ayuda
-	Target          string           `json:"target,omitempty"`     // formato de salida (mp4, mp3, json…)
-	Status          models.JobStatus `json:"status"`
-	WorkerID        string           `json:"worker_id,omitempty"`
-	StartedAt       *time.Time       `json:"started_at,omitempty"`
-	CompletedAt     *time.Time       `json:"completed_at,omitempty"`
-	DurationSeconds float64          `json:"duration_seconds"`
-	ResultURL       string           `json:"result_url,omitempty"`
-	Error           string           `json:"error,omitempty"`
+	JobID           string             `json:"job_id"`
+	File            string             `json:"file"`
+	FileType        models.FileType    `json:"file_type"`
+	Operation       models.Operation   `json:"operation"`
+	SourceExt       string             `json:"source_ext,omitempty"` // formato de entrada (mkv, flac…)
+	Assignment      string             `json:"assignment,omitempty"` // afinidad | ayuda
+	Target          string             `json:"target,omitempty"`     // formato de salida (mp4, mp3, json…)
+	Status          models.JobStatus   `json:"status"`
+	WorkerID        string             `json:"worker_id,omitempty"`
+	StartedAt       *time.Time         `json:"started_at,omitempty"`
+	CompletedAt     *time.Time         `json:"completed_at,omitempty"`
+	DurationSeconds float64            `json:"duration_seconds"`
+	ResultURL       string             `json:"result_url,omitempty"`
+	Error           string             `json:"error,omitempty"`
+	Enrichment      *models.Enrichment `json:"enrichment,omitempty"` // recursos integrados (solo enrich_*)
 }
 
 type GroupCount struct {
@@ -70,6 +71,8 @@ var opLabels = map[models.Operation][2]string{
 	models.OpExtractAudio: {"audio extraído", "audios extraídos"},
 	models.OpThumbnail:    {"miniatura generada", "miniaturas generadas"},
 	models.OpMetadata:     {"archivo con metadatos extraídos", "archivos con metadatos extraídos"},
+	models.OpEnrichAudio:  {"audio enriquecido", "audios enriquecidos"},
+	models.OpEnrichVideo:  {"video enriquecido", "videos enriquecidos"},
 }
 
 // BuildReport arma el reporte a partir del caso y sus sub-tareas. Es una función pura.
@@ -89,7 +92,7 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 			JobID: j.ID, File: j.FilePath, FileType: j.FileType, Operation: j.Operation,
 			SourceExt: strings.TrimPrefix(strings.ToLower(filepath.Ext(j.FilePath)), "."), Target: j.Target, Assignment: j.Assignment,
 			Status: j.Status, WorkerID: j.WorkerID, StartedAt: j.StartedAt, CompletedAt: j.CompletedAt,
-			ResultURL: j.ResultURL, Error: j.ErrorMsg,
+			ResultURL: j.ResultURL, Error: j.ErrorMsg, Enrichment: j.Enrichment,
 		}
 		if j.StartedAt != nil && j.CompletedAt != nil {
 			st.DurationSeconds = j.CompletedAt.Sub(*j.StartedAt).Seconds()

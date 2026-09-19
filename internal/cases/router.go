@@ -32,8 +32,8 @@ var extToType = map[string]models.FileType{
 // Operaciones válidas por tipo de contenido. La primera de cada lista es la que el
 // coordinador elige cuando el cliente no pide ninguna.
 var opsByType = map[models.FileType][]models.Operation{
-	models.FileVideo: {models.OpConvert, models.OpExtractAudio, models.OpThumbnail, models.OpMetadata},
-	models.FileAudio: {models.OpConvertAudio, models.OpThumbnail, models.OpMetadata},
+	models.FileVideo: {models.OpConvert, models.OpExtractAudio, models.OpThumbnail, models.OpMetadata, models.OpEnrichVideo},
+	models.FileAudio: {models.OpConvertAudio, models.OpThumbnail, models.OpMetadata, models.OpEnrichAudio},
 	models.FileImage: {models.OpThumbnail, models.OpMetadata},
 }
 
@@ -44,6 +44,9 @@ var targetsByOp = map[models.Operation][]string{
 	models.OpConvertAudio: {"flac", "mp3", "wav", "aac", "ogg"},
 	models.OpThumbnail:    {"jpg", "png", "webp"},
 	models.OpMetadata:     {"json"},
+	// Contenedores que admiten portada embebida + etiquetas + letra/descripción.
+	models.OpEnrichAudio: {"mp3", "flac", "ogg", "m4a"},
+	models.OpEnrichVideo: {"mp4", "mkv", "mov"},
 }
 
 // Anchos válidos de miniatura; el primero es el default.
@@ -54,6 +57,11 @@ var ThumbnailWidths = []int{320, 640, 1280}
 // aquí a propósito: png → png a 320 px es un cambio de tamaño, no de formato, y conserva la
 // transparencia.
 var identityExcludedOps = []models.Operation{models.OpConvert, models.OpConvertAudio}
+
+// Operaciones que conservan el formato: "enriquecer" integra recursos dentro del mismo archivo,
+// así que el default es el formato de origen si el contenedor lo admite (mp3 → mp3, mkv → mkv) y,
+// si no, el primero de la lista (wav → mp3, avi → mp4).
+var identityPreferredOps = []models.Operation{models.OpEnrichAudio, models.OpEnrichVideo}
 
 // Extensiones distintas del mismo formato, para que .jpeg → JPG o .m4a → AAC tampoco se ofrezcan.
 var extAliases = map[string]string{"jpeg": "jpg", "tiff": "tif", "aiff": "aif", "m4a": "aac", "mpeg": "mpg"}
@@ -67,6 +75,8 @@ var poolByOp = map[models.Operation]string{
 	models.OpConvertAudio: "audio",
 	models.OpThumbnail:    "metadata",
 	models.OpMetadata:     "metadata",
+	models.OpEnrichAudio:  "metadata", // remux con -c copy + portada: liviano
+	models.OpEnrichVideo:  "metadata",
 }
 
 // RouteDecision es lo que el coordinador decide para un archivo del caso.
@@ -113,7 +123,23 @@ func TargetsFor(op models.Operation, filename string) []string {
 
 // DefaultTargetFor es el formato de salida que el coordinador elige para op sobre filename.
 func DefaultTargetFor(op models.Operation, filename string) string {
-	return TargetsFor(op, filename)[0]
+	valid := TargetsFor(op, filename)
+	if prefersIdentity(op) {
+		src := strings.ToLower(strings.TrimPrefix(filepath.Ext(filename), "."))
+		if contains(valid, src) {
+			return src
+		}
+	}
+	return valid[0]
+}
+
+func prefersIdentity(op models.Operation) bool {
+	for _, o := range identityPreferredOps {
+		if o == op {
+			return true
+		}
+	}
+	return false
 }
 
 func normExt(ext string) string {
@@ -160,7 +186,7 @@ func RouteWith(filename string, requested models.Operation, target string, width
 	target = strings.ToLower(strings.TrimPrefix(target, "."))
 	valid := TargetsFor(op, filename)
 	if target == "" {
-		target = valid[0]
+		target = DefaultTargetFor(op, filename)
 	} else if !contains(valid, target) {
 		if excludesIdentity(op) && targetApplies(op, target) {
 			return RouteDecision{}, fmt.Errorf("%s ya está en %s: convertirlo a %s no cambia el formato; válidos: %s",
@@ -192,7 +218,9 @@ type Catalog struct {
 	// Operaciones en las que el formato de origen no se ofrece como salida, y las extensiones
 	// que cuentan como el mismo formato; el dashboard filtra con esto igual que RouteWith.
 	IdentityExcludedOps []models.Operation `json:"identity_excluded_ops"`
-	ExtAliases          map[string]string  `json:"ext_aliases"`
+	// Operaciones cuyo default es el formato de origen cuando está en la lista (enriquecer).
+	IdentityPreferredOps []models.Operation `json:"identity_preferred_ops"`
+	ExtAliases           map[string]string  `json:"ext_aliases"`
 }
 
 func GetCatalog() Catalog {
@@ -201,7 +229,7 @@ func GetCatalog() Catalog {
 		exts = append(exts, e)
 	}
 	return Catalog{OpsByType: opsByType, TargetsByOp: targetsByOp, PoolByOp: poolByOp, ThumbWidths: ThumbnailWidths, Extensions: exts,
-		IdentityExcludedOps: identityExcludedOps, ExtAliases: extAliases}
+		IdentityExcludedOps: identityExcludedOps, IdentityPreferredOps: identityPreferredOps, ExtAliases: extAliases}
 }
 
 func operationApplies(ft models.FileType, op models.Operation) bool {
@@ -231,4 +259,34 @@ func widthApplies(w int) bool {
 		}
 	}
 	return false
+}
+
+// IsEnrich dice si la operación integra recursos asociados (enrich_audio / enrich_video).
+func IsEnrich(op models.Operation) bool { return prefersIdentity(op) }
+
+// DefaultEnrichment completa los recursos asociados de una sub-tarea de enriquecimiento: lo que
+// el cliente mandó gana; si falta, el título sale del nombre del archivo y el álbum del nombre
+// del caso. Para las demás operaciones devuelve nil.
+func DefaultEnrichment(op models.Operation, caseName, filename string, given *models.Enrichment) *models.Enrichment {
+	if !IsEnrich(op) {
+		return nil
+	}
+	e := models.Enrichment{}
+	if given != nil {
+		e = *given
+	}
+	if strings.TrimSpace(e.Title) == "" {
+		e.Title = titleFromFilename(filename)
+	}
+	if strings.TrimSpace(e.Album) == "" {
+		e.Album = strings.TrimSpace(caseName)
+	}
+	return &e
+}
+
+// titleFromFilename: "audio_medium_07-final_mix.flac" → "audio medium 07 final mix".
+func titleFromFilename(filename string) string {
+	base := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
+	base = strings.NewReplacer("_", " ", "-", " ").Replace(base)
+	return strings.Join(strings.Fields(base), " ")
 }

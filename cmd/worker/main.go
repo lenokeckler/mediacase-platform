@@ -75,12 +75,13 @@ func getEnv(key, fallback string) string {
 // ── Tipos de mensajes ────────────────────────────────────────────────────────
 
 type jobAssignment struct {
-	JobID     string `json:"id"`
-	FilePath  string `json:"file_path"`
-	Operation string `json:"operation"`
-	Target    string `json:"target"` // formato de salida decidido por el coordinador
-	Width     int    `json:"width"`  // ancho de miniatura
-	Priority  int    `json:"priority"`
+	JobID      string             `json:"id"`
+	FilePath   string             `json:"file_path"`
+	Operation  string             `json:"operation"`
+	Target     string             `json:"target"` // formato de salida decidido por el coordinador
+	Width      int                `json:"width"`  // ancho de miniatura
+	Priority   int                `json:"priority"`
+	Enrichment *models.Enrichment `json:"enrichment,omitempty"` // recursos asociados (enrich_*)
 }
 
 // wsMsg es el mensaje del canal con el coordinador (misma forma que en internal/coordinator).
@@ -226,7 +227,8 @@ func (w *worker) serveStream(ctx context.Context, conn *websocket.Conn) {
 			continue
 		}
 		job := jobAssignment{JobID: m.Job.ID, FilePath: m.Job.FilePath,
-			Operation: string(m.Job.Operation), Target: m.Job.Target, Width: m.Job.Width, Priority: m.Job.Priority}
+			Operation: string(m.Job.Operation), Target: m.Job.Target, Width: m.Job.Width, Priority: m.Job.Priority,
+			Enrichment: m.Job.Enrichment}
 		select {
 		case w.jobCh <- job:
 			log.Printf("[assign] job %s aceptado (op=%s → %s)", job.JobID, job.Operation, job.Target)
@@ -308,6 +310,11 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 		resultPath, opErr = multimedia.ConvertAudioTo(ctx, localInput, target, progressCB)
 	case string(models.OpMetadata):
 		resultPath, opErr = multimedia.Metadata(ctx, localInput, progressCB)
+	case string(models.OpEnrichAudio), string(models.OpEnrichVideo):
+		if target == "" {
+			target = map[string]string{string(models.OpEnrichAudio): "mp3", string(models.OpEnrichVideo): "mp4"}[job.Operation]
+		}
+		resultPath, opErr = multimedia.Enrich(ctx, localInput, target, job.Enrichment, progressCB)
 	default:
 		opErr = fmt.Errorf("operación desconocida: %s", job.Operation)
 	}

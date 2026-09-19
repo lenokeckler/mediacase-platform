@@ -106,3 +106,26 @@ func TestBuildReport_DestinoEnResumenYGrupos(t *testing.T) {
 		t.Errorf("cada sub-tarea lleva origen → destino: %+v", r.SubTasks)
 	}
 }
+
+// Las sub-tareas enriquecidas se cuentan con su etiqueta ("audios enriquecidos"), y el reporte
+// conserva qué recursos se integraron (etiquetas, letra) para que el detalle del caso lo muestre.
+func TestBuildReport_Enriquecidos(t *testing.T) {
+	base := time.Date(2026, 9, 18, 21, 0, 0, 0, time.UTC)
+	c := &models.Case{ID: "C3", Name: "concierto", Status: models.CaseCompleted, TotalJobs: 3, CreatedAt: base}
+	jobs := []*models.Job{
+		{ID: "j1", FilePath: "a.mp3", FileType: models.FileAudio, Operation: models.OpEnrichAudio, Target: "mp3", Status: models.StatusCompleted,
+			Enrichment: &models.Enrichment{Title: "Tema 1", Artist: "JLJ", Album: "concierto", Lyrics: "la la la"}},
+		{ID: "j2", FilePath: "b.wav", FileType: models.FileAudio, Operation: models.OpEnrichAudio, Target: "mp3", Status: models.StatusCompleted,
+			Enrichment: &models.Enrichment{Title: "Tema 2", Album: "concierto"}},
+		{ID: "j3", FilePath: "v.mkv", FileType: models.FileVideo, Operation: models.OpEnrichVideo, Target: "mkv", Status: models.StatusCompleted,
+			Enrichment: &models.Enrichment{Title: "Apertura", Lyrics: "descripción del video"}},
+	}
+	r := BuildReport(c, jobs)
+	want := "de 3 archivos — 2 audios enriquecidos a MP3, 1 video enriquecido a MKV"
+	if r.Summary != want {
+		t.Fatalf("resumen:\n got: %s\nwant: %s", r.Summary, want)
+	}
+	if r.SubTasks[0].Enrichment == nil || r.SubTasks[0].Enrichment.Lyrics != "la la la" || r.SubTasks[1].Enrichment.Artist != "" {
+		t.Errorf("cada sub-tarea enriquecida lleva sus recursos: %+v", r.SubTasks)
+	}
+}

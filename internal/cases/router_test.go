@@ -174,3 +174,71 @@ func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
 		t.Errorf("catálogo sin la info de exclusión: %+v", c)
 	}
 }
+
+// "Enriquecer" integra recursos asociados (portada, etiquetas, letra) dentro del mismo archivo:
+// el default es el formato de origen cuando el contenedor los admite, y si no, el primero de la
+// lista (wav → mp3, avi → mp4). Es liviano (remux) → pool metadata.
+func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
+	tests := []struct {
+		file    string
+		op      models.Operation
+		wantDef string
+	}{
+		{"a.mp3", models.OpEnrichAudio, "mp3"},
+		{"a.flac", models.OpEnrichAudio, "flac"},
+		{"a.ogg", models.OpEnrichAudio, "ogg"},
+		{"a.m4a", models.OpEnrichAudio, "m4a"},
+		{"a.wav", models.OpEnrichAudio, "mp3"},
+		{"a.aac", models.OpEnrichAudio, "mp3"},
+		{"v.mp4", models.OpEnrichVideo, "mp4"},
+		{"v.mkv", models.OpEnrichVideo, "mkv"},
+		{"v.mov", models.OpEnrichVideo, "mov"},
+		{"v.avi", models.OpEnrichVideo, "mp4"},
+		{"v.webm", models.OpEnrichVideo, "mp4"},
+	}
+	for _, tc := range tests {
+		d, err := Route(tc.file, tc.op)
+		if err != nil || d.Target != tc.wantDef || d.Pool != "metadata" {
+			t.Errorf("%s %s: %+v err=%v; quería target=%s pool=metadata", tc.file, tc.op, d, err, tc.wantDef)
+		}
+	}
+	// Sigue siendo posible pedir otro contenedor de la lista.
+	if d, err := RouteWith("a.mp3", models.OpEnrichAudio, "flac", 0); err != nil || d.Target != "flac" {
+		t.Errorf("mp3 → flac enriquecido: %+v err=%v", d, err)
+	}
+	// No aplica a imágenes ni cruzado de tipo.
+	if _, err := Route("i.jpg", models.OpEnrichAudio); err == nil {
+		t.Error("enrich_audio sobre imagen debía rechazarse")
+	}
+	if _, err := Route("a.mp3", models.OpEnrichVideo); err == nil {
+		t.Error("enrich_video sobre audio debía rechazarse")
+	}
+	// La operación por defecto de cada tipo no cambia.
+	if d, _ := Route("a.mp3", ""); d.Operation != models.OpConvertAudio {
+		t.Errorf("default de audio cambió: %s", d.Operation)
+	}
+	c := GetCatalog()
+	if len(c.IdentityPreferredOps) != 2 {
+		t.Errorf("catálogo sin identity_preferred_ops: %+v", c.IdentityPreferredOps)
+	}
+}
+
+// El coordinador completa los recursos que el cliente no mandó: título legible a partir del
+// nombre del archivo y álbum = nombre del caso. Lo que el cliente manda, gana. Para las demás
+// operaciones no se genera nada.
+func TestDefaultEnrichment(t *testing.T) {
+	got := DefaultEnrichment(models.OpEnrichAudio, "concierto-s1", "audio_medium_07-final_mix.flac", nil)
+	if got == nil || got.Title != "audio medium 07 final mix" || got.Album != "concierto-s1" {
+		t.Errorf("defaults: %+v", got)
+	}
+	got = DefaultEnrichment(models.OpEnrichVideo, "boda", "clip.mp4", &models.Enrichment{Title: "Entrada", Lyrics: "descripción"})
+	if got.Title != "Entrada" || got.Album != "boda" || got.Lyrics != "descripción" {
+		t.Errorf("el cliente gana: %+v", got)
+	}
+	if DefaultEnrichment(models.OpConvert, "boda", "clip.mp4", &models.Enrichment{Title: "x"}) != nil {
+		t.Error("las demás operaciones no llevan recursos")
+	}
+	if got := DefaultEnrichment(models.OpEnrichAudio, "", "a.mp3", nil); got.Album != "" || got.Title != "a" {
+		t.Errorf("sin nombre de caso no se inventa álbum: %+v", got)
+	}
+}

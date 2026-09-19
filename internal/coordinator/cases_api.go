@@ -22,6 +22,8 @@ type caseFileReq struct {
 	Operation models.Operation `json:"operation,omitempty"` // opcional: si falta, decide el coordinador
 	Target    string           `json:"target,omitempty"`    // opcional: formato de salida (mp4, flac, jpg…)
 	Width     int              `json:"width,omitempty"`     // opcional: ancho de la miniatura
+	// opcional: recursos asociados para enrich_* (título, artista, álbum, letra…)
+	Enrichment *models.Enrichment `json:"enrichment,omitempty"`
 }
 
 type submitCaseReq struct {
@@ -90,7 +92,8 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 			ID: uuid.New().String(), CaseID: c.ID, FileID: f.Key, FilePath: f.Key,
 			FileType: decisions[i].FileType, Operation: decisions[i].Operation, Pool: decisions[i].Pool,
 			Target: decisions[i].Target, Width: decisions[i].Width,
-			Priority: req.Priority, Status: models.StatusPending, MaxRetries: 3, CreatedAt: time.Now(),
+			Enrichment: cases.DefaultEnrichment(decisions[i].Operation, req.Name, f.Key, f.Enrichment),
+			Priority:   req.Priority, Status: models.StatusPending, MaxRetries: 3, CreatedAt: time.Now(),
 		}
 		if err := db.InsertJob(a.db, job); err != nil {
 			log.Printf("[cases] insert job %s (%s): %v", job.ID, f.Key, err)

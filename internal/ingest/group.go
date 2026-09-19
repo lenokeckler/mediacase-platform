@@ -159,15 +159,58 @@ type CaseRequest struct {
 }
 
 type CaseFile struct {
-	Key string `json:"key"`
+	Key        string      `json:"key"`
+	Operation  string      `json:"operation,omitempty"`
+	Enrichment *Enrichment `json:"enrichment,omitempty"`
+}
+
+// Enrichment son los recursos asociados que el coordinador integra en enrich_* (misma forma
+// que models.Enrichment; se repite aquí para que el cliente no dependa del coordinador).
+type Enrichment struct {
+	Artist  string `json:"artist,omitempty"`
+	Album   string `json:"album,omitempty"`
+	Comment string `json:"comment,omitempty"`
 }
 
 // ToRequest convierte un grupo en la solicitud de caso. La operación no se indica: la decide
 // el coordinador por tipo (routing).
-func (g Group) ToRequest(priority int) CaseRequest {
+func (g Group) ToRequest(priority int) CaseRequest { return g.ToRequestWith(priority, false) }
+
+// ToRequestWith es ToRequest y, con enrich, pide enrich_* para audios y videos con los recursos
+// del manifest: usuario → artista, evento → álbum, sesión y lote → comentario. El título y el
+// álbum que falten los completa el coordinador.
+func (g Group) ToRequestWith(priority int, enrich bool) CaseRequest {
 	r := CaseRequest{Name: g.Name(), Priority: priority, Files: make([]CaseFile, 0, len(g.Files))}
 	for _, f := range g.Files {
-		r.Files = append(r.Files, CaseFile{Key: f.Key})
+		cf := CaseFile{Key: f.Key}
+		if enrich {
+			switch f.Type {
+			case "audio":
+				cf.Operation = "enrich_audio"
+			case "video":
+				cf.Operation = "enrich_video"
+			}
+			if cf.Operation != "" {
+				cf.Enrichment = enrichmentFromManifest(f)
+			}
+		}
+		r.Files = append(r.Files, cf)
 	}
 	return r
+}
+
+func enrichmentFromManifest(f ManifestFile) *Enrichment {
+	e := &Enrichment{Artist: f.User, Album: f.Event}
+	switch {
+	case f.Session != "" && f.Batch != "":
+		e.Comment = f.Session + " · " + f.Batch
+	case f.Session != "":
+		e.Comment = f.Session
+	case f.Batch != "":
+		e.Comment = f.Batch
+	}
+	if *e == (Enrichment{}) {
+		return nil
+	}
+	return e
 }

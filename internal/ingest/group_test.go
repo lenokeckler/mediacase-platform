@@ -91,3 +91,44 @@ func TestToRequest(t *testing.T) {
 		t.Errorf("request: %+v", r)
 	}
 }
+
+// Con -enrich, los audios y videos del grupo van como enrich_* con los recursos del manifest
+// (usuario → artista, evento → álbum, sesión y lote → comentario); las imágenes siguen con la
+// operación que decide el coordinador.
+func TestToRequestEnriched(t *testing.T) {
+	groups, _ := GroupBy(sample(), "event")
+	var boda Group
+	for _, g := range groups {
+		if g.Name() == "event=boda" {
+			boda = g
+		}
+	}
+	r := boda.ToRequestWith(5, true)
+	if len(r.Files) != 3 {
+		t.Fatalf("archivos: %+v", r.Files)
+	}
+	byKey := map[string]CaseFile{}
+	for _, f := range r.Files {
+		byKey[f.Key] = f
+	}
+	if v := byKey["v1.mp4"]; v.Operation != "enrich_video" || v.Enrichment == nil || v.Enrichment.Artist != "leno" || v.Enrichment.Album != "boda" || v.Enrichment.Comment != "boda-s1 · lote-1" {
+		t.Errorf("video: %+v %+v", v, v.Enrichment)
+	}
+	if a := byKey["a1.mp3"]; a.Operation != "enrich_audio" || a.Enrichment == nil || a.Enrichment.Artist != "leno" {
+		t.Errorf("audio: %+v %+v", a, a.Enrichment)
+	}
+	// Sin -enrich no cambia nada.
+	plain := boda.ToRequestWith(5, false)
+	if plain.Files[0].Operation != "" || plain.Files[0].Enrichment != nil {
+		t.Errorf("sin enrich: %+v", plain.Files[0])
+	}
+	// Un archivo sin metadatos (manifest v1) igual va a enriquecer, solo sin artista ni álbum.
+	groups, _ = GroupBy(sample(), "folder")
+	for _, g := range groups {
+		for _, f := range g.ToRequestWith(5, true).Files {
+			if f.Key == "casos/sesion3/v3.mp4" && (f.Operation != "enrich_video" || f.Enrichment != nil) {
+				t.Errorf("sin metadatos: %+v", f)
+			}
+		}
+	}
+}

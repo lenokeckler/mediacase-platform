@@ -21,31 +21,52 @@ const (
 	OpThumbnail    Operation = "thumbnail"
 	OpConvertAudio Operation = "convert_audio"
 	OpMetadata     Operation = "metadata" // ffprobe → JSON con duración, códecs, resolución, etiquetas
+	// "Integración de letras o recursos informativos asociados" (consigna): el mismo archivo con
+	// portada, etiquetas y letra/descripción embebidas. Remux liviano, sin recodificar.
+	OpEnrichAudio Operation = "enrich_audio"
+	OpEnrichVideo Operation = "enrich_video"
 )
 
+// Enrichment son los recursos asociados que se integran en una sub-tarea enrich_*. Los llena el
+// cliente (formulario o ingest desde el manifest) y el coordinador completa los defaults.
+type Enrichment struct {
+	Title   string `json:"title,omitempty"`
+	Artist  string `json:"artist,omitempty"`  // artista / autor
+	Album   string `json:"album,omitempty"`   // álbum / evento
+	Date    string `json:"date,omitempty"`    // año o fecha
+	Comment string `json:"comment,omitempty"` // sesión, lote, nota
+	Lyrics  string `json:"lyrics,omitempty"`  // letra (audio) o descripción (video)
+}
+
+// IsEmpty dice si no hay ningún recurso que integrar además de la portada.
+func (e *Enrichment) IsEmpty() bool {
+	return e == nil || (e.Title == "" && e.Artist == "" && e.Album == "" && e.Date == "" && e.Comment == "" && e.Lyrics == "")
+}
+
 type Job struct {
-	ID          string     `json:"id"`
-	CaseID      string     `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
-	FileID      string     `json:"file_id"`
-	FilePath    string     `json:"file_path"` // clave del objeto en el bucket de entradas
-	FileType    FileType   `json:"file_type"` // decidido por el coordinador (routing por tipo)
-	Pool        string     `json:"pool"`      // pool de workers que la ejecuta
-	Operation   Operation  `json:"operation"`
-	Target      string     `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
-	Assignment  string     `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
-	Width       int        `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
-	OutputPath  string     `json:"output_path"`
-	Status      JobStatus  `json:"status"`
-	Priority    int        `json:"priority"`
-	WorkerID    string     `json:"worker_id"`
-	Progress    int        `json:"progress"`
-	ErrorMsg    string     `json:"error_msg,omitempty"`
-	ResultURL   string     `json:"result_url,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	StartedAt   *time.Time `json:"started_at,omitempty"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Retries     int        `json:"retries"`
-	MaxRetries  int        `json:"max_retries"`
+	ID          string      `json:"id"`
+	CaseID      string      `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
+	FileID      string      `json:"file_id"`
+	FilePath    string      `json:"file_path"` // clave del objeto en el bucket de entradas
+	FileType    FileType    `json:"file_type"` // decidido por el coordinador (routing por tipo)
+	Pool        string      `json:"pool"`      // pool de workers que la ejecuta
+	Operation   Operation   `json:"operation"`
+	Target      string      `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
+	Assignment  string      `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
+	Width       int         `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
+	Enrichment  *Enrichment `json:"enrichment,omitempty"` // recursos asociados (solo enrich_*)
+	OutputPath  string      `json:"output_path"`
+	Status      JobStatus   `json:"status"`
+	Priority    int         `json:"priority"`
+	WorkerID    string      `json:"worker_id"`
+	Progress    int         `json:"progress"`
+	ErrorMsg    string      `json:"error_msg,omitempty"`
+	ResultURL   string      `json:"result_url,omitempty"`
+	CreatedAt   time.Time   `json:"created_at"`
+	StartedAt   *time.Time  `json:"started_at,omitempty"`
+	CompletedAt *time.Time  `json:"completed_at,omitempty"`
+	Retries     int         `json:"retries"`
+	MaxRetries  int         `json:"max_retries"`
 }
 
 type WorkerInfo struct {
