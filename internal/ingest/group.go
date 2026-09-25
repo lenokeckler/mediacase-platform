@@ -12,8 +12,9 @@ import (
 	"strings"
 )
 
-// ManifestFile es una entrada de dataset/manifest.json (v2). Los campos de agrupación son
-// opcionales: un manifest v1 sin metadatos solo puede agruparse por carpeta.
+// ManifestFile es una entrada de dataset/manifest.json (v2, con campos v3 opcionales). Los
+// campos de agrupación son opcionales: un manifest v1 sin metadatos solo puede agruparse por
+// carpeta.
 type ManifestFile struct {
 	Filename  string `json:"filename"`
 	Key       string `json:"key"`
@@ -26,12 +27,53 @@ type ManifestFile struct {
 	Session   string `json:"session"`
 	Batch     string `json:"batch"`
 	User      string `json:"user"`
+	// v3 (opcionales): procedencia del archivo, para el dataset con casos reales/de borde
+	// mezclados con los sintéticos (GET /dataset los expone tal cual al dashboard).
+	Source  string `json:"source,omitempty"` // synthetic | real | edge
+	Origin  string `json:"origin,omitempty"`
+	License string `json:"license,omitempty"`
+	Author  string `json:"author,omitempty"`
+	URL     string `json:"url,omitempty"`
+	Note    string `json:"note,omitempty"`
+}
+
+// TestCase es un caso de prueba ya armado en el manifest (v3, campo top-level "test_cases"):
+// se envía tal cual con `ingest cases --test-cases`, sin pasar por GroupBy.
+type TestCase struct {
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Kind        string         `json:"kind,omitempty"` // homogeneous | heterogeneous
+	Files       []TestCaseFile `json:"files"`
+}
+
+// TestCaseFile es un archivo de un TestCase, con su operación y destino ya decididos por quien
+// armó el manifest (a diferencia de Group.ToRequest, que deja la operación al coordinador).
+type TestCaseFile struct {
+	Key        string      `json:"key"`
+	Operation  string      `json:"operation,omitempty"`
+	Target     string      `json:"target,omitempty"`
+	Width      int         `json:"width,omitempty"`
+	Enrichment *Enrichment `json:"enrichment,omitempty"`
+}
+
+// ToRequest convierte el caso de prueba en la solicitud de POST /cases, tal cual está definido
+// en el manifest (operación, destino, ancho y recursos asociados por archivo).
+func (tc TestCase) ToRequest(priority int) CaseRequest {
+	r := CaseRequest{Name: tc.Name, Priority: priority, Files: make([]CaseFile, 0, len(tc.Files))}
+	for _, f := range tc.Files {
+		r.Files = append(r.Files, CaseFile{
+			Key: f.Key, Operation: f.Operation, Target: f.Target, Width: f.Width, Enrichment: f.Enrichment,
+		})
+	}
+	return r
 }
 
 type Manifest struct {
-	Version int            `json:"version"`
-	Total   int            `json:"total"`
-	Files   []ManifestFile `json:"files"`
+	Version   int            `json:"version"`
+	Total     int            `json:"total"`
+	Files     []ManifestFile `json:"files"`
+	TestCases []TestCase     `json:"test_cases,omitempty"`
 }
 
 func LoadManifest(p string) (*Manifest, error) {
@@ -161,15 +203,38 @@ type CaseRequest struct {
 type CaseFile struct {
 	Key        string      `json:"key"`
 	Operation  string      `json:"operation,omitempty"`
+	Target     string      `json:"target,omitempty"`
+	Width      int         `json:"width,omitempty"`
 	Enrichment *Enrichment `json:"enrichment,omitempty"`
 }
 
-// Enrichment son los recursos asociados que el coordinador integra en enrich_* (misma forma
-// que models.Enrichment; se repite aquí para que el cliente no dependa del coordinador).
+// Enrichment son los recursos asociados que el coordinador integra en enrich_* (misma forma que
+// models.Enrichment; se repite aquí para que el cliente no dependa del coordinador).
 type Enrichment struct {
+	Title   string `json:"title,omitempty"`
 	Artist  string `json:"artist,omitempty"`
 	Album   string `json:"album,omitempty"`
+	Date    string `json:"date,omitempty"`
 	Comment string `json:"comment,omitempty"`
+	Lyrics  string `json:"lyrics,omitempty"`
+}
+
+// UnmarshalJSON acepta "description" como alias de "lyrics": el manifest usa ese nombre para los
+// test_cases de video, pero el coordinador solo conoce "lyrics" (letra o descripción según el
+// tipo; ver models.Enrichment). Si vienen los dos, gana "lyrics".
+func (e *Enrichment) UnmarshalJSON(data []byte) error {
+	type alias Enrichment
+	aux := struct {
+		*alias
+		Description string `json:"description,omitempty"`
+	}{alias: (*alias)(e)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if e.Lyrics == "" {
+		e.Lyrics = aux.Description
+	}
+	return nil
 }
 
 // ToRequest convierte un grupo en la solicitud de caso. La operación no se indica: la decide

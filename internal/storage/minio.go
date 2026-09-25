@@ -5,6 +5,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -128,6 +129,64 @@ func (m *MinIOClient) Download(ctx context.Context, bucket, objectKey, destDir s
 		return "", fmt.Errorf("get object %s/%s: %w", bucket, objectKey, err)
 	}
 	return local, nil
+}
+
+// GetHead lee los primeros n bytes de bucket/objectKey: alcanza para inspeccionar el contenido
+// real de un archivo (magic bytes) sin bajarlo completo. Devuelve (nil, nil) si el objeto existe
+// pero está vacío, y menos de n bytes si el objeto es más chico que eso.
+func (m *MinIOClient) GetHead(ctx context.Context, bucket, objectKey string, n int64) ([]byte, error) {
+	info, err := m.client.StatObject(ctx, bucket, objectKey, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("stat object %s/%s: %w", bucket, objectKey, err)
+	}
+	if info.Size == 0 {
+		return nil, nil
+	}
+	opts := minio.GetObjectOptions{}
+	if info.Size > n {
+		if err := opts.SetRange(0, n-1); err != nil {
+			return nil, fmt.Errorf("set range %s/%s: %w", bucket, objectKey, err)
+		}
+	}
+	obj, err := m.client.GetObject(ctx, bucket, objectKey, opts)
+	if err != nil {
+		return nil, fmt.Errorf("get object %s/%s: %w", bucket, objectKey, err)
+	}
+	defer obj.Close()
+	limit := n
+	if info.Size < limit {
+		limit = info.Size
+	}
+	data, err := io.ReadAll(io.LimitReader(obj, limit))
+	if err != nil {
+		return nil, fmt.Errorf("read head %s/%s: %w", bucket, objectKey, err)
+	}
+	return data, nil
+}
+
+// StatObject devuelve el tamaño y la fecha de modificación de un objeto sin bajarlo: lo usa el
+// coordinador para saber si el manifest del dataset cambió antes de volver a descargarlo.
+func (m *MinIOClient) StatObject(ctx context.Context, bucket, objectKey string) (size int64, lastModified time.Time, err error) {
+	info, err := m.client.StatObject(ctx, bucket, objectKey, minio.StatObjectOptions{})
+	if err != nil {
+		return 0, time.Time{}, fmt.Errorf("stat object %s/%s: %w", bucket, objectKey, err)
+	}
+	return info.Size, info.LastModified, nil
+}
+
+// GetObjectBytes baja bucket/objectKey completo. Pensado para objetos chicos (el manifest del
+// dataset); para archivos de entrada usar Download o GetHead.
+func (m *MinIOClient) GetObjectBytes(ctx context.Context, bucket, objectKey string) ([]byte, error) {
+	obj, err := m.client.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("get object %s/%s: %w", bucket, objectKey, err)
+	}
+	defer obj.Close()
+	data, err := io.ReadAll(obj)
+	if err != nil {
+		return nil, fmt.Errorf("read object %s/%s: %w", bucket, objectKey, err)
+	}
+	return data, nil
 }
 
 // ObjectInfo resume un objeto del bucket.

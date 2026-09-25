@@ -1,6 +1,7 @@
 package cases
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -66,7 +67,7 @@ func TestSummary_Plurales(t *testing.T) {
 		{FilePath: "a.mp4", FileType: models.FileVideo, Operation: models.OpConvert, Status: models.StatusFailed, ErrorMsg: "x"},
 		{FilePath: "b.mp4", FileType: models.FileVideo, Operation: models.OpConvert, Status: models.StatusFailed, ErrorMsg: "x"},
 	})
-	if r.Summary != "de 2 archivos — 2 fallidos (x)" {
+	if r.Summary != "de 2 archivos — 2 fallidos (2 × x)" {
 		t.Errorf("todo fallido: %q", r.Summary)
 	}
 }
@@ -127,5 +128,41 @@ func TestBuildReport_Enriquecidos(t *testing.T) {
 	}
 	if r.SubTasks[0].Enrichment == nil || r.SubTasks[0].Enrichment.Lyrics != "la la la" || r.SubTasks[1].Enrichment.Artist != "" {
 		t.Errorf("cada sub-tarea enriquecida lleva sus recursos: %+v", r.SubTasks)
+	}
+}
+
+// Un archivo cuya extensión no correspondía al contenido real (sniff.go) se enruta por su tipo
+// real y el reporte lo cuenta aparte en el resumen, sin importar el motivo (tipo o solo formato).
+func TestBuildReport_ExtensionEnganosa(t *testing.T) {
+	base := time.Date(2026, 9, 25, 10, 0, 0, 0, time.UTC)
+	c := &models.Case{ID: "C5", Status: models.CaseCompleted, TotalJobs: 3, CreatedAt: base}
+	jobs := []*models.Job{
+		{ID: "j1", FilePath: "clip.mp4", FileType: models.FileAudio, Operation: models.OpConvertAudio, Target: "wav", Status: models.StatusCompleted,
+			RoutingNote: MisleadingTypeNote("mp4", models.FileVideo, models.FileAudio, "mp3")},
+		{ID: "j2", FilePath: "otro.mp4", FileType: models.FileVideo, Operation: models.OpConvert, Target: "mkv", Status: models.StatusCompleted,
+			RoutingNote: MisleadingFormatNote("mp4", "mkv")},
+		{ID: "j3", FilePath: "b.mp4", FileType: models.FileVideo, Operation: models.OpConvert, Target: "webm", Status: models.StatusCompleted},
+	}
+	r := BuildReport(c, jobs)
+	if !strings.Contains(r.Summary, "2 archivos con extensión engañosa, enrutados por su contenido real") {
+		t.Fatalf("el resumen no cuenta la extensión engañosa: %q", r.Summary)
+	}
+	if r.SubTasks[0].RoutingNote == "" || !IsMisleadingExtNote(r.SubTasks[0].RoutingNote) {
+		t.Errorf("la sub-tarea debe conservar la nota de routing: %+v", r.SubTasks[0])
+	}
+	if r.SubTasks[2].RoutingNote != "" {
+		t.Errorf("una sub-tarea sin extensión engañosa no debe llevar nota: %+v", r.SubTasks[2])
+	}
+}
+
+func TestSummary_MotivosDeFalloAgrupados(t *testing.T) {
+	failed := func(msg string) *models.Job {
+		return &models.Job{FilePath: "x", FileType: models.FileVideo, Operation: models.OpConvert, Status: models.StatusFailed, ErrorMsg: msg}
+	}
+	c := &models.Case{ID: "C3", Status: models.CasePartiallyCompleted, TotalJobs: 3}
+	r := BuildReport(c, []*models.Job{failed("moov atom not found"), failed("archivo vacío"), failed("moov atom not found")})
+	want := "de 3 archivos — 3 fallidos (2 × moov atom not found; archivo vacío)"
+	if r.Summary != want {
+		t.Errorf("resumen:\n got: %s\nwant: %s", r.Summary, want)
 	}
 }

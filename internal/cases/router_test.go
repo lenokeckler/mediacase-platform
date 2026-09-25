@@ -192,7 +192,7 @@ func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
 		{"a.aac", models.OpEnrichAudio, "mp3"},
 		{"v.mp4", models.OpEnrichVideo, "mp4"},
 		{"v.mkv", models.OpEnrichVideo, "mkv"},
-		{"v.mov", models.OpEnrichVideo, "mov"},
+		{"v.mov", models.OpEnrichVideo, "mp4"}, // QuickTime no guarda portada ni descripción
 		{"v.avi", models.OpEnrichVideo, "mp4"},
 		{"v.webm", models.OpEnrichVideo, "mp4"},
 	}

@@ -38,7 +38,7 @@ func spaHandler(dir string) http.Handler {
 // (las usan el worker, el cliente CLI, los scripts de prueba y la página /connect).
 var apiPrefixes = []string{
 	"/jobs", "/jobs/", "/cases", "/cases/", "/workers", "/workers/",
-	"/stats", "/ws", "/upload", "/dataset", "/connect", "/download/", "/metrics",
+	"/stats", "/ws", "/upload", "/dataset", "/dataset/test-cases", "/connect", "/download/", "/metrics",
 }
 
 // Handler compone la API (en / y bajo /api/), el WebSocket y el dashboard estático.

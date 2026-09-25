@@ -57,6 +57,7 @@ func usage() {
   ingest upload --dir dataset/files --manifest dataset/manifest.json [--concurrency 4]
   ingest cases  --group-by event|session|batch|user|folder|type|tier [--only homogeneous|heterogeneous]
                 [--priority 5] [--limit N] [--dry-run] [--manifest ...] [--coordinator URL]
+  ingest cases  --test-cases id1,id2|all [--priority 5] [--dry-run] [--manifest ...] [--coordinator URL]
   ingest load   --cases 20 --concurrency 5 --group-by session [--priority 5] [--wait]`)
 	os.Exit(2)
 }
@@ -124,6 +125,15 @@ func cmdUpload(args []string) {
 	wg.Wait()
 	fmt.Printf("upload: %d subidos (%.2f GB), %d ya estaban, %d fallidos, %s\n",
 		done.Load(), float64(bytesUp.Load())/1e9, skipped.Load(), failed.Load(), time.Since(start).Round(time.Second))
+
+	// El manifest también queda en el bucket (clave ".manifest.json"): así el coordinador puede
+	// enriquecer GET /dataset y servir GET /dataset/test-cases sin depender de un archivo local.
+	if err := mc.UploadObject(ctx, storage.DatasetBucket, ".manifest.json", *manifestPath); err != nil {
+		log.Printf("  ✗ no se pudo subir el manifest (%s): %v", *manifestPath, err)
+	} else {
+		log.Printf("  manifest subido a dataset/.manifest.json")
+	}
+
 	if failed.Load() > 0 {
 		os.Exit(1)
 	}
@@ -178,8 +188,14 @@ func cmdCases(args []string) {
 	limit := fs.Int("limit", 0, "máximo de casos a crear (0 = todos)")
 	dryRun := fs.Bool("dry-run", false, "solo mostrar la agrupación, no crear casos")
 	enrich := fs.Bool("enrich", false, "audios y videos como enrich_* con los recursos del manifest (usuario → artista, evento → álbum)")
+	testCases := fs.String("test-cases", "", "en vez de agrupar: enviar los casos de prueba del manifest (test_cases), por id separados por coma, o \"all\"")
 	coord := fs.String("coordinator", env("COORDINATOR_URL", "http://localhost:8080"), "URL del coordinador")
 	fs.Parse(args)
+
+	if *testCases != "" {
+		cmdTestCases(*manifestPath, *testCases, *priority, *dryRun, *coord)
+		return
+	}
 
 	groups := selectGroups(*manifestPath, *criterion, *only, *limit)
 	fmt.Printf("agrupación por %s: %d casos%s\n\n", *criterion, len(groups), map[bool]string{true: " (dry-run)", false: ""}[*dryRun])
@@ -205,6 +221,49 @@ func cmdCases(args []string) {
 		fmt.Printf("%-32s %6d %-22s %-12s %s\n", g.Name(), len(g.Files), strings.Join(g.Types(), "+"), kind, id)
 	}
 	fmt.Printf("\n%d homogéneos, %d heterogéneos\n", hom, het)
+}
+
+// cmdTestCases envía los casos de prueba ya armados en el manifest (v3, "test_cases") tal cual
+// están definidos (operación, destino, ancho y recursos asociados por archivo), sin agruparlos.
+func cmdTestCases(manifestPath, ids string, priority int, dryRun bool, coord string) {
+	m, err := ingest.LoadManifest(manifestPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(m.TestCases) == 0 {
+		log.Fatalf("%s no define test_cases", manifestPath)
+	}
+	all := ids == "all"
+	wanted := map[string]bool{}
+	if !all {
+		for _, id := range strings.Split(ids, ",") {
+			wanted[strings.TrimSpace(id)] = true
+		}
+	}
+
+	fmt.Printf("casos de prueba del manifest: %d definidos%s\n\n", len(m.TestCases), map[bool]string{true: " (dry-run)", false: ""}[dryRun])
+	fmt.Printf("%-16s %-32s %6s %-12s %s\n", "ID MANIFEST", "CASO", "ARCH.", "CLASE", "ID")
+	sent := 0
+	for _, tc := range m.TestCases {
+		if !all && !wanted[tc.ID] {
+			continue
+		}
+		sent++
+		id := "-"
+		if !dryRun {
+			c, err := postCase(coord, tc.ToRequest(priority))
+			if err != nil {
+				id = "ERROR: " + err.Error()
+			} else {
+				id = c.ID[:8]
+			}
+		}
+		fmt.Printf("%-16s %-32s %6d %-12s %s\n", tc.ID, tc.Name, len(tc.Files), tc.Kind, id)
+	}
+	if sent == 0 {
+		log.Fatalf("ningún test_case coincide con %q", ids)
+	}
+	fmt.Printf("\n%d casos de prueba enviados\n", sent)
 }
 
 // ── load ─────────────────────────────────────────────────────────────────────

@@ -46,7 +46,7 @@ var targetsByOp = map[models.Operation][]string{
 	models.OpMetadata:     {"json"},
 	// Contenedores que admiten portada embebida + etiquetas + letra/descripción.
 	models.OpEnrichAudio: {"mp3", "flac", "ogg", "m4a"},
-	models.OpEnrichVideo: {"mp4", "mkv", "mov"},
+	models.OpEnrichVideo: {"mp4", "mkv"},
 }
 
 // Anchos válidos de miniatura; el primero es el default.
@@ -150,6 +150,10 @@ func normExt(ext string) string {
 	return ext
 }
 
+// SameFormat dice si dos formatos (extensión o los que devuelve SniffType) son el mismo,
+// considerando los alias (jpeg/jpg, m4a/aac…).
+func SameFormat(a, b string) bool { return normExt(a) == normExt(b) }
+
 func excludesIdentity(op models.Operation) bool {
 	for _, o := range identityExcludedOps {
 		if o == op {
@@ -177,6 +181,12 @@ func RouteWith(filename string, requested models.Operation, target string, width
 	if err != nil {
 		return RouteDecision{}, err
 	}
+	return RouteAs(ft, filename, requested, target, width)
+}
+
+// RouteAs es RouteWith con el tipo de contenido ya decidido: lo usa el coordinador cuando la
+// inspección de contenido (sniff.go) determina que la extensión no corresponde al tipo real.
+func RouteAs(ft models.FileType, filename string, requested models.Operation, target string, width int) (RouteDecision, error) {
 	op := requested
 	if op == "" {
 		op = DefaultOperation(ft)

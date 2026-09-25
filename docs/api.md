@@ -17,6 +17,17 @@ Un caso es **una sola solicitud** con 1..N archivos ya presentes en el bucket `d
 la operación por su tipo (routing) y el pool que la atiende, registra el caso, lo descompone en
 sub-tareas y las encola. El caso se acepta entero o se rechaza entero.
 
+**Inspección de contenido:** el routing por extensión es solo el primer paso; el coordinador
+también lee el encabezado real de cada archivo (`internal/cases/sniff.go`, firmas binarias —
+ftyp, EBML, RIFF, ID3/cuadro MPEG, ADTS, Ogg, etc. — sin ejecutar ffmpeg) y lo compara contra lo
+que decía la extensión. Si el contenido real es de OTRO tipo (p. ej. un `.mp4` que en realidad es
+un mp3), re-enruta por el tipo real: si la operación pedida ya no aplica, usa el default de ese
+tipo en vez de rechazar el caso entero. Si el tipo coincide pero el formato real es distinto (un
+`.mp4` que en realidad es un `.mkv`) conserva el tipo detectado. En ambos casos la sub-tarea trae
+`routing_note` con el detalle; un archivo vacío trae la nota correspondiente y se procesa por
+extensión igual (fallará en el worker, que es lo esperado). Si MinIO no está disponible o la
+lectura falla, se conserva el routing por extensión sin nota.
+
 ```json
 {
   "name": "boda-2026-09-06",
@@ -121,6 +132,10 @@ Estados: `queued` · `processing` · `retrying` · `completed` · `partially_com
 Estados de una sub-tarea: `pending` · `assigned` · `running` · `completed` · `failed` ·
 `cancelled`. `404` si no existe.
 
+Cuando la inspección de contenido corrigió el routing (o el archivo estaba vacío), la sub-tarea
+trae además `"routing_note": "extensión engañosa: .mp4 sugiere video, pero el contenido real es
+audio (mp3); se enrutó por el contenido real"`. Ausente cuando la extensión era correcta.
+
 ### `GET /cases/{id}/report` — reporte consolidado
 
 Disponible cuando el barrier cerró el caso (`completed`, `partially_completed`, `failed`) o se
@@ -154,6 +169,9 @@ La misma copia queda en MinIO en `results/cases/<id>/report.json`.
 ```
 
 Una sub-tarea fallida trae además `"error": "ffmpeg: Invalid data found when processing input"`.
+Una sub-tarea re-enrutada por su contenido real trae `routing_note` (ver `GET /cases/{id}`), y el
+`summary` cuenta cuántas hubo: `"…, 1 archivo con extensión engañosa, enrutado por su contenido
+real"`.
 
 ### `POST /cases/{id}/cancel` — cancelar
 
@@ -192,9 +210,14 @@ Un worker sin heartbeat por 15 s se expulsa y sus sub-tareas se re-encolan (el c
 | Método y ruta | Qué hace |
 |---|---|
 | `POST /upload` (multipart, campo `file`, repetible) | sube al bucket `dataset/` con clave = nombre saneado; valida el tipo de cada archivo antes de subir nada → `201 {"keys":["a.mp4","b.jpg"]}` |
-| `GET /dataset` | lista el bucket: `[{key, size_bytes, type, last_modified}]` (lo usa el dashboard para elegir archivos) |
+| `GET /dataset` | lista el bucket: `[{key, size_bytes, type, last_modified, format?, tier?, source?, duration_s?, event?, session?, license?, note?}]` (lo usa el dashboard para elegir archivos) |
+| `GET /dataset/test-cases` | los casos de prueba ya armados en el manifest (campo `test_cases`, v3): `[{id, name, description?, kind, files:[{key, operation?, target?, width?, enrichment?}]}]`; `[]` si el manifest no define ninguno |
 
-Para el dataset completo (492 archivos, 14 GB) es más práctico `bin/ingest upload` (reanudable).
+Para el dataset completo (492 archivos, 14 GB) es más práctico `bin/ingest upload` (reanudable);
+también sube el manifest al bucket como `dataset/.manifest.json` (objeto interno: no aparece en
+`GET /dataset`, que oculta claves que empiezan con `.`). Los campos opcionales de `GET /dataset`
+salen de ese manifest (o, si el bucket todavía no lo tiene, del archivo local `DATASET_MANIFEST`,
+default `dataset/manifest.json`); el coordinador lo cachea y lo refresca cada 30 s si cambió.
 
 ## Monitoreo
 
@@ -273,6 +296,7 @@ Prometheus (`infra/prometheus.yml`) scrapea solo `host.docker.internal:8080`; Gr
 
 - **Dashboard** (`dashboard/src/api.js`): casos, reporte, cancelar, `/upload`, `/dataset`, `/ws`.
 - **`cmd/client`**: `-case`, `-case-status`, `-stats`, `-batch` (sub-tareas sueltas).
-- **`cmd/ingest`**: `upload` (MinIO directo), `cases` (`POST /cases` por grupo), `load`
+- **`cmd/ingest`**: `upload` (MinIO directo + `dataset/.manifest.json`), `cases` (`POST /cases`
+  por grupo, o `--test-cases id1,id2|all` para enviar los del manifest tal cual), `load`
   (`POST /cases` concurrentes + `GET /cases` para el resumen).
 - **Scripts de hito** en `tests/`: `curl` + `python` sobre estas rutas.

@@ -18,13 +18,14 @@ import (
 
 // API groups all HTTP handlers of the coordinator.
 type API struct {
-	queue     *queue.Queue
-	registry  *Registry
-	hub       *Hub       // WebSocket del dashboard
-	workerHub *WorkerHub // WebSocket de los workers (canal saliente)
-	db        *sql.DB
-	barrier   *cases.Barrier       // cierra el caso cuando todas sus sub-tareas resolvieron
-	minio     *storage.MinIOClient // entradas (dataset/) y resultados; nil si no está disponible
+	queue           *queue.Queue
+	registry        *Registry
+	hub             *Hub       // WebSocket del dashboard
+	workerHub       *WorkerHub // WebSocket de los workers (canal saliente)
+	db              *sql.DB
+	barrier         *cases.Barrier       // cierra el caso cuando todas sus sub-tareas resolvieron
+	minio           *storage.MinIOClient // entradas (dataset/) y resultados; nil si no está disponible
+	datasetManifest *manifestCache       // metadatos del dataset (GET /dataset, GET /dataset/test-cases)
 
 	// onWorkerRestart se invoca cuando un worker se registra con un ID conocido pero otra
 	// instancia (proceso nuevo): sus jobs en vuelo deben volver a la cola. Lo conecta el scheduler.
@@ -48,7 +49,8 @@ func (a *API) SetOnWorkerRestart(fn func(ctx context.Context, workerID string)) 
 
 func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, database *sql.DB,
 	barrier *cases.Barrier, minio *storage.MinIOClient) *API {
-	return &API{queue: q, registry: reg, hub: hub, workerHub: workerHub, db: database, barrier: barrier, minio: minio}
+	return &API{queue: q, registry: reg, hub: hub, workerHub: workerHub, db: database, barrier: barrier, minio: minio,
+		datasetManifest: &manifestCache{}}
 }
 
 // Router builds and returns the HTTP mux with all the routes.
@@ -82,6 +84,7 @@ func (a *API) Router() http.Handler {
 	// Entradas: subir al bucket dataset/ y listarlo (lo usa el dashboard para armar casos)
 	mux.HandleFunc("POST /upload", a.uploadFiles)
 	mux.HandleFunc("GET /dataset", a.listDataset)
+	mux.HandleFunc("GET /dataset/test-cases", a.datasetTestCases)
 
 	// Conectar otra máquina como worker: página + ZIP con el .env ya escrito
 	mux.HandleFunc("GET /connect", a.connectPage)

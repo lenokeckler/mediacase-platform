@@ -58,7 +58,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		req.Priority = 5
 	}
 
-	// 1. Routing por tipo, de TODOS los archivos, antes de tocar la base: el caso se acepta
+	// 1. Routing por extensión, de TODOS los archivos, antes de tocar la base: el caso se acepta
 	//    entero o se rechaza entero, y la respuesta dice exactamente qué archivo no sirve.
 	decisions := make([]cases.RouteDecision, len(req.Files))
 	for i, f := range req.Files {
@@ -73,6 +73,10 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		}
 		decisions[i] = d
 	}
+
+	// 1.b Inspección de contenido: la extensión puede mentir. Corrige decisions[i] cuando el
+	// contenido real es otro tipo (o el mismo tipo con otro formato) y deja una nota por archivo.
+	routingNotes := inspectContent(r.Context(), a.minio, req.Files, decisions)
 
 	// 2. Registrar el caso.
 	c := &models.Case{
@@ -92,8 +96,9 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 			ID: uuid.New().String(), CaseID: c.ID, FileID: f.Key, FilePath: f.Key,
 			FileType: decisions[i].FileType, Operation: decisions[i].Operation, Pool: decisions[i].Pool,
 			Target: decisions[i].Target, Width: decisions[i].Width,
-			Enrichment: cases.DefaultEnrichment(decisions[i].Operation, req.Name, f.Key, f.Enrichment),
-			Priority:   req.Priority, Status: models.StatusPending, MaxRetries: 3, CreatedAt: time.Now(),
+			Enrichment:  cases.DefaultEnrichment(decisions[i].Operation, req.Name, f.Key, f.Enrichment),
+			RoutingNote: routingNotes[i],
+			Priority:    req.Priority, Status: models.StatusPending, MaxRetries: 3, CreatedAt: time.Now(),
 		}
 		if err := db.InsertJob(a.db, job); err != nil {
 			log.Printf("[cases] insert job %s (%s): %v", job.ID, f.Key, err)

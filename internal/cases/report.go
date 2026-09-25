@@ -31,6 +31,9 @@ type SubTaskResult struct {
 	ResultURL       string             `json:"result_url,omitempty"`
 	Error           string             `json:"error,omitempty"`
 	Enrichment      *models.Enrichment `json:"enrichment,omitempty"` // recursos integrados (solo enrich_*)
+	// RoutingNote: la inspección de contenido detectó que la extensión no correspondía al
+	// contenido real, o el archivo estaba vacío. "" = extensión OK.
+	RoutingNote string `json:"routing_note,omitempty"`
 }
 
 type GroupCount struct {
@@ -92,7 +95,7 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 			JobID: j.ID, File: j.FilePath, FileType: j.FileType, Operation: j.Operation,
 			SourceExt: strings.TrimPrefix(strings.ToLower(filepath.Ext(j.FilePath)), "."), Target: j.Target, Assignment: j.Assignment,
 			Status: j.Status, WorkerID: j.WorkerID, StartedAt: j.StartedAt, CompletedAt: j.CompletedAt,
-			ResultURL: j.ResultURL, Error: j.ErrorMsg, Enrichment: j.Enrichment,
+			ResultURL: j.ResultURL, Error: j.ErrorMsg, Enrichment: j.Enrichment, RoutingNote: j.RoutingNote,
 		}
 		if j.StartedAt != nil && j.CompletedAt != nil {
 			st.DurationSeconds = j.CompletedAt.Sub(*j.StartedAt).Seconds()
@@ -144,7 +147,7 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 // Summary produce la línea agregada, p. ej.
 // "de 45 archivos — 30 videos convertidos, 10 audios extraídos, 4 miniaturas generadas, 1 fallido (formato no soportado)".
 func Summary(r *Report) string {
-	parts := make([]string, 0, len(r.ByTypeAndOperation)+2)
+	parts := make([]string, 0, len(r.ByTypeAndOperation)+3)
 	for _, g := range r.ByTypeAndOperation {
 		if g.Completed == 0 {
 			continue
@@ -159,13 +162,14 @@ func Summary(r *Report) string {
 		}
 		parts = append(parts, part)
 	}
+	if n := misleadingExtCount(r.SubTasks); n > 0 {
+		parts = append(parts, plural(n, "archivo con extensión engañosa, enrutado por su contenido real",
+			"archivos con extensión engañosa, enrutados por su contenido real"))
+	}
 	if r.Totals.Failed > 0 {
 		reason := ""
-		for _, s := range r.SubTasks {
-			if s.Status == models.StatusFailed && s.Error != "" {
-				reason = " (" + firstLine(s.Error) + ")"
-				break
-			}
+		if reasons := failureReasons(r.SubTasks); len(reasons) > 0 {
+			reason = " (" + strings.Join(reasons, "; ") + ")"
 		}
 		parts = append(parts, plural(r.Totals.Failed, "fallido", "fallidos")+reason)
 	}
@@ -175,11 +179,61 @@ func Summary(r *Report) string {
 	return fmt.Sprintf("de %s — %s", plural(r.Totals.Total, "archivo", "archivos"), strings.Join(parts, ", "))
 }
 
+// misleadingExtCount cuenta cuántas sub-tareas se enrutaron por su contenido real porque la
+// extensión mentía (ver sniff.go); el resumen agregado los reporta aparte.
+func misleadingExtCount(subs []SubTaskResult) int {
+	n := 0
+	for _, s := range subs {
+		if IsMisleadingExtNote(s.RoutingNote) {
+			n++
+		}
+	}
+	return n
+}
+
 func plural(n int, singular, pluralForm string) string {
 	if n == 1 {
 		return "1 " + singular
 	}
 	return fmt.Sprintf("%d %s", n, pluralForm)
+}
+
+// maxFailureReasons y maxReasonLen acotan el resumen: los detalles completos están en cada sub-tarea.
+const (
+	maxFailureReasons = 3
+	maxReasonLen      = 90
+)
+
+// failureReasons junta los motivos distintos de las sub-tareas fallidas, en orden de aparición,
+// con "N ×" cuando se repiten; si hay más de maxFailureReasons, el resto va como "…".
+func failureReasons(subs []SubTaskResult) []string {
+	var order []string
+	count := map[string]int{}
+	for _, s := range subs {
+		if s.Status != models.StatusFailed || s.Error == "" {
+			continue
+		}
+		r := firstLine(s.Error)
+		if len([]rune(r)) > maxReasonLen {
+			r = string([]rune(r)[:maxReasonLen-1]) + "…"
+		}
+		if count[r] == 0 {
+			order = append(order, r)
+		}
+		count[r]++
+	}
+	out := make([]string, 0, maxFailureReasons+1)
+	for i, r := range order {
+		if i == maxFailureReasons {
+			out = append(out, "…")
+			break
+		}
+		if count[r] > 1 {
+			r = fmt.Sprintf("%d × %s", count[r], r)
+		}
+		out = append(out, r)
+	}
+	return out
 }
 
 func firstLine(s string) string {

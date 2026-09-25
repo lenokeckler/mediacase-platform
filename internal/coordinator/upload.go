@@ -103,9 +103,21 @@ type datasetItem struct {
 	Size         int64     `json:"size_bytes"`
 	Type         string    `json:"type"`
 	LastModified time.Time `json:"last_modified"`
+	// Metadatos opcionales del manifest del dataset (bucket dataset/.manifest.json, o el archivo
+	// local si el bucket no lo tiene), cuando existen para esta clave.
+	Format   string `json:"format,omitempty"`
+	Tier     string `json:"tier,omitempty"`
+	Source   string `json:"source,omitempty"`
+	Duration int    `json:"duration_s,omitempty"`
+	Event    string `json:"event,omitempty"`
+	Session  string `json:"session,omitempty"`
+	License  string `json:"license,omitempty"`
+	Note     string `json:"note,omitempty"`
 }
 
-// listDataset lista las entradas disponibles en el bucket (opcionalmente bajo un prefijo).
+// listDataset lista las entradas disponibles en el bucket (opcionalmente bajo un prefijo),
+// enriquecidas con los metadatos del manifest cuando existen para esa clave. Los objetos internos
+// (p. ej. ".manifest.json") no son entradas del dataset y se ocultan.
 func (a *API) listDataset(w http.ResponseWriter, r *http.Request) {
 	if a.minio == nil {
 		http.Error(w, "MinIO no disponible en el coordinador", http.StatusServiceUnavailable)
@@ -116,14 +128,34 @@ func (a *API) listDataset(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "minio: "+err.Error(), http.StatusBadGateway)
 		return
 	}
+	manifest, _ := a.datasetManifest.get(r.Context(), a.minio)
 	items := make([]datasetItem, 0, len(objs))
 	for _, o := range objs {
+		if isHiddenKey(o.Key) {
+			continue
+		}
 		t := "other"
 		if ft, err := cases.DetectFileType(o.Key); err == nil {
 			t = string(ft)
 		}
-		items = append(items, datasetItem{Key: o.Key, Size: o.Size, Type: t, LastModified: o.LastModified})
+		item := datasetItem{Key: o.Key, Size: o.Size, Type: t, LastModified: o.LastModified}
+		if mf, ok := manifest[o.Key]; ok {
+			item.Format, item.Tier, item.Source = mf.Format, mf.Tier, mf.Source
+			item.Duration, item.Event, item.Session = mf.Duration, mf.Event, mf.Session
+			item.License, item.Note = mf.License, mf.Note
+		}
+		items = append(items, item)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(items)
+}
+
+// isHiddenKey dice si una clave del bucket es un objeto interno (nombre de archivo que empieza
+// con ".", como ".manifest.json"), no una entrada del dataset.
+func isHiddenKey(key string) bool {
+	base := key
+	if i := strings.LastIndexByte(base, '/'); i >= 0 {
+		base = base[i+1:]
+	}
+	return strings.HasPrefix(base, ".")
 }

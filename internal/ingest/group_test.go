@@ -1,6 +1,9 @@
 package ingest
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func sample() []ManifestFile {
 	return []ManifestFile{
@@ -130,5 +133,44 @@ func TestToRequestEnriched(t *testing.T) {
 				t.Errorf("sin metadatos: %+v", f)
 			}
 		}
+	}
+}
+
+// Un caso de prueba del manifest (v3, "test_cases") se envía tal cual: operación, destino, ancho
+// y recursos asociados por archivo, sin pasar por GroupBy.
+func TestTestCase_ToRequest(t *testing.T) {
+	tc := TestCase{
+		ID: "heterogeneo-1", Name: "caso de prueba heterogéneo", Kind: "heterogeneous",
+		Files: []TestCaseFile{
+			{Key: "v1.mp4", Operation: "convert", Target: "mkv"},
+			{Key: "i1.jpg", Operation: "thumbnail", Target: "webp", Width: 640},
+			{Key: "a1.mp3", Operation: "enrich_audio", Enrichment: &Enrichment{Title: "Tema", Artist: "JLJ"}},
+		},
+	}
+	r := tc.ToRequest(8)
+	if r.Name != "caso de prueba heterogéneo" || r.Priority != 8 || len(r.Files) != 3 {
+		t.Fatalf("request: %+v", r)
+	}
+	if r.Files[0].Target != "mkv" || r.Files[1].Width != 640 || r.Files[2].Enrichment.Artist != "JLJ" {
+		t.Errorf("no conservó operación/destino/ancho/recursos tal cual: %+v", r.Files)
+	}
+}
+
+// El manifest describe la "descripción" de un video enriquecido con la clave "description"; el
+// coordinador solo entiende "lyrics" (letra o descripción según el tipo), así que se alía a ese
+// campo al deserializar.
+func TestEnrichment_DescriptionEsAliasDeLyrics(t *testing.T) {
+	var e Enrichment
+	if err := json.Unmarshal([]byte(`{"title":"Apertura","description":"discurso de bienvenida"}`), &e); err != nil {
+		t.Fatal(err)
+	}
+	if e.Title != "Apertura" || e.Lyrics != "discurso de bienvenida" {
+		t.Errorf("alias description → lyrics: %+v", e)
+	}
+	// Si vienen los dos, gana "lyrics".
+	var e2 Enrichment
+	json.Unmarshal([]byte(`{"lyrics":"letra real","description":"no debería ganar"}`), &e2)
+	if e2.Lyrics != "letra real" {
+		t.Errorf("lyrics debía ganar sobre description: %+v", e2)
 	}
 }

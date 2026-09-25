@@ -44,29 +44,32 @@ func (e *Enrichment) IsEmpty() bool {
 }
 
 type Job struct {
-	ID          string      `json:"id"`
-	CaseID      string      `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
-	FileID      string      `json:"file_id"`
-	FilePath    string      `json:"file_path"` // clave del objeto en el bucket de entradas
-	FileType    FileType    `json:"file_type"` // decidido por el coordinador (routing por tipo)
-	Pool        string      `json:"pool"`      // pool de workers que la ejecuta
-	Operation   Operation   `json:"operation"`
-	Target      string      `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
-	Assignment  string      `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
-	Width       int         `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
-	Enrichment  *Enrichment `json:"enrichment,omitempty"` // recursos asociados (solo enrich_*)
-	OutputPath  string      `json:"output_path"`
-	Status      JobStatus   `json:"status"`
-	Priority    int         `json:"priority"`
-	WorkerID    string      `json:"worker_id"`
-	Progress    int         `json:"progress"`
-	ErrorMsg    string      `json:"error_msg,omitempty"`
-	ResultURL   string      `json:"result_url,omitempty"`
-	CreatedAt   time.Time   `json:"created_at"`
-	StartedAt   *time.Time  `json:"started_at,omitempty"`
-	CompletedAt *time.Time  `json:"completed_at,omitempty"`
-	Retries     int         `json:"retries"`
-	MaxRetries  int         `json:"max_retries"`
+	ID         string      `json:"id"`
+	CaseID     string      `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
+	FileID     string      `json:"file_id"`
+	FilePath   string      `json:"file_path"` // clave del objeto en el bucket de entradas
+	FileType   FileType    `json:"file_type"` // decidido por el coordinador (routing por tipo)
+	Pool       string      `json:"pool"`      // pool de workers que la ejecuta
+	Operation  Operation   `json:"operation"`
+	Target     string      `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
+	Assignment string      `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
+	Width      int         `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
+	Enrichment *Enrichment `json:"enrichment,omitempty"` // recursos asociados (solo enrich_*)
+	// RoutingNote: cuando la inspección de contenido (internal/cases/sniff.go) detectó que la
+	// extensión no correspondía al contenido real, o el archivo estaba vacío. "" = extensión OK.
+	RoutingNote string     `json:"routing_note,omitempty"`
+	OutputPath  string     `json:"output_path"`
+	Status      JobStatus  `json:"status"`
+	Priority    int        `json:"priority"`
+	WorkerID    string     `json:"worker_id"`
+	Progress    int        `json:"progress"`
+	ErrorMsg    string     `json:"error_msg,omitempty"`
+	ResultURL   string     `json:"result_url,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	StartedAt   *time.Time `json:"started_at,omitempty"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	Retries     int        `json:"retries"`
+	MaxRetries  int        `json:"max_retries"`
 }
 
 type WorkerInfo struct {
