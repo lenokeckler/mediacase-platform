@@ -94,6 +94,9 @@ func Migrate(db *sql.DB) error {
 	-- Proceso del worker (cambia en cada arranque): permite detectar, tras reiniciar el coordinador,
 	-- que un worker volvió como proceso nuevo y que sus sub-tareas en vuelo quedaron huérfanas.
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS instance     TEXT NOT NULL DEFAULT '';
+	-- Capacidad declarada por el worker (sub-tareas simultáneas, según su hardware): el
+	-- planificador reparte en proporción. 0 = worker viejo que no la informa.
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS capacity     INT  NOT NULL DEFAULT 0;
 	-- Inspección de contenido (routing por tipo real, no solo por extensión): la nota queda vacía
 	-- cuando la extensión coincidía con el contenido.
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS routing_note TEXT NOT NULL DEFAULT '';

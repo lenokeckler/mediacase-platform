@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -33,7 +32,8 @@ type workerConfig struct {
 	workerID       string
 	role           string // video | audio | metadata | all
 	coordinatorURL string
-	poolSize       int
+	poolSize       int  // capacidad: sub-tareas simultáneas
+	poolAuto       bool // true si poolSize salió del hardware (WORKER_POOL_SIZE=auto)
 }
 
 // Pools de workers (deben coincidir con internal/cases.PoolFor).
@@ -51,17 +51,13 @@ func RoleCapabilities(role string) []string {
 }
 
 func loadConfig() workerConfig {
-	poolSize := 4
-	if v := os.Getenv("WORKER_POOL_SIZE"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			poolSize = n
-		}
-	}
+	poolSize, auto := poolSizeFromEnv()
 	return workerConfig{
 		workerID:       getEnv("WORKER_ID", "worker-1"),
 		role:           getEnv("WORKER_ROLE", "all"),
 		coordinatorURL: getEnv("COORDINATOR_URL", "http://coordinator:8080"),
 		poolSize:       poolSize,
+		poolAuto:       auto,
 	}
 }
 
@@ -450,6 +446,7 @@ func (w *worker) register() error {
 		"hostname":     host, // solo informativo: el coordinador ya no necesita alcanzar al worker
 		"role":         w.cfg.role,
 		"capabilities": RoleCapabilities(w.cfg.role),
+		"capacity":     w.cfg.poolSize,        // sub-tareas simultáneas: el planificador reparte en proporción
 		"hardware":     w.hardware.Hardware(), // CPU, RAM total, GPUs: lo fijo del nodo
 	}
 	body, _ := json.Marshal(payload)
@@ -512,7 +509,11 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 func main() {
 	cfg := loadConfig()
 	log.Printf("=== MediaCase Worker ===")
-	log.Printf("ID=%s | rol=%s (%v) | pool=%d | coordinator=%s", cfg.workerID, cfg.role, RoleCapabilities(cfg.role), cfg.poolSize, cfg.coordinatorURL)
+	origin := "fijada en WORKER_POOL_SIZE"
+	if cfg.poolAuto {
+		origin = "según el hardware"
+	}
+	log.Printf("ID=%s | rol=%s (%v) | capacidad=%d (%s) | coordinator=%s", cfg.workerID, cfg.role, RoleCapabilities(cfg.role), cfg.poolSize, origin, cfg.coordinatorURL)
 
 	if err := killChildrenWithWorker(); err != nil {
 		log.Printf("[worker] aviso: si este proceso muere, sus ffmpeg podrían quedar huérfanos: %v", err)

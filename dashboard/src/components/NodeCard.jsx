@@ -106,7 +106,9 @@ export default function NodeCard({ worker, history, onOpen }) {
             </div>
 
             <footer className={styles.foot}>
-                <span><b>{w.active_jobs}</b> sub-tarea{w.active_jobs === 1 ? '' : 's'} activa{w.active_jobs === 1 ? '' : 's'}</span>
+                {w.capacity
+                    ? <span title="Cupos que este nodo calculó según sus núcleos y su RAM; el planificador le da trabajo en proporción"><b>{w.active_jobs}</b> de {w.capacity} cupos ocupados</span>
+                    : <span><b>{w.active_jobs}</b> sub-tarea{w.active_jobs === 1 ? '' : 's'} activa{w.active_jobs === 1 ? '' : 's'}</span>}
                 {m?.disk_percent != null && <span>disco {Math.round(m.disk_percent)} %</span>}
             </footer>
         </article>

@@ -183,23 +183,31 @@ flowchart LR
   end
   S[Scheduler<br/>cada 200 ms recorre los pools] -->|si alguien puede atender el pool| redis
   redis -->|high antes que normal antes que low| S
-  S -->|1. afinidad: worker del pool<br/>2. ayuda: cualquier worker libre<br/>en ambos: no saturado, menos activas, menos CPU| W[(worker elegido)]
+  S -->|1. afinidad: worker del pool<br/>2. ayuda: afín a la mitad y otro más libre<br/>en ambos: no saturado, menor fracción ocupada,<br/>más capacidad, menos CPU; los llenos no cuentan| W[(worker elegido)]
 ```
 
 - **Nueve colas = pool × prioridad.** Prioridad 8-10 → `high`, 4-7 → `normal`, 1-3 → `low`.
   Dentro de un pool se vacía `high` antes que `normal` antes que `low` (planificación multinivel).
 - **Afinidad, ayuda y carga (`Registry.PickFor`)**: para cada pool el scheduler elige primero un
-  worker cuyo pool principal coincida (*afinidad*); si ese nodo está ocupado o saturado y hay otro
-  nodo libre de cualquier pool, se lo da a ese (*ayuda*, work stealing). "Saturado" sale de las
-  métricas reales del heartbeat: RAM ≥ 90 % o CPU ≥ 95 %. Dentro de cada grupo gana el no
-  saturado con menos sub-tareas activas y menos CPU. Cada sub-tarea guarda cómo se asignó
-  (`assignment = afinidad | ayuda`) y el dashboard lo muestra. `SCHEDULER_STRICT_POOLS=true`
-  vuelve al modelo de pools puros (sin ayuda), útil para demostrar la separación.
+  worker cuyo pool principal coincida (*afinidad*). Cuando el afín llega a la mitad de su
+  capacidad (o está saturado) y otro nodo está proporcionalmente más libre, la sub-tarea va a ese
+  (*ayuda*, work stealing). "Saturado" sale de las métricas reales del heartbeat: RAM ≥ 90 % o
+  CPU ≥ 95 %. Dentro de cada grupo gana el no saturado con **menor fracción ocupada** (sub-tareas
+  activas ÷ capacidad), a igualdad el de **más capacidad** y por último el de menos CPU; un nodo
+  que ya cubrió su capacidad no se considera (la sub-tarea espera en la cola en vez de ser
+  rechazada). Cada asignación se cuenta en el acto (`NoteAssigned`) y el heartbeat la corrige al
+  segundo siguiente, para que una ráfaga no caiga entera en el mismo nodo. Cada sub-tarea guarda
+  cómo se asignó (`assignment = afinidad | ayuda`) y el dashboard lo muestra.
+  `SCHEDULER_STRICT_POOLS=true` vuelve al modelo de pools puros (sin ayuda), útil para demostrar
+  la separación.
 - **No se saca nada de una cola si nadie puede atenderla**: si ningún nodo vivo puede tomar un
   pool (en modo estricto, ninguno de ese pool), la profundidad de esa cola crece y **eso es lo que
   muestra el dashboard** (`by_pool`) y Grafana.
-- **Backpressure**: el worker tiene un pool fijo de goroutines (`WORKER_POOL_SIZE`); si está lleno
-  responde `reject` y la sub-tarea vuelve a la cola sin contar como reintento.
+- **Capacidad y backpressure**: cada worker procesa a la vez tantas sub-tareas como su capacidad
+  (`WORKER_POOL_SIZE`). Con `auto` la calcula con su hardware: un cupo cada 2 hilos lógicos y
+  cada ~2 GB de RAM, lo que se agote primero, entre 1 y 8 (12 hilos y 15 GB → 6; una VM de 2 hilos
+  y 2 GB → 1). La informa al registrarse y el Monitor muestra "3 de 6 cupos ocupados". Si aun así
+  le llega una de más, responde `reject` y la sub-tarea vuelve a la cola sin contar como reintento.
 - **Tolerancia a fallos**: heartbeat cada 1 s; sin heartbeat por 15 s el worker se expulsa y sus
   sub-tareas `assigned`/`running` vuelven a la cola (el caso pasa a `retrying`). Un worker que
   vuelve como proceso nuevo (otro `instance`) provoca el mismo reclaim de inmediato; uno que se
@@ -225,10 +233,24 @@ Con workers genéricos puros, una sub-tarea de video podía caer en el nodo más
 el cierre de todo el caso** (el barrier espera a la más lenta). Con pools puros, el trabajo pesado
 iba siempre al nodo que lo termina antes, pero un nodo ocioso no ayudaba a otro pool saturado. La
 versión final usa la especialización como **preferencia** (afinidad) y no como pared: el video va
-primero al nodo con GPU, y un nodo libre toma trabajo de otro pool antes que quedarse parado,
+primero al nodo más potente, y un nodo libre toma trabajo de otro pool antes que quedarse parado,
 siempre evitando los nodos saturados según sus métricas reales (§5). Es la lectura de la Unidad 1
 que se defiende en el informe: heterogeneidad de cómputo aprovechada sin desperdiciar capacidad.
 Números reales en [`informe-pruebas.md`](informe-pruebas.md).
+
+**La potencia de cada máquina también cuenta, no solo su rol.** Un número fijo de sub-tareas por
+nodo trata igual a una laptop de 4 hilos y a una estación de 32: la potente se queda a medias y,
+como el reparto miraba sub-tareas activas en bruto, el trabajo terminaba en la débil (2 activas de
+8 posibles parecían "más carga" que 1 de 2). Por eso cada worker calcula su **capacidad** con sus
+núcleos y su RAM y el planificador reparte por **fracción ocupada**: ante una ráfaga de 10
+sub-tareas, un nodo de capacidad 8 recibe 8 y uno de capacidad 2 recibe 2 (prueba
+`TestPickFor_RepartoProporcionalALaCapacidad`). Una PC nueva se suma desde `/connect` eligiendo su
+rol (todo, video, audio o imágenes y metadatos); el ZIP la configura con `WORKER_POOL_SIZE=auto`.
+
+Lo que queda fuera a propósito: codificar con la GPU (NVENC, QSV, AMF). Depende del modelo de la
+tarjeta y de los drivers de cada máquina, y un fallo de hardware en la demo no se puede
+diagnosticar a tiempo; con x264 en CPU todas las máquinas producen el mismo resultado. El worker ya
+reporta sus GPUs (Monitor), así que el siguiente paso sería un rol `video-gpu` con receta propia.
 
 ## 7. Comunicación entre procesos
 
@@ -327,7 +349,7 @@ solo la infraestructura de node-1, no los workers.
 | `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET` | ambos | credenciales y bucket de resultados |
 | `WORKER_ID` | worker | nombre estable del nodo (`node2`, `laptop-jenn`) |
 | `WORKER_ROLE` | worker | `video` · `audio` · `metadata` · `all` |
-| `WORKER_POOL_SIZE` | worker | sub-tareas simultáneas (goroutines) |
+| `WORKER_POOL_SIZE` | worker | capacidad: sub-tareas simultáneas; `auto` (o vacío) = según núcleos y RAM, un número la fija |
 | `COORDINATOR_URL` | worker, clientes | `http://<ip>:8080` o `https://xxx.trycloudflare.com` |
 | `WORKER_DIAG_ADDR` | worker | puerto opcional de diagnóstico (`:8090`); vacío = ninguno |
 
@@ -359,6 +381,6 @@ Los archivos reales están en `infra/env/*.env` (no versionados; los `.example` 
 | Concurrencia y asincronía | pool de goroutines del worker, scheduler, broadcast del dashboard |
 | Sincronización (barrier/join) | `internal/cases/barrier.go` con `SELECT … FOR UPDATE` |
 | Comunicación entre procesos | HTTP, WebSocket saliente, S3, Redis |
-| Heterogeneidad de cómputo (Unidad 1) | pools especializados, §6 |
+| Heterogeneidad de cómputo (Unidad 1) | pools especializados y capacidad según el hardware de cada nodo, §5-6 |
 | Monitoreo y balanceo | heartbeat, `/metrics`, Grafana, colas por pool, reclaim/redistribución |
 | Administración de archivos | MinIO: entradas por clave, resultados por caso y sub-tarea, reporte |

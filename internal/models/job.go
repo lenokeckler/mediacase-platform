@@ -78,6 +78,7 @@ type WorkerInfo struct {
 	Hostname     string    `json:"hostname"`
 	Role         string    `json:"role,omitempty"`         // video | audio | metadata | all
 	Capabilities []string  `json:"capabilities,omitempty"` // pools que este worker atiende
+	Capacity     int       `json:"capacity,omitempty"`     // sub-tareas simultáneas; 0 = worker viejo que no la informa
 	Status       string    `json:"status"`
 	ActiveJobs   int       `json:"active_jobs"`
 	CPUPercent   float64   `json:"cpu_percent"`

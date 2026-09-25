@@ -118,3 +118,55 @@ func TestPickFor_EvitaNodosSaturadosYRespetaConexion(t *testing.T) {
 		t.Fatalf("got %v; solo v1 tiene canal", w)
 	}
 }
+
+func TestPickFor_RepartoProporcionalALaCapacidad(t *testing.T) {
+	r := &Registry{workers: make(map[string]*models.WorkerInfo)}
+	r.registerNoDB(&models.WorkerInfo{ID: "chica", Capacity: 2})
+	r.registerNoDB(&models.WorkerInfo{ID: "potente", Capacity: 8})
+	all := func(string) bool { return true }
+
+	// Ráfaga de 10 sub-tareas genéricas: se cuentan al asignar (sin esperar el heartbeat).
+	got := map[string]int{}
+	for i := 0; i < 10; i++ {
+		w, _ := r.PickFor("video", false, all)
+		if w == nil {
+			t.Fatalf("sub-tarea %d sin worker; quedaban cupos", i)
+		}
+		got[w.ID]++
+		r.NoteAssigned(w.ID)
+	}
+	if got["potente"] != 8 || got["chica"] != 2 {
+		t.Fatalf("reparto %v; quería potente=8 chica=2 (proporcional a la capacidad)", got)
+	}
+	// Las dos llenas: nadie (la sub-tarea espera en la cola en vez de ser rechazada).
+	if w, _ := r.PickFor("video", false, all); w != nil {
+		t.Fatalf("con todos llenos debía devolver nil, devolvió %s", w.ID)
+	}
+}
+
+func TestPickFor_AfinidadHastaLaMitadAntesDePedirAyuda(t *testing.T) {
+	r := &Registry{workers: make(map[string]*models.WorkerInfo)}
+	r.registerNoDB(&models.WorkerInfo{ID: "video", Capabilities: []string{"video"}, Capacity: 6})
+	r.registerNoDB(&models.WorkerInfo{ID: "audio", Capabilities: []string{"audio"}, Capacity: 2})
+	all := func(string) bool { return true }
+
+	for i := 0; i < 3; i++ { // 0/6, 1/6, 2/6: por debajo de la mitad se queda en su pool
+		w, how := r.PickFor("video", false, all)
+		if w.ID != "video" || how != AssignAffinity {
+			t.Fatalf("paso %d: %s %s; debía seguir por afinidad", i, w.ID, how)
+		}
+		r.NoteAssigned(w.ID)
+	}
+	// 3/6 = la mitad: el de audio (0/2) ayuda.
+	if w, how := r.PickFor("video", false, all); w.ID != "audio" || how != AssignHelp {
+		t.Fatalf("a la mitad: %s %s; debía ayudar el nodo libre", w.ID, how)
+	}
+}
+
+func TestPickFor_WorkerViejoSinCapacidad(t *testing.T) {
+	r := &Registry{workers: make(map[string]*models.WorkerInfo)}
+	r.registerNoDB(&models.WorkerInfo{ID: "viejo", ActiveJobs: 5}) // no informa capacidad
+	if w, _ := r.PickFor("video", false, func(string) bool { return true }); w == nil {
+		t.Fatal("a un worker sin capacidad declarada no se le salta aunque parezca lleno")
+	}
+}

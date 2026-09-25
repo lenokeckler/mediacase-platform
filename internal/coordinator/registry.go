@@ -33,7 +33,7 @@ func NewRegistry(db *sql.DB) *Registry {
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
 		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null'),
-		       COALESCE(registered_at, last_seen), instance
+		       COALESCE(registered_at, last_seen), instance, capacity
 		FROM worker_registry WHERE last_seen > NOW() - INTERVAL '1 minute'`)
 	if err != nil {
 		return
@@ -42,7 +42,7 @@ func (r *Registry) loadFromDB() {
 	for rows.Next() {
 		w := &models.WorkerInfo{}
 		var caps, hw string
-		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw, &w.RegisteredAt, &w.Instance)
+		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw, &w.RegisteredAt, &w.Instance, &w.Capacity)
 		if caps != "" {
 			w.Capabilities = strings.Split(caps, ",")
 		}
@@ -75,10 +75,10 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 	hw, _ := json.Marshal(w.Hardware) // "null" si el worker no lo manda
 	// registered_at solo se fija al insertar: un re-registro no cambia el orden de llegada.
 	r.db.Exec(`
-		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at, instance)
-		VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)
-		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5, instance=$7`,
-		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw), w.RegisteredAt, w.Instance,
+		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at, instance, capacity)
+		VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5, instance=$7, capacity=$8`,
+		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw), w.RegisteredAt, w.Instance, w.Capacity,
 	)
 	return restarted
 }
@@ -165,11 +165,14 @@ const (
 
 // PickFor elige el worker para una sub-tarea del pool dado.
 //
-// Orden de preferencia: (1) afinidad —nodos cuyo pool principal coincide—, (2) si no hay o
-// están todos ocupados/saturados, ayuda —cualquier nodo con canal abierto—. Dentro de cada
-// grupo: primero los no saturados (RAM < 90 %, CPU < 95 % según sus métricas reales), luego
-// menos sub-tareas activas, luego menos CPU. Es la conexión con la Unidad 1: la
-// heterogeneidad se usa como preferencia (video a la máquina con GPU) y no como pared.
+// Orden de preferencia: (1) afinidad —nodos cuyo pool principal coincide—, (2) ayuda —cualquier
+// nodo con canal abierto— cuando no hay afín o el afín va por la mitad de su capacidad (o está
+// saturado) y el otro está proporcionalmente más libre. Dentro de cada grupo: primero los no
+// saturados (RAM < 90 %, CPU < 95 % según sus métricas reales), luego la menor fracción ocupada
+// (activas ÷ capacidad, que el worker calcula con sus núcleos y su RAM), a igualdad el nodo de
+// más capacidad y por último menos CPU. Los nodos llenos no se consideran. Es la conexión con
+// la Unidad 1: la heterogeneidad se usa como preferencia (el video a la máquina potente) y la
+// capacidad de cada máquina decide cuánto trabajo recibe, en vez de un número fijo para todas.
 //
 // strict = true vuelve al modelo de pools puros (solo afinidad). connected dice qué workers
 // tienen el canal WebSocket abierto ahora mismo.
@@ -178,7 +181,7 @@ func (r *Registry) PickFor(pool string, strict bool, connected func(id string) b
 	defer r.mu.RUnlock()
 	var bestAff, bestHelp *models.WorkerInfo
 	for _, w := range r.workers {
-		if !r.isAlive(w) || (connected != nil && !connected(w.ID)) {
+		if !r.isAlive(w) || (connected != nil && !connected(w.ID)) || isFull(w) {
 			continue
 		}
 		if hasCapability(w, pool) {
@@ -200,9 +203,52 @@ func (r *Registry) PickFor(pool string, strict bool, connected func(id string) b
 	return nil, ""
 }
 
-// shouldPreferHelp: el nodo afín está ocupado o saturado y el de ayuda está libre y sano.
+// helpThreshold: el nodo afín se llena hasta la mitad de su capacidad antes de pedir ayuda.
+// Así el pool especializado conserva su trabajo (la afinidad sigue viéndose en la demo) y aun
+// así los nodos libres entran antes de que el afín se sature.
+const helpThreshold = 0.5
+
+// shouldPreferHelp: el nodo de ayuda está sano y proporcionalmente menos cargado, y el afín
+// está saturado, lleno o al menos a la mitad de su capacidad.
 func shouldPreferHelp(aff, help *models.WorkerInfo) bool {
-	return (aff.ActiveJobs > 0 || isOverloaded(aff)) && help.ActiveJobs == 0 && !isOverloaded(help)
+	if isOverloaded(help) || loadRatio(help) >= loadRatio(aff) {
+		return false
+	}
+	return isOverloaded(aff) || loadRatio(aff) >= helpThreshold
+}
+
+// legacyCapacity es la capacidad que se supone a un worker que no la informa (el ZIP viejo
+// traía WORKER_POOL_SIZE=2 fijo).
+const legacyCapacity = 2
+
+func capacityOf(w *models.WorkerInfo) int {
+	if w.Capacity > 0 {
+		return w.Capacity
+	}
+	return legacyCapacity
+}
+
+// loadRatio es la fracción ocupada: 2 activas pesan distinto en un nodo de 8 cupos que en uno de 2.
+func loadRatio(w *models.WorkerInfo) float64 {
+	return float64(w.ActiveJobs) / float64(capacityOf(w))
+}
+
+// isFull: el worker declaró su capacidad y ya la tiene cubierta; mandarle más solo produciría
+// un rechazo ("pool lleno") y un reencolado. A un worker viejo (capacidad 0) no se le salta.
+func isFull(w *models.WorkerInfo) bool {
+	return w.Capacity > 0 && w.ActiveJobs >= w.Capacity
+}
+
+// NoteAssigned cuenta en el acto una sub-tarea recién entregada. El heartbeat (cada 1 s) trae
+// después el número real; sin esto, en una ráfaga todas irían al mismo worker porque su carga
+// no cambia hasta el siguiente latido.
+func (r *Registry) NoteAssigned(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if w, ok := r.workers[id]; ok {
+		w.ActiveJobs++
+		w.Status = "busy"
+	}
 }
 
 func isOverloaded(w *models.WorkerInfo) bool {
@@ -213,14 +259,18 @@ func isOverloaded(w *models.WorkerInfo) bool {
 	return mem >= overloadedMemPercent || cpu >= overloadedCPUPercent
 }
 
-// lessLoaded ordena: no saturado antes que saturado, menos activas, menos CPU.
+// lessLoaded ordena: no saturado antes que saturado, menor fracción ocupada (activas ÷
+// capacidad), a igualdad el de más capacidad (el nodo potente primero), y por último menos CPU.
 func lessLoaded(a, b *models.WorkerInfo) bool {
 	oa, ob := isOverloaded(a), isOverloaded(b)
 	if oa != ob {
 		return !oa
 	}
-	if a.ActiveJobs != b.ActiveJobs {
-		return a.ActiveJobs < b.ActiveJobs
+	if ra, rb := loadRatio(a), loadRatio(b); ra != rb {
+		return ra < rb
+	}
+	if ca, cb := capacityOf(a), capacityOf(b); ca != cb {
+		return ca > cb
 	}
 	ca, cb := a.CPUPercent, b.CPUPercent
 	if a.Metrics != nil {

@@ -154,11 +154,15 @@ genérico (`WORKER_ROLE=all`). Un nodo con rol `video` recibe los videos por *af
 está libre y hay audio o miniaturas esperando, también los toma (*ayuda*): nadie se queda parado
 mientras haya trabajo. El coordinador además evita cargar un nodo con la RAM sobre 90 % o la CPU
 sobre 95 % mientras haya otro descansado. En el Monitor cada tarjeta dice "ayuda en …" y cada
-sub-tarea marca si llegó por ayuda. Para especializarlo, editar `worker.env` antes de arrancar:
+sub-tarea marca si llegó por ayuda. El rol se elige en la página `/connect` antes de descargar
+("¿Qué va a procesar esta PC?"); si la PC es la más potente, conviene **Video**. Cuántas sub-tareas
+procesa a la vez lo calcula el worker con sus núcleos y su RAM, y la tarjeta del Monitor lo muestra
+como "2 de 6 cupos ocupados". Para cambiar cualquiera de las dos cosas después, editar `worker.env`
+antes de arrancar:
 
 ```
 WORKER_ROLE=audio        # video | audio | metadata | all
-WORKER_POOL_SIZE=2       # sub-tareas simultáneas: 2 en una laptop normal, 4 si tiene 6+ núcleos
+WORKER_POOL_SIZE=auto    # sub-tareas simultáneas: auto = según núcleos y RAM; un número la fija
 WORKER_ID=laptop-jenn    # nombre que se ve en el dashboard (vacío = nombre de la máquina)
 ```
 

@@ -31,11 +31,25 @@ const connectHTML = `<!doctype html>
   code{background:#eee;padding:.1rem .35rem;border-radius:4px}
   ol li{margin:.35rem 0}
   .note{font-size:.92rem;color:#555;margin-top:2rem}
+  fieldset{border:1px solid #ddd;border-radius:8px;padding:.6rem 1rem 1rem;margin:1rem 0}
+  legend{font-weight:600;padding:0 .3rem}
+  label{display:block;margin:.35rem 0;cursor:pointer}
+  label small{color:#666}
+  button.b{border:0;font:inherit;cursor:pointer}
 </style></head><body>
 <p style="margin:0 0 .5rem"><img src="/logo.png" alt="MediaCase" width="72" height="72"></p>
 <h1>Conectar esta PC como worker</h1>
 <p>Descargue el worker para su sistema, descomprímalo y ejecútelo. En unos segundos esta máquina aparece en el dashboard y empieza a recibir sub-tareas.</p>
-<p><a class="b" href="/download/worker?os=windows">Descargar para Windows</a><a class="b alt" href="/download/worker?os=linux">Descargar para Linux</a></p>
+<form method="get" action="/download/worker">
+<fieldset><legend>¿Qué va a procesar esta PC?</legend>
+  <label><input type="radio" name="role" value="all" checked> <b>Todo</b> <small>— recomendado: toma lo que haga falta</small></label>
+  <label><input type="radio" name="role" value="video"> <b>Video</b> <small>— para la máquina más potente (conversiones pesadas, 4K)</small></label>
+  <label><input type="radio" name="role" value="audio"> <b>Audio</b> <small>— conversión y extracción de audio</small></label>
+  <label><input type="radio" name="role" value="metadata"> <b>Imágenes y metadatos</b> <small>— miniaturas, metadatos, enriquecer</small></label>
+  <p style="margin:.6rem 0 0"><small>Aunque elija un tipo, si esta PC está libre también ayuda con los demás. Cuántas sub-tareas procesa a la vez lo calcula sola según sus núcleos y su RAM.</small></p>
+</fieldset>
+<p><button class="b" name="os" value="windows">Descargar para Windows</button><button class="b alt" name="os" value="linux">Descargar para Linux</button></p>
+</form>
 <ol>
   <li>Descomprimir el ZIP en cualquier carpeta.</li>
   <li><b>Windows:</b> doble clic en <code>start-worker.bat</code>. &nbsp; <b>Linux:</b> <code>bash start-worker.sh</code></li>
@@ -104,7 +118,7 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 	if minioTunnel == "" {
 		minioTunnel = minioTunnelEndpoint() // scripts/tunnel.ps1, el modo manual
 	}
-	env := workerEnvFor(r.Host, requestScheme(r), minioTunnel)
+	env := workerEnvFor(r.Host, requestScheme(r), minioTunnel, workerRoleParam(r.URL.Query().Get("role")))
 
 	// El servidor corta cualquier respuesta a los 10 s (WriteTimeout). Un ZIP de ~85 MB por WiFi
 	// tarda más: esta respuesta recibe su propio plazo sin relajar el del resto de la API.
@@ -146,7 +160,17 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 // diga otra cosa. Si el navegador llegó por el túnel (https) y hay túnel de MinIO, el worker
 // remoto habla S3 por TLS contra ese túnel; si no lo hay, se avisa en el archivo: el 9000 de
 // la LAN no es alcanzable desde otra red.
-func workerEnvFor(host, scheme, minioTunnel string) string {
+// workerRoleParam valida el rol elegido en /connect; cualquier otra cosa es "all" (genérico).
+func workerRoleParam(role string) string {
+	switch role {
+	case "video", "audio", "metadata":
+		return role
+	default:
+		return "all"
+	}
+}
+
+func workerEnvFor(host, scheme, minioTunnel, role string) string {
 	coordURL := scheme + "://" + host
 	minioPub := os.Getenv("MINIO_PUBLIC_ENDPOINT")
 	if minioPub == "" || strings.HasPrefix(minioPub, "localhost") || strings.HasPrefix(minioPub, "127.") {
@@ -173,12 +197,14 @@ MINIO_USE_SSL=%s
 MINIO_ACCESS_KEY=%s
 MINIO_SECRET_KEY=%s
 MINIO_BUCKET=%s
-WORKER_ROLE=all
-WORKER_POOL_SIZE=2
+# video | audio | metadata | all: el pool preferido; si esta PC esta libre ayuda con los demas
+WORKER_ROLE=%s
+# auto = segun nucleos y RAM (1 cada 2 hilos, ~2 GB cada una, tope 8); un numero la fija a mano
+WORKER_POOL_SIZE=auto
 # WORKER_ID vacio = el lanzador usa el nombre de esta maquina
 WORKER_ID=
 `, coordURL, aviso, minioPub, minioPub, useSSL,
-		envOr("MINIO_ACCESS_KEY", "minioadmin"), envOr("MINIO_SECRET_KEY", "minioadmin"), envOr("MINIO_BUCKET", "results"))
+		envOr("MINIO_ACCESS_KEY", "minioadmin"), envOr("MINIO_SECRET_KEY", "minioadmin"), envOr("MINIO_BUCKET", "results"), role)
 }
 
 // Lanzadores. Sin tildes: PowerShell 5.1 lee .ps1 sin BOM como ANSI.

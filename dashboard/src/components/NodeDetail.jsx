@@ -114,7 +114,8 @@ export default function NodeDetail({ worker, history, jobs = [], onClose }) {
                     <Fact label="Memoria">{hw ? `${gb(hw.mem_total_bytes)} instalados` : '—'}{m ? ` · ${gb(m.mem_used_bytes)} en uso (${Math.round(m.mem_percent)}%)` : ''}</Fact>
                     <Fact label="Disco de trabajo">{m?.disk_percent != null ? `${Math.round(m.disk_percent)}% ocupado` : '—'}</Fact>
                     <Fact label="Pools">principal {pools.join(', ')}{helps.length ? ` · ayuda en ${helps.join(', ')}` : ''}</Fact>
-                    <Fact label="Sub-tareas activas">{w.active_jobs}</Fact>
+                    <Fact label="Sub-tareas activas">{w.capacity ? `${w.active_jobs} de ${w.capacity} cupos` : w.active_jobs}</Fact>
+                    <Fact label="Capacidad">{w.capacity ? `${w.capacity} sub-tareas a la vez` : 'no informada (worker anterior)'}</Fact>
                 </div>
 
                 <div className={styles.charts}>

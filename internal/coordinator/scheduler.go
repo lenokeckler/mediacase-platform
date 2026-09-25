@@ -149,6 +149,7 @@ func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *
 		return
 	}
 
+	s.registry.NoteAssigned(worker.ID)
 	s.queue.Ack(ctx, stream, msgID)
 }
 
