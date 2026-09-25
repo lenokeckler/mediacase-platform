@@ -12,6 +12,7 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/cases"
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 	"github.com/lenokeckler/mediacase-platform/internal/queue"
+	"github.com/lib/pq"
 )
 
 // Scheduler reads jobs from the queue and assigns them to workers.
@@ -161,7 +162,7 @@ func (s *Scheduler) sendToWorker(ctx context.Context, worker *models.WorkerInfo,
 // responding (evicted) or that came back as a new process (re-registered with another instance).
 func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 	rows, err := s.db.QueryContext(ctx,
-		`UPDATE jobs SET status='pending', worker_id=NULL
+		`UPDATE jobs SET status='pending', worker_id=NULL, progress=0, started_at=NULL
 		 WHERE worker_id=$1 AND status IN ('assigned','running')
 		 RETURNING id, file_path, operation, priority, retries, max_retries, COALESCE(case_id,''), file_type, pool`,
 		workerID,
@@ -196,6 +197,9 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 
 // reclaimStuckJobs marks as failed any job that has been in 'running' state
 // for longer than 15 minutes — these are jobs whose worker silently dropped them.
+// Jobs of a worker that is still connected are left alone: a 4K conversion can legitimately
+// take longer than that, and a worker that dies is already caught by heartbeat eviction or by
+// its instance changing on re-register (ReclaimWorkerJobs).
 // Also re-queues jobs stuck in 'assigned' for that long: the worker accepted them but its
 // 'running' report never arrived (typically the coordinator was restarting), so nobody knows
 // if they ran; back to the queue is the safe move.
@@ -207,7 +211,9 @@ func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
 		     error_msg='job timed out: worker did not report completion within 15 minutes'
 		 WHERE status='running'
 		   AND started_at < NOW() - INTERVAL '15 minutes'
+		   AND NOT (COALESCE(worker_id, '') = ANY($1))
 		 RETURNING id, COALESCE(case_id, '')`,
+		pq.Array(s.workerHub.Connected()),
 	)
 	if err != nil {
 		log.Printf("[scheduler] stuck-job reclaim failed: %v", err)
@@ -236,7 +242,7 @@ func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
 // requeueStaleAssigned devuelve a la cola las sub-tareas asignadas hace > 15 min sin noticias.
 func (s *Scheduler) requeueStaleAssigned(ctx context.Context) {
 	rows, err := s.db.QueryContext(ctx,
-		`UPDATE jobs SET status='pending', worker_id=NULL
+		`UPDATE jobs SET status='pending', worker_id=NULL, progress=0, started_at=NULL
 		 WHERE status='assigned' AND COALESCE(assigned_at, created_at) < NOW() - INTERVAL '15 minutes'
 		 RETURNING id, file_path, operation, priority, retries, max_retries, COALESCE(case_id,''), file_type, pool`)
 	if err != nil {

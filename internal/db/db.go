@@ -91,6 +91,9 @@ func Migrate(db *sql.DB) error {
 	ALTER TABLE jobs ADD COLUMN IF NOT EXISTS enrichment JSONB;
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS hardware     JSONB;
 	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+	-- Proceso del worker (cambia en cada arranque): permite detectar, tras reiniciar el coordinador,
+	-- que un worker volvió como proceso nuevo y que sus sub-tareas en vuelo quedaron huérfanas.
+	ALTER TABLE worker_registry ADD COLUMN IF NOT EXISTS instance     TEXT NOT NULL DEFAULT '';
 	`)
 	return err
 }

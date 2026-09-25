@@ -265,6 +265,7 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	// FilePath es la clave del objeto en el bucket de entradas. Se baja a un directorio
 	// temporal propio del job (así dos jobs sobre el mismo archivo no se pisan) y se borra al final.
 	inDir := filepath.Join(os.TempDir(), "mediacase-in", job.JobID)
+	os.RemoveAll(inDir)       // restos de un proceso anterior que murió con esta sub-tarea en vuelo
 	defer os.RemoveAll(inDir) // también si la descarga falla a medias
 	localInput, dlErr := w.storage.Download(ctx, storage.DatasetBucket, job.FilePath, inDir)
 	if dlErr != nil {
@@ -287,30 +288,33 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	// El destino lo decidió el coordinador (routing); si un coordinador viejo no lo manda, el
 	// default de cada operación.
 	target := job.Target
-	switch job.Operation {
-	case string(models.OpConvert):
+	opErr = multimedia.CheckInput(localInput)
+	switch {
+	case opErr != nil:
+		// entrada vacía o ilegible: no vale la pena llamar a ffmpeg
+	case job.Operation == string(models.OpConvert):
 		if target == "" {
 			target = "mp4"
 		}
 		resultPath, opErr = multimedia.ConvertTo(ctx, localInput, target, progressCB)
-	case string(models.OpExtractAudio):
+	case job.Operation == string(models.OpExtractAudio):
 		if target == "" {
 			target = "mp3"
 		}
 		resultPath, opErr = multimedia.ExtractAudioTo(ctx, localInput, target, progressCB)
-	case string(models.OpThumbnail):
+	case job.Operation == string(models.OpThumbnail):
 		if target == "" {
 			target = "jpg"
 		}
 		resultPath, opErr = multimedia.ThumbnailTo(ctx, localInput, target, job.Width, progressCB)
-	case string(models.OpConvertAudio):
+	case job.Operation == string(models.OpConvertAudio):
 		if target == "" {
 			target = "flac"
 		}
 		resultPath, opErr = multimedia.ConvertAudioTo(ctx, localInput, target, progressCB)
-	case string(models.OpMetadata):
+	case job.Operation == string(models.OpMetadata):
 		resultPath, opErr = multimedia.Metadata(ctx, localInput, progressCB)
-	case string(models.OpEnrichAudio), string(models.OpEnrichVideo):
+	case job.Operation == string(models.OpEnrichAudio) || job.Operation == string(models.OpEnrichVideo):
 		if target == "" {
 			target = map[string]string{string(models.OpEnrichAudio): "mp3", string(models.OpEnrichVideo): "mp4"}[job.Operation]
 		}
@@ -325,7 +329,7 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 		}
 		log.Printf("[job %s] FALLÓ: %v", job.JobID, opErr)
 		monitoring.JobsFailed.WithLabelValues(w.cfg.workerID, job.Operation).Inc()
-		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", opErr.Error())
+		w.reportProgress(job.JobID, 0, string(models.StatusFailed), "", multimedia.CleanError(opErr, localInput))
 		return
 	}
 
@@ -509,6 +513,10 @@ func main() {
 	cfg := loadConfig()
 	log.Printf("=== MediaCase Worker ===")
 	log.Printf("ID=%s | rol=%s (%v) | pool=%d | coordinator=%s", cfg.workerID, cfg.role, RoleCapabilities(cfg.role), cfg.poolSize, cfg.coordinatorURL)
+
+	if err := killChildrenWithWorker(); err != nil {
+		log.Printf("[worker] aviso: si este proceso muere, sus ffmpeg podrían quedar huérfanos: %v", err)
+	}
 
 	if err := multimedia.CheckTools(); err != nil {
 		log.Fatalf("[worker] %v — instalar ffmpeg (Windows: usar el ZIP de /connect o winget install Gyan.FFmpeg; Linux: apt install ffmpeg)", err)

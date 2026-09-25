@@ -33,7 +33,7 @@ func NewRegistry(db *sql.DB) *Registry {
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
 		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null'),
-		       COALESCE(registered_at, last_seen)
+		       COALESCE(registered_at, last_seen), instance
 		FROM worker_registry WHERE last_seen > NOW() - INTERVAL '1 minute'`)
 	if err != nil {
 		return
@@ -42,7 +42,7 @@ func (r *Registry) loadFromDB() {
 	for rows.Next() {
 		w := &models.WorkerInfo{}
 		var caps, hw string
-		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw, &w.RegisteredAt)
+		rows.Scan(&w.ID, &w.Hostname, &w.Role, &caps, &hw, &w.RegisteredAt, &w.Instance)
 		if caps != "" {
 			w.Capabilities = strings.Split(caps, ",")
 		}
@@ -62,16 +62,23 @@ func (r *Registry) loadFromDB() {
 // Register da de alta (o refresca) un worker. Devuelve true si el ID ya existía pero
 // con OTRA instancia: es un proceso nuevo, y los jobs del proceso anterior quedaron huérfanos.
 func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
+	// La instancia anterior se lee de la BD antes de pisarla: si el coordinador también se
+	// reinició, la memoria está vacía y es la única forma de saber que el proceso cambió.
+	var persisted string
+	r.db.QueryRow(`SELECT instance FROM worker_registry WHERE id=$1`, w.ID).Scan(&persisted)
 	restarted = r.registerNoDB(w)
+	if !restarted && persisted != "" && w.Instance != "" && persisted != w.Instance {
+		restarted = true
+	}
 
 	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
 	hw, _ := json.Marshal(w.Hardware) // "null" si el worker no lo manda
 	// registered_at solo se fija al insertar: un re-registro no cambia el orden de llegada.
 	r.db.Exec(`
-		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at)
-		VALUES ($1, $2, NOW(), $3, $4, $5, $6)
-		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5`,
-		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw), w.RegisteredAt,
+		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at, instance)
+		VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)
+		ON CONFLICT (id) DO UPDATE SET hostname=$2, last_seen=NOW(), role=$3, capabilities=$4, hardware=$5, instance=$7`,
+		w.ID, w.Hostname, w.Role, strings.Join(w.Capabilities, ","), string(hw), w.RegisteredAt, w.Instance,
 	)
 	return restarted
 }

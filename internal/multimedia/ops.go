@@ -20,6 +20,12 @@ var videoRecipes = map[string][]string{
 	"webm": {"-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-crf", "33", "-b:v", "0", "-c:a", "libopus", "-b:a", "96k"},
 }
 
+// videoNormalize se agrega al convertir: x264 y VP9 exigen ancho y alto pares (un 640x359 real
+// falla) y yuv420p es lo único que reproduce cualquier equipo (evita salidas 4:4:4 o de 10 bits
+// cuando el origen es HEVC/AV1 de alta gama). Va aparte de las recetas porque enrich las reutiliza
+// con una portada adjunta, y ahí un filtro de video tocaría también la imagen.
+var videoNormalize = []string{"-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-pix_fmt", "yuv420p"}
+
 var audioRecipes = map[string][]string{
 	"mp3":  {"-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100"},
 	"wav":  {"-c:a", "pcm_s16le", "-ar", "44100", "-ac", "2"},
@@ -42,6 +48,7 @@ func ConvertTo(ctx context.Context, inputPath, target string, cb progressFn) (st
 	out := outputPath(inputPath, "."+target)
 	log.Printf("[convert] %s → %s", inputPath, out)
 	args := append([]string{"-y", "-i", inputPath}, recipe...)
+	args = append(args, videoNormalize...)
 	args = append(args, "-progress", "pipe:2", "-nostats", out)
 	return runWithProgress(ctx, "convert", args, cb, out)
 }
@@ -237,8 +244,14 @@ func runWithProgress(ctx context.Context, op string, args []string, cb progressF
 		return "", fmt.Errorf("ffmpeg start: %w", err)
 	}
 	lowerPriorityStarted(cmd)
-	go streamProgress(stderr, cb)
-	if err := cmd.Wait(); err != nil {
+	tail := make(chan []string, 1)
+	go func() { tail <- streamProgress(stderr, cb) }()
+	err = cmd.Wait()
+	last := <-tail
+	if err != nil {
+		if len(last) > 0 {
+			return "", fmt.Errorf("ffmpeg %s: %w: %s", op, err, strings.Join(last, " | "))
+		}
 		return "", fmt.Errorf("ffmpeg %s: %w", op, err)
 	}
 	return out, nil

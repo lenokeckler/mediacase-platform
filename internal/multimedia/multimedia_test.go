@@ -148,6 +148,8 @@ func TestParseFFmpegTime(t *testing.T) {
 		{"0", "1", "0", "0", 60.0},
 		{"1", "0", "0", "0", 3600.0},
 		{"0", "0", "10", "50", 10.5},
+		{"0", "6", "3", "18", 363.18},       // Duration del encabezado (centésimas)
+		{"0", "0", "5", "123456", 5.123456}, // out_time de -progress (microsegundos)
 	}
 	for _, c := range cases {
 		got := parseFFmpegTime(c.h, c.m, c.s, c.cs)
@@ -227,4 +229,37 @@ func TestThumbnailTo_PNG640(t *testing.T) {
 		t.Errorf("salida %s", out)
 	}
 	os.Remove(out)
+}
+
+// Un video real de 640x359 (Big Buck Bunny 360p) hacía fallar a libx264: exige dimensiones pares.
+func TestConvertTo_DimensionesImpares(t *testing.T) {
+	input := filepath.Join(t.TempDir(), "impar.mkv")
+	gen := exec.Command("ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc2=size=321x179:rate=10", "-t", "2",
+		"-c:v", "ffv1", input)
+	if out, err := gen.CombinedOutput(); err != nil {
+		t.Skipf("ffmpeg no disponible o falló: %v\n%s", err, string(out))
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	for _, target := range []string{"mp4", "mkv", "webm"} {
+		out, err := ConvertTo(ctx, input, target, func(int) {})
+		if err != nil {
+			t.Fatalf("%s: %v", target, err)
+		}
+		os.Remove(out)
+	}
+}
+
+// Si ffmpeg falla, el error trae sus últimas líneas de diagnóstico (van al reporte del caso).
+func TestConvertTo_ErrorConDetalleDeFFmpeg(t *testing.T) {
+	input := filepath.Join(t.TempDir(), "roto.mp4")
+	if err := os.WriteFile(input, []byte("esto no es un video"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	args := []string{"-y", "-i", input, "-progress", "pipe:2", "-nostats", filepath.Join(t.TempDir(), "x.mp4")}
+	_, err := runWithProgress(context.Background(), "convert", args, nil, "")
+	if err == nil || !strings.Contains(err.Error(), "roto.mp4") {
+		t.Errorf("el error debía traer el detalle de ffmpeg (nombra el archivo): %v", err)
+	}
+	t.Log(err)
 }

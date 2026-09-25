@@ -29,22 +29,36 @@ var durationRe = regexp.MustCompile(`Duration:\s+(\d+):(\d+):(\d+)\.(\d+)`)
 var timeRe = regexp.MustCompile(`time=(\d+):(\d+):(\d+)\.(\d+)`)
 
 // parseFFmpegTime convierte HH:MM:SS.cs a segundos totales.
-func parseFFmpegTime(h, m, s, cs string) float64 {
+// La fracción se lee como decimal, sea de 2 dígitos (el "Duration: 00:06:03.18" del encabezado)
+// o de 6 (el "out_time=00:00:05.123456" de -progress): leerla siempre como centésimas sumaba
+// 1234 s en el segundo caso y el progreso saltaba a 100 % apenas empezaba.
+func parseFFmpegTime(h, m, s, frac string) float64 {
 	hi, _ := strconv.ParseFloat(h, 64)
 	mi, _ := strconv.ParseFloat(m, 64)
 	si, _ := strconv.ParseFloat(s, 64)
-	csi, _ := strconv.ParseFloat(cs, 64)
-	return hi*3600 + mi*60 + si + csi/100
+	fi, _ := strconv.ParseFloat("0."+frac, 64)
+	return hi*3600 + mi*60 + si + fi
 }
 
-// streamProgress lee stderr de FFmpeg y llama cb con el porcentaje calculado.
-func streamProgress(r io.Reader, cb progressFn) {
+// ffmpegTailLines es cuántas líneas de diagnóstico de ffmpeg se guardan para el mensaje de error.
+const ffmpegTailLines = 3
+
+// streamProgress lee stderr de FFmpeg y llama cb con el porcentaje calculado. Devuelve las
+// últimas líneas de diagnóstico (no las de -progress), que explican el fallo si ffmpeg termina mal.
+func streamProgress(r io.Reader, cb progressFn) []string {
 	var totalSeconds float64
+	var last []string
 	scanner := bufio.NewScanner(r)
 	scanner.Split(scanLines)
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		if isDiagnosticLine(line) {
+			last = append(last, strings.TrimSpace(line))
+			if len(last) > ffmpegTailLines {
+				last = last[1:]
+			}
+		}
 
 		if totalSeconds == 0 {
 			if m := durationRe.FindStringSubmatch(line); m != nil {
@@ -63,6 +77,16 @@ func streamProgress(r io.Reader, cb progressFn) {
 			}
 		}
 	}
+	return last
+}
+
+// progressLineRe reconoce las líneas clave=valor que ffmpeg escribe con -progress.
+var progressLineRe = regexp.MustCompile(`^[a-z_0-9]+=\S*$`)
+
+// isDiagnosticLine dice si una línea de stderr es un mensaje de ffmpeg y no una de progreso.
+func isDiagnosticLine(line string) bool {
+	line = strings.TrimSpace(line)
+	return line != "" && !progressLineRe.MatchString(line)
 }
 
 // scanLines divide en \r o \n para capturar las líneas de progreso de FFmpeg.
