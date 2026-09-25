@@ -1,0 +1,65 @@
+# Archivos sintéticos LIVIANOS que el manifest v3 excluye para dejar lugar al material real
+# (dataset/real_sources.json) sin salir del rango 400-600 de la consigna.
+# Criterio fijo y reproducible: los de numeración más alta de cada tipo —
+#   video_light_121..140 (20), audio_light_86..100 (15), image_46..70 (25) = 60 archivos.
+# Los archivos siguen en dataset/files (el generador los crea igual); solo salen del manifest.
+video_light_121.mov
+video_light_122.mov
+video_light_123.mp4
+video_light_124.avi
+video_light_125.mkv
+video_light_126.mov
+video_light_127.webm
+video_light_128.avi
+video_light_129.mkv
+video_light_130.mov
+video_light_131.mp4
+video_light_132.avi
+video_light_133.mp4
+video_light_134.webm
+video_light_135.mp4
+video_light_136.mp4
+video_light_137.mkv
+video_light_138.webm
+video_light_139.webm
+video_light_140.avi
+audio_light_86.ogg
+audio_light_87.aac
+audio_light_88.wav
+audio_light_89.aac
+audio_light_90.mp3
+audio_light_91.aac
+audio_light_92.flac
+audio_light_93.mp3
+audio_light_94.aac
+audio_light_95.wav
+audio_light_96.wav
+audio_light_97.wav
+audio_light_98.aac
+audio_light_99.wav
+audio_light_100.mp3
+image_46.png
+image_47.png
+image_48.png
+image_49.png
+image_50.jpg
+image_51.jpg
+image_52.webp
+image_53.webp
+image_54.webp
+image_55.png
+image_56.jpg
+image_57.png
+image_58.webp
+image_59.webp
+image_60.png
+image_61.png
+image_62.png
+image_63.webp
+image_64.webp
+image_65.jpg
+image_66.webp
+image_67.webp
+image_68.webp
+image_69.png
+image_70.jpg

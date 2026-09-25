@@ -1,0 +1,1638 @@
+{
+  "version": 1,
+  "description": "Fuentes reales con licencia libre, variantes derivadas con ffmpeg y casos límite del dataset de MediaCase. Lo consume dataset/scripts/fetch_real.sh; build_manifest.py lo mezcla con el manifest sintético.",
+  "user_agent": "mediacase-dataset/1.0 (proyecto academico TEC; https://github.com/lenokeckler/mediacase-platform)",
+  "sources": [
+    {
+      "id": "bbb_180p",
+      "url": "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4.zip",
+      "key": "real_bbb_180p.mp4",
+      "title": "Big Buck Bunny (320×180)",
+      "author": "Blender Foundation · www.bigbuckbunny.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://peach.blender.org/",
+      "event": "cine",
+      "zip_member": "BigBuckBunny_320x180.mp4",
+      "sha256": "109e3ede8790bd633f374ca311d9cc61dce8d7f98f5b0797ca98199c9fbceedf",
+      "file_sha256": "f78f39603e6774907f2faafabf26a667f4a6fc31769ec304a8a8f7c62d280508"
+    },
+    {
+      "id": "bbb_360p",
+      "url": "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v.zip",
+      "key": "real_bbb_360p.m4v",
+      "title": "Big Buck Bunny (640×360, m4v)",
+      "author": "Blender Foundation · www.bigbuckbunny.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://peach.blender.org/",
+      "event": "cine",
+      "zip_member": "BigBuckBunny_640x360.m4v",
+      "sha256": "7118242b6728d40c871479c5b3c0f0fb27d748089df15d7f1b469f297c74a2d6",
+      "file_sha256": "738e2f999860553d056dd79c952f58f63cbb73892a57c72342ce9e5330d9d2d7"
+    },
+    {
+      "id": "bbb_480p",
+      "url": "https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov.zip",
+      "key": "real_bbb_480p.mov",
+      "title": "Big Buck Bunny (480p, mov)",
+      "author": "Blender Foundation · www.bigbuckbunny.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://peach.blender.org/",
+      "event": "cine",
+      "zip_member": "big_buck_bunny_480p_h264.mov",
+      "sha256": "9735a4124928237f6f011a8a1f492a7c8139d918ddcea86ed0d438406addcbe9",
+      "file_sha256": "b2acb9bddcb384f9762f919af8f6d8b4be781e40ad2f35a37cc12beef55b9a27"
+    },
+    {
+      "id": "sintel_480",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
+      "key": "real_sintel_trailer_480p.mp4",
+      "title": "Sintel, tráiler (480p)",
+      "author": "Blender Foundation · durian.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://durian.blender.org/",
+      "event": "cine",
+      "sha256": "b670602fa00934ca27c4351bb0efe7ea7a07fae57284e44226025eeed7c51254"
+    },
+    {
+      "id": "sintel_720",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4",
+      "key": "real_sintel_trailer_720p.mp4",
+      "title": "Sintel, tráiler (720p)",
+      "author": "Blender Foundation · durian.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://durian.blender.org/",
+      "event": "cine",
+      "sha256": "cb0fe73fc0a7d543459996c0cdab730997e6eac1013d3ede18796f777cb7f273"
+    },
+    {
+      "id": "sintel_1080",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4",
+      "key": "real_sintel_trailer_1080p.mp4",
+      "title": "Sintel, tráiler (1080p)",
+      "author": "Blender Foundation · durian.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://durian.blender.org/",
+      "event": "cine",
+      "sha256": "34bbd52a4b89fdf63c8ace50b268da26653a59508288100cd3c23de276db7931"
+    },
+    {
+      "id": "sintel_mkv",
+      "url": "https://download.blender.org/durian/trailer/Sintel_Trailer1.1080p.DivX_Plus_HD.mkv",
+      "key": "real_sintel_trailer_1080p.mkv",
+      "title": "Sintel, tráiler (1080p, DivX Plus HD mkv)",
+      "author": "Blender Foundation · durian.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://durian.blender.org/",
+      "event": "cine",
+      "sha256": "c2ea5475b6772ca30307715cb104aece1e88cc3c73ce23348c4232ecd04a20f6"
+    },
+    {
+      "id": "sintel_4k_frame",
+      "url": "https://download.blender.org/demo/movies/Sintel_4k/tiff16/00000301.tif",
+      "key": "real_sintel_4k_fotograma_0301.tif",
+      "title": "Sintel, fotograma 301 en 4K (TIFF de 16 bits)",
+      "author": "Blender Foundation · durian.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://durian.blender.org/",
+      "event": "cine",
+      "note": "fotograma maestro 4096 px, 16 bits por canal",
+      "sha256": "b4a5bf6c0e8d71dc68dacf336f8a0711003f317bef9c172cd2331ac2c912fe97"
+    },
+    {
+      "id": "tos_720",
+      "url": "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov",
+      "key": "real_tos_720p.mov",
+      "title": "Tears of Steel (720p, mov)",
+      "author": "Blender Foundation · mango.blender.org",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Blender Foundation",
+      "page": "https://mango.blender.org/",
+      "event": "cine",
+      "sha256": "efa9062d9cdb7a338e40ad530dfdf234806743f29ae6a1a136b97ece4e588e8f"
+    },
+    {
+      "id": "ed_480",
+      "url": "https://download.blender.org/ED/elephantsdream-480-h264-st-aac.mov",
+      "key": "real_ed_480p.mov",
+      "title": "Elephants Dream (480p, mov)",
+      "author": "Orange Open Movie Project Studio · Blender Foundation",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "origin": "Blender Foundation",
+      "page": "https://orange.blender.org/",
+      "event": "cine",
+      "sha256": "a7dbacae5fa2bc345dbd7b10588575f3e2bba36012e9a93df5346467053b0634"
+    },
+    {
+      "id": "ed_wires",
+      "url": "https://download.blender.org/ED/1-TheWires.mp3",
+      "key": "real_ed_01_the_wires.mp3",
+      "title": "Elephants Dream OST: The Wires",
+      "author": "Jan Morgenstern · Orange Open Movie Project Studio · Blender Foundation",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "origin": "Blender Foundation",
+      "page": "https://orange.blender.org/",
+      "event": "concierto",
+      "sha256": "0d3005b8bab3b187f1aed3104948957f27dcd5b953131f1025cc00c8c7bc97a2"
+    },
+    {
+      "id": "ed_typewriter",
+      "url": "https://download.blender.org/ED/2-TypewriterDance.mp3",
+      "key": "real_ed_02_typewriter_dance.mp3",
+      "title": "Elephants Dream OST: Typewriter Dance",
+      "author": "Jan Morgenstern · Orange Open Movie Project Studio · Blender Foundation",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "origin": "Blender Foundation",
+      "page": "https://orange.blender.org/",
+      "event": "concierto",
+      "sha256": "a30a695df7b6bf758be71268d734778318f11756386a15a6bb414356ed7cedf7"
+    },
+    {
+      "id": "ed_endtitle",
+      "url": "https://download.blender.org/ED/5-EndTitle.mp3",
+      "key": "real_ed_05_end_title.mp3",
+      "title": "Elephants Dream OST: End Title",
+      "author": "Jan Morgenstern · Orange Open Movie Project Studio · Blender Foundation",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "origin": "Blender Foundation",
+      "page": "https://orange.blender.org/",
+      "event": "concierto",
+      "sha256": "1b2bab76f405b30d1f00d845987496f808c538860af3f30322f5417a9a8c3a74"
+    },
+    {
+      "id": "ed_cover",
+      "url": "https://download.blender.org/ED/cover.jpg",
+      "key": "real_ed_portada.jpg",
+      "title": "Elephants Dream, portada del DVD",
+      "author": "Orange Open Movie Project Studio · Blender Foundation",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "origin": "Blender Foundation",
+      "page": "https://orange.blender.org/",
+      "event": "cine",
+      "sha256": "a18be30822fea5413833871fc859c407e63a6096fcecbab8ee3173f90c20d5df"
+    },
+    {
+      "id": "grieg_morning",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Greig_PeerGynt/EdvardGrieg-PeerGyntSuiteNo.1Op.46-01-Morning.flac",
+      "key": "Grieg - La mañana (Peer Gynt).flac",
+      "title": "Grieg: Peer Gynt, suite n.º 1, op. 46 — I. La mañana",
+      "author": "Edvard Grieg (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "note": "nombre con tilde, eñe y espacios",
+      "sha256": "b667041ee4766e81b77e062e8fb1861c8aae418b4747fb0e3fec1dc0c80e3292"
+    },
+    {
+      "id": "grieg_mountain",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Greig_PeerGynt/EdvardGrieg-PeerGyntSuiteNo.1Op.46-04-InTheHallOfTheMountainKing.mp3",
+      "key": "real_grieg_rey_de_la_montana.mp3",
+      "title": "Grieg: Peer Gynt — IV. En la gruta del rey de la montaña",
+      "author": "Edvard Grieg (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "4f9b31aa9b7699847127711af927a20cf89a2049e43a3361dc756255b5f66266"
+    },
+    {
+      "id": "grieg_aase",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Greig_PeerGynt/EdvardGrieg-PeerGyntSuiteNo.1Op.46-02-AasesDeath.ogg",
+      "key": "real_grieg_muerte_de_aase.ogg",
+      "title": "Grieg: Peer Gynt — II. La muerte de Aase",
+      "author": "Edvard Grieg (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "9bb2438db5199000ff3b94dc293b15eaec81fa2bc5b05f5457b05586fde8f717"
+    },
+    {
+      "id": "mozart40_1",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Mozart_SymphonyNo.40inGMinor/WolfgangAmadeusMozart-SymphonyNo.40InGMinorK.550-01-MoltoAllegro.mp3",
+      "key": "real_mozart_sinfonia40_1.mp3",
+      "title": "Mozart: Sinfonía n.º 40, K. 550 — I. Molto allegro",
+      "author": "W. A. Mozart (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "86f5545cbbe87a75043ae2b90a077a220433ca1244a275743c5a384744c3083c"
+    },
+    {
+      "id": "mozart40_3",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Mozart_SymphonyNo.40inGMinor/WolfgangAmadeusMozart-SymphonyNo.40InGMinorK.550-03-MenuettoAllegretto.flac",
+      "key": "real_mozart_sinfonia40_3.flac",
+      "title": "Mozart: Sinfonía n.º 40, K. 550 — III. Menuetto. Allegretto",
+      "author": "W. A. Mozart (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "3f0cf2bb5938f2986b1a29503e35d05b4e6ee55512ff16fa255457c3540b1120"
+    },
+    {
+      "id": "magic_flute",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Mozart_MagicFluteOverture/WolfgangAmadeusMozart-MagicFluteOverture.mp3",
+      "key": "real_mozart_flauta_magica.mp3",
+      "title": "Mozart: La flauta mágica, obertura",
+      "author": "W. A. Mozart (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "9d61417b39b4d8c567a73da55be96774d232cfdbcc77201a881252e9261408f5"
+    },
+    {
+      "id": "suk",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Suk_Meditation/JosefSuk-Meditation.ogg",
+      "key": "real_suk_meditacion.ogg",
+      "title": "Suk: Meditación sobre el coral San Wenceslao",
+      "author": "Josef Suk (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "1d2843119f7299184dc52e43abd990d40156a77a1401af74bdf1f47bc56cac79"
+    },
+    {
+      "id": "vltava",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Smetana_Vltava/BedichSmetana-MVlast-Vltava.flac",
+      "key": "real_smetana_moldava.flac",
+      "title": "Smetana: Má vlast — Vltava (El Moldava)",
+      "author": "Bedřich Smetana (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "eaba28529d19169d1685f9fc047bd911ac42ee58184ef0655f359f6e8322a761"
+    },
+    {
+      "id": "goldberg_aria",
+      "url": "https://archive.org/download/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-01-GoldbergVariationsBwv.988-Aria.flac",
+      "key": "real_bach_goldberg_aria.flac",
+      "title": "Bach: Variaciones Goldberg, BWV 988 — Aria",
+      "author": "J. S. Bach (compositor) · grabación Musopen",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/MusopenCollectionAsFlac",
+      "event": "concierto",
+      "sha256": "1ebc90d079dd76009b871b4cd962e243a5f0e055e7c3e49441ec291e589d25d4"
+    },
+    {
+      "id": "chopin_nocturne",
+      "url": "https://archive.org/download/musopen-chopin/Nocturne%20Op.%209%20no.%202%20in%20E%20flat%20major.m4a",
+      "key": "real_chopin_nocturno_op9_2.m4a",
+      "title": "Chopin: Nocturno op. 9 n.º 2 (ALAC)",
+      "author": "Frédéric Chopin (compositor) · grabación Musopen",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/musopen-chopin",
+      "event": "concierto",
+      "note": "m4a con Apple Lossless (ALAC), no AAC",
+      "sha256": "b61184e736924631a46ae07e2702f5f2f56a299d9213d434f0505ef5b635880e"
+    },
+    {
+      "id": "chopin_waltz",
+      "url": "https://archive.org/download/musopen-chopin/Waltz%20Op.%2064%20no.%201%20in%20D%20flat%20major.m4a",
+      "key": "real_chopin_vals_op64_1.m4a",
+      "title": "Chopin: Vals op. 64 n.º 1, «del minuto» (ALAC)",
+      "author": "Frédéric Chopin (compositor) · grabación Musopen",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/musopen-chopin",
+      "event": "concierto",
+      "sha256": "41cad2410d39c060ee0adf1812961bf39d02f66703e8ce5168d7b5043cdc1dd4"
+    },
+    {
+      "id": "chopin_mazurka",
+      "url": "https://archive.org/download/musopen-chopin/Mazurka%20Op.%207%20no.%204%20in%20A%20flat%20major.mp3",
+      "key": "real_chopin_mazurka_op7_4.mp3",
+      "title": "Chopin: Mazurca op. 7 n.º 4",
+      "author": "Frédéric Chopin (compositor) · grabación Musopen",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Musopen / Internet Archive",
+      "page": "https://archive.org/details/musopen-chopin",
+      "event": "concierto",
+      "sha256": "ba2f19160b75b8190e70b731ffc2a68c736e4544d824429705f35a12a7558a98"
+    },
+    {
+      "id": "marti_01",
+      "url": "https://archive.org/download/edad_de_oro_1001_librivox/edaddeoro_01_marti.mp3",
+      "key": "real_marti_edad_de_oro_01.mp3",
+      "title": "José Martí: La Edad de Oro, cap. 1",
+      "author": "José Martí · voluntarios de LibriVox",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/edad_de_oro_1001_librivox",
+      "event": "clase",
+      "note": "voz hablada en español",
+      "sha256": "453ba5b12ee671757569dd0d4a84360a536ed61538daba04b09be6ebdbfbc3e3"
+    },
+    {
+      "id": "marti_00",
+      "url": "https://archive.org/download/edad_de_oro_1001_librivox/edaddeoro_00_marti_64kb.mp3",
+      "key": "real_marti_edad_de_oro_00.mp3",
+      "title": "José Martí: La Edad de Oro, presentación (64 kb/s)",
+      "author": "José Martí · voluntarios de LibriVox",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/edad_de_oro_1001_librivox",
+      "event": "clase",
+      "sha256": "7a9922523c43fca7bd9f7d260d0f379449e3c83b0c84c9556f26776d7fefa7f6"
+    },
+    {
+      "id": "girondo_01",
+      "url": "https://archive.org/download/20poemas_2005_librivox/20poemastranvia_01_girondo.mp3",
+      "key": "real_girondo_poema_01.mp3",
+      "title": "Oliverio Girondo: 20 poemas para ser leídos en el tranvía, n.º 1",
+      "author": "Oliverio Girondo · voluntarios de LibriVox",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/20poemas_2005_librivox",
+      "event": "clase",
+      "sha256": "4c13dec0261df9211190792294bdce5c5e46aaaf4bc1aca85519083b03e9ca82"
+    },
+    {
+      "id": "girondo_m4b",
+      "url": "https://archive.org/download/20poemas_2005_librivox/20Poems_librivox.m4b",
+      "key": "real_girondo_20_poemas.m4a",
+      "title": "Oliverio Girondo: 20 poemas… (audiolibro completo con capítulos)",
+      "author": "Oliverio Girondo · voluntarios de LibriVox",
+      "license": "Dominio público (PDM 1.0)",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/20poemas_2005_librivox",
+      "event": "clase",
+      "note": "se publica como .m4b (audiolibro MP4 con capítulos); se guarda como .m4a porque es el mismo contenedor",
+      "sha256": "eff6b6e41549d7f221f51884e4a18208237e7c2da78f1d90bf36030581eee659"
+    },
+    {
+      "id": "esopo_151",
+      "url": "https://archive.org/download/fabulas_esopo_06_librivox/fabulas_06_151_esopo.ogg",
+      "key": "real_esopo_fabula_151.ogg",
+      "title": "Fábulas de Esopo, vol. 6, n.º 151",
+      "author": "Esopo · trad. Jorge R. Rodríguez · LibriVox",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/fabulas_esopo_06_librivox",
+      "event": "clase",
+      "sha256": "03343e7cd959ed0c81bb841bf228570e652dc179e6016624314b54262995a3f4"
+    },
+    {
+      "id": "esopo_152",
+      "url": "https://archive.org/download/fabulas_esopo_06_librivox/fabulas_06_152_esopo.mp3",
+      "key": "real_esopo_fabula_152.mp3",
+      "title": "Fábulas de Esopo, vol. 6, n.º 152",
+      "author": "Esopo · trad. Jorge R. Rodríguez · LibriVox",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "LibriVox / Internet Archive",
+      "page": "https://archive.org/details/fabulas_esopo_06_librivox",
+      "event": "clase",
+      "sha256": "0f609d35274011d2abd736f42b55ac86acc674b289266042eab3a9658285648c"
+    },
+    {
+      "id": "irazu_01",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Iraz%C3%BA_Volcano_01.jpg",
+      "key": "Volcán Irazú 01.jpg",
+      "title": "Irazú Volcano 01 (panorámica 9917 px)",
+      "author": "Bernard Gagnon",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AIraz%C3%BA_Volcano_01.jpg",
+      "event": "naturaleza",
+      "note": "JPEG grande: 9917×3563 px",
+      "sha256": "5351c2a64f9cf533052a694266a3eabd8c71e90961b3ca48628e00504c53a39d"
+    },
+    {
+      "id": "irazu_02",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Iraz%C3%BA_Volcano_02.jpg",
+      "key": "Volcán Irazú 02.jpg",
+      "title": "Irazú Volcano 02",
+      "author": "Bernard Gagnon",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AIraz%C3%BA_Volcano_02.jpg",
+      "event": "naturaleza",
+      "sha256": "adcab9b57f58a1208a8a39df6b76bdb4bf18be10d1f70a6e2606e5e623869aa0"
+    },
+    {
+      "id": "cano_negro",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Ca%C3%B1o_Negro_Wildlife_Refuge_01.jpg",
+      "key": "Refugio Caño Negro.jpg",
+      "title": "Caño Negro Wildlife Refuge 01",
+      "author": "Bernard Gagnon",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ACa%C3%B1o_Negro_Wildlife_Refuge_01.jpg",
+      "event": "naturaleza",
+      "sha256": "78e624637c0619a3834bf113ca9481d5a357c6feb51a171d9ce805251cc628e8"
+    },
+    {
+      "id": "cartago",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/28/Basilica_of_Our_Lady_of_the_Angels%2C_Cartago_01.jpg",
+      "key": "real_basilica_cartago.jpg",
+      "title": "Basilica of Our Lady of the Angels, Cartago 01",
+      "author": "Bernard Gagnon",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ABasilica_of_Our_Lady_of_the_Angels%2C_Cartago_01.jpg",
+      "event": "naturaleza",
+      "sha256": "57ddc4e2dd8216ecc33a615c9b8c0c444ad8c6e555b22bb4e99b88fa991fad59"
+    },
+    {
+      "id": "orosi",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Iglesia_de_San_Jos%C3%A9_de_Orosi_01.jpg",
+      "key": "Iglesia de Orosi.jpg",
+      "title": "Iglesia de San José de Orosi 01",
+      "author": "Bernard Gagnon",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AIglesia_de_San_Jos%C3%A9_de_Orosi_01.jpg",
+      "event": "naturaleza",
+      "note": "foto vertical",
+      "sha256": "c488374a9027e8c8dc2211d41036e1d3a03187ada7a8c58aa4c525ecbbf7a99b"
+    },
+    {
+      "id": "arenal",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/69/Arenal_volcano_%2870785p%29.jpg",
+      "key": "real_volcan_arenal.jpg",
+      "title": "Arenal volcano (70785p)",
+      "author": "Rhododendrites",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AArenal_volcano_%2870785p%29.jpg",
+      "event": "naturaleza",
+      "sha256": "a7e583b6b2651be5832c02e57b84a22e2b96e98b4ef57cf8d685454842924f1b"
+    },
+    {
+      "id": "cdmx",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sunday_in_the_center_of_Mexico_City_%28close_to_Alameda_Park%29%2C_Schoeps_MS_Setup.flac",
+      "key": "real_domingo_cdmx.flac",
+      "title": "Sunday in the center of Mexico City (close to Alameda Park), Schoeps MS Setup",
+      "author": "Felix Blume",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ASunday_in_the_center_of_Mexico_City_%28close_to_Alameda_Park%29%2C_Schoeps_MS_Setup.flac",
+      "event": "naturaleza",
+      "note": "grabación de campo, micrófono MS",
+      "sha256": "eef94d371fc7c50939ea370d7fe5624347233928a0d4eff82e58e75436990f69"
+    },
+    {
+      "id": "taxquena",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Paisaje_sonoro_fuera_del_Metro_Taxque%C3%B1a.wav",
+      "key": "Paisaje sonoro Taxqueña.wav",
+      "title": "Paisaje sonoro fuera del Metro Taxqueña",
+      "author": "ProtoplasmaKid",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3APaisaje_sonoro_fuera_del_Metro_Taxque%C3%B1a.wav",
+      "event": "naturaleza",
+      "sha256": "499a06e9886e31d3ec45d0c04e283655be814be34f015bca9ad558f690282d06"
+    },
+    {
+      "id": "insurgentes",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/02/Cruce_de_Eje_1_e_Insurgentes_Norte.wav",
+      "key": "real_cruce_insurgentes.wav",
+      "title": "Cruce de Eje 1 e Insurgentes Norte",
+      "author": "ProtoplasmaKid",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ACruce_de_Eje_1_e_Insurgentes_Norte.wav",
+      "event": "naturaleza",
+      "sha256": "7b4fec1decc145ec13f7dd16d577b6a635c2a6140a0bff00e17b7e10b1955b72"
+    },
+    {
+      "id": "bridge",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Cars_passing_over_bridge.ogg",
+      "key": "real_autos_sobre_puente.ogg",
+      "title": "Cars passing over bridge",
+      "author": "Dsw4",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ACars_passing_over_bridge.ogg",
+      "event": "naturaleza",
+      "sha256": "4bd87f3259dc64ef99d6ed7b68ae2a00bab9c38b1a45942acc1daf70d6937ffa"
+    },
+    {
+      "id": "jungle",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/34/The_Loyalist_-_Jungle.ogg",
+      "key": "real_loyalist_jungle.ogg",
+      "title": "The Loyalist - Jungle",
+      "author": "The Loyalist",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AThe_Loyalist_-_Jungle.ogg",
+      "event": "concierto",
+      "sha256": "7df9b18478b50cdbc2ee673a6763e4ab5e2bee819da9b75214173499b690c2d1"
+    },
+    {
+      "id": "solitaire",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/43/Costa_Rica_Chirripo_Solitaire_Myadestes_melanops.ogg",
+      "key": "real_jilguero_chirripo.ogg",
+      "title": "Costa Rica Chirripo Solitaire Myadestes melanops",
+      "author": "Claude Humbert",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ACosta_Rica_Chirripo_Solitaire_Myadestes_melanops.ogg",
+      "event": "naturaleza",
+      "note": "audio muy corto (1.6 s, 14 KB): caso límite de duración",
+      "sha256": "26f704e21b6e42e5a404247cab6f82dcc2553f841f6339934e072eeaf194d13e"
+    },
+    {
+      "id": "earth_gif",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif",
+      "key": "real_tierra_rotando.gif",
+      "title": "Rotating earth (large)",
+      "author": "Marvel",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ARotating_earth_%28large%29.gif",
+      "event": "clase",
+      "note": "GIF animado, 44 cuadros",
+      "sha256": "b0acdc9a01f91f6123dbff38d4bee59d0d6e4b26071b5c83937b242b6b202378"
+    },
+    {
+      "id": "newton_gif",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif",
+      "key": "real_pendulo_newton.gif",
+      "title": "Newtons cradle animation book 2",
+      "author": "DemonDeLuxe (Dominique Toussaint)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ANewtons_cradle_animation_book_2.gif",
+      "event": "clase",
+      "note": "GIF animado",
+      "sha256": "47f6bcd67d0fdff8074e256a034ae7cd2693613df16ccf529e48d93b62b424f0"
+    },
+    {
+      "id": "png_alpha",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png",
+      "key": "real_png_transparencia.png",
+      "title": "PNG transparency demonstration 1",
+      "author": "Ed g2s (fuente POV-Ray de Gilles Tran)",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3APNG_transparency_demonstration_1.png",
+      "event": "clase",
+      "note": "PNG RGBA con transparencia parcial",
+      "sha256": "c4e870d358d64ce677e958c156d0e3fba466993d8e915fc81c5dc64937a9b696"
+    },
+    {
+      "id": "dice",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Dice.png",
+      "key": "real_dados.png",
+      "title": "Dice",
+      "author": "Nein Arimasen",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ADice.png",
+      "event": "clase",
+      "note": "PNG RGB sin canal alfa (contraste con real_png_transparencia.png, que sí lo tiene)",
+      "sha256": "0e16b19f0f4a5dcfe3bd10449fa3bd41133c1588861f568da508ffaeda894b9c"
+    },
+    {
+      "id": "emblem",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Emblem-favorites.svg/1280px-Emblem-favorites.svg.png",
+      "key": "real_icono_estrella.png",
+      "title": "Emblem-favorites (SVG renderizado a PNG de 1280 px por Wikimedia)",
+      "author": "The Tango! Desktop Project",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3AEmblem-favorites.svg",
+      "event": "clase",
+      "note": "ícono SVG de dominio público; se usa el PNG que renderiza Wikimedia (con alfa)",
+      "verify": "warn",
+      "sha256": "726491b4f204c8e98bb39de0cc4f054d525431bd2f62315234c0641b57d52e3e"
+    },
+    {
+      "id": "sun_poster",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Sun_poster.svg/1280px-Sun_poster.svg.png",
+      "key": "real_sol_poster.png",
+      "title": "Sun poster (SVG renderizado a PNG de 1280 px por Wikimedia)",
+      "author": "Kelvinsong",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "origin": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File%3ASun_poster.svg",
+      "event": "clase",
+      "verify": "warn",
+      "sha256": "1c9a5e5e387d0b56a4c72fec2dd650260572c36592d8f15e7db139ff6456eed8"
+    },
+    {
+      "id": "atlas_4k",
+      "url": "https://images-assets.nasa.gov/video/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844~orig.mp4",
+      "key": "real_nasa_atlas_v_4k.mp4",
+      "title": "Atlas V STP-3 / LCRD: vistas aisladas del lanzamiento (4K, 60 fps)",
+      "author": "NASA / Kennedy Space Center",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844",
+      "event": "documental",
+      "note": "video 4K real: 3840×2160 a 59.94 fps",
+      "sha256": "efe08f3355be8dd6c5374e7efe590493a0e23da9af720a47641c3c29fdde2f4d"
+    },
+    {
+      "id": "atlas_360",
+      "url": "https://images-assets.nasa.gov/video/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844~small.mp4",
+      "key": "real_nasa_atlas_v_360p.mp4",
+      "title": "Atlas V STP-3 / LCRD: vistas del lanzamiento (versión 360p)",
+      "author": "NASA / Kennedy Space Center",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/KSC-20211207-MH-AJW01-0001-Atlas_V_LCRD_STP3_Isolated_Launch_Views--4K--3282844",
+      "event": "documental",
+      "sha256": "ece4cc9923e5cfc70d006f1f455f0796a6b50c87ed2c7b0f2fcddfbe30f2cd18"
+    },
+    {
+      "id": "moon",
+      "url": "https://images-assets.nasa.gov/video/NHQ_2019_1219_How%20We%20Are%20Going%20to%20the%20Moon%20-%204K/NHQ_2019_1219_How%20We%20Are%20Going%20to%20the%20Moon%20-%204K~orig.mp4",
+      "key": "real_nasa_como_iremos_a_la_luna.mp4",
+      "title": "How We Are Going to the Moon",
+      "author": "NASA",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/NHQ_2019_1219_How%20We%20Are%20Going%20to%20the%20Moon%20-%204K",
+      "event": "documental",
+      "note": "pese al nombre, el archivo publicado es 1280×720",
+      "sha256": "bfce4504e99e57d10145d64c158dc430073c807c2f5724b9f9c6906afc630629"
+    },
+    {
+      "id": "podcast",
+      "url": "https://images-assets.nasa.gov/audio/Ep393_Crew-11/Ep393_Crew-11~64k.m4a",
+      "key": "real_nasa_podcast_ep393.m4a",
+      "title": "Houston We Have a Podcast, ep. 393: Crew-11",
+      "author": "NASA Johnson Space Center",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/Ep393_Crew-11",
+      "event": "entrevista",
+      "note": "voz hablada (entrevista), AAC 64 kb/s",
+      "sha256": "bd44d68b61a8f6638e1f8ac7afe24ed73df9b524c771264de31935f18c496d32"
+    },
+    {
+      "id": "as11",
+      "url": "https://images-assets.nasa.gov/image/as11-40-5903/as11-40-5903~orig.jpg",
+      "key": "real_nasa_apolo11_aldrin.jpg",
+      "title": "Apolo 11: Buzz Aldrin en la superficie lunar (AS11-40-5903)",
+      "author": "NASA",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/as11-40-5903",
+      "event": "documental",
+      "sha256": "e34e716f1dd66040e9fd89454f3a390b11ecd9619321b963b0b7631dffe32021"
+    },
+    {
+      "id": "pillars",
+      "url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000842/GSFC_20171208_Archive_e000842~orig.jpg",
+      "key": "real_nasa_pilares_de_la_creacion.jpg",
+      "title": "Hubble revisita los Pilares de la Creación",
+      "author": "NASA / ESA / Hubble",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/GSFC_20171208_Archive_e000842",
+      "event": "documental",
+      "sha256": "049b096fd781c11bfcda743b7150eebc86d52a25b8b1128964241dc29933ded1"
+    },
+    {
+      "id": "bluemarble",
+      "url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001788/GSFC_20171208_Archive_e001788~orig.jpg",
+      "key": "real_nasa_blue_marble.jpg",
+      "title": "Blue Marble 2012, hemisferio oriental",
+      "author": "NASA Goddard",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/GSFC_20171208_Archive_e001788",
+      "event": "documental",
+      "sha256": "061d91670edff272a54eb1f9804d625e5886cada1df5891330c60ea2b7283837"
+    },
+    {
+      "id": "helene",
+      "url": "https://images-assets.nasa.gov/image/iss072e001649/iss072e001649~orig.jpg",
+      "key": "real_nasa_huracan_helene.jpg",
+      "title": "El huracán Helene visto desde la Estación Espacial",
+      "author": "NASA",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/iss072e001649",
+      "event": "documental",
+      "sha256": "267b691738a298396dc4a95741e1c081be5141767908d093321a11a924b6f438"
+    },
+    {
+      "id": "earthrise",
+      "url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000496/GSFC_20171208_Archive_e000496~orig.png",
+      "key": "real_nasa_earthrise.png",
+      "title": "Earthrise en alta resolución (LRO)",
+      "author": "NASA Goddard / Arizona State University",
+      "license": "Dominio público (NASA)",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "origin": "NASA Image and Video Library",
+      "page": "https://images.nasa.gov/details/GSFC_20171208_Archive_e000496",
+      "event": "documental",
+      "sha256": "7b26a0ce3f4e0dfa0ffbba6154ebb403ebc947b633228010eeb09ec67ebdc6b4"
+    },
+    {
+      "id": "duck_avi",
+      "url": "https://archive.org/download/DuckandC1951/DuckandC1951.avi",
+      "key": "real_duck_and_cover_cinepak.avi",
+      "title": "Duck and Cover (1951), AVI Cinepak",
+      "author": "Archer Productions (1951) · Prelinger Archives",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Prelinger Archives / Internet Archive",
+      "page": "https://archive.org/details/DuckandC1951",
+      "event": "cine",
+      "note": "códec de video antiguo (Cinepak)",
+      "sha256": "7105c9fec6f4ff0137a44681f23ad3dd6b8b18d2dccdd97e5a6c736e18610dd5"
+    },
+    {
+      "id": "duck_mp4",
+      "url": "https://archive.org/download/DuckandC1951/DuckandC1951_512kb.mp4",
+      "key": "real_duck_and_cover_512kb.mp4",
+      "title": "Duck and Cover (1951), MPEG-4 512 kb/s",
+      "author": "Archer Productions (1951) · Prelinger Archives",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Prelinger Archives / Internet Archive",
+      "page": "https://archive.org/details/DuckandC1951",
+      "event": "cine",
+      "sha256": "ab0a244f9705792c8b24e9ab1e1f85a7d8ea0c3c1b8cbf8810271e608b6578b6"
+    },
+    {
+      "id": "duck_mpeg",
+      "url": "https://archive.org/download/DuckandC1951/DuckandC1951.mpeg",
+      "key": "real_duck_and_cover.mpeg",
+      "title": "Duck and Cover (1951), MPEG-2",
+      "author": "Archer Productions (1951) · Prelinger Archives",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Prelinger Archives / Internet Archive",
+      "page": "https://archive.org/details/DuckandC1951",
+      "event": "cine",
+      "note": "MPEG-2 de programa, entrelazado 4:3",
+      "sha256": "c7594c18aff204bfeb2c34b8a7c9aa5e619d4a3336f53e16e43ab0e7c5f3791b"
+    },
+    {
+      "id": "duck_gif",
+      "url": "https://archive.org/download/DuckandC1951/DuckandC1951.gif",
+      "key": "real_duck_and_cover.gif",
+      "title": "Duck and Cover (1951), GIF animado de vista previa",
+      "author": "Archer Productions (1951) · Prelinger Archives",
+      "license": "Dominio público",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Prelinger Archives / Internet Archive",
+      "page": "https://archive.org/details/DuckandC1951",
+      "event": "cine",
+      "sha256": "0cb4e0e79d97b5f86d3c5c9249c3f5916707b18987c88bae625f7d498218ede4"
+    }
+  ],
+  "derived": [
+    {
+      "key": "real_sintel_clip.ts",
+      "from": "sintel_1080",
+      "args": [
+        "-t",
+        "20",
+        "-vf",
+        "scale=-2:720",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
+        "-f",
+        "mpegts"
+      ],
+      "note": "MPEG-TS (transport stream) de 20 s, 720p"
+    },
+    {
+      "key": "real_bbb_clip.flv",
+      "from": "bbb_360p",
+      "args": [
+        "-t",
+        "20",
+        "-c:v",
+        "flv",
+        "-b:v",
+        "800k",
+        "-c:a",
+        "libmp3lame",
+        "-ar",
+        "44100",
+        "-b:a",
+        "96k"
+      ],
+      "note": "FLV con Sorenson Spark (flv1) + MP3",
+      "input": [
+        "-ss",
+        "60"
+      ]
+    },
+    {
+      "key": "real_bbb_clip.3gp",
+      "from": "bbb_180p",
+      "args": [
+        "-t",
+        "20",
+        "-vf",
+        "scale=176:144",
+        "-c:v",
+        "h263",
+        "-b:v",
+        "200k",
+        "-c:a",
+        "aac",
+        "-ar",
+        "22050",
+        "-ac",
+        "1",
+        "-b:a",
+        "32k"
+      ],
+      "note": "3GP de celular: H.263 QCIF 176×144 + AAC mono",
+      "input": [
+        "-ss",
+        "120"
+      ]
+    },
+    {
+      "key": "real_bbb_clip.mpg",
+      "from": "bbb_360p",
+      "args": [
+        "-t",
+        "20",
+        "-c:v",
+        "mpeg1video",
+        "-b:v",
+        "1500k",
+        "-c:a",
+        "mp2",
+        "-b:a",
+        "192k",
+        "-f",
+        "mpeg"
+      ],
+      "note": "MPEG-1 video + MP2 (programa MPEG-PS), extensión .mpg",
+      "input": [
+        "-ss",
+        "90"
+      ]
+    },
+    {
+      "key": "Despegue en cámara lenta.mov",
+      "from": "atlas_4k",
+      "args": [
+        "-t",
+        "12",
+        "-vf",
+        "scale=1920:-2,setpts=2*PTS",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p",
+        "-r",
+        "30000/1001"
+      ],
+      "note": "nombre con tildes y espacios; 60 fps reinterpretados a 30 fps = cámara lenta ×2, sin audio",
+      "input": [
+        "-ss",
+        "150"
+      ]
+    },
+    {
+      "key": "real_tos_clip.m4v",
+      "from": "tos_720",
+      "args": [
+        "-t",
+        "20",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
+        "-f",
+        "ipod"
+      ],
+      "note": "m4v (contenedor iPod): video H.264 copiado sin recodificar, audio MP3 original pasado a AAC",
+      "input": [
+        "-ss",
+        "300"
+      ]
+    },
+    {
+      "key": "real_sintel_vertical_9x16.mp4",
+      "from": "sintel_1080",
+      "args": [
+        "-t",
+        "15",
+        "-vf",
+        "crop=ih*9/16:ih,scale=1080:1920",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k"
+      ],
+      "note": "video vertical 9:16 (1080×1920)"
+    },
+    {
+      "key": "real_bbb_sin_audio.mp4",
+      "from": "bbb_480p",
+      "args": [
+        "-t",
+        "20",
+        "-an",
+        "-vf",
+        "scale=854:480",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p"
+      ],
+      "note": "video SIN pista de audio: extract_audio debe fallar con un error claro",
+      "input": [
+        "-ss",
+        "30"
+      ]
+    },
+    {
+      "key": "real_atlas_4k_clip.mp4",
+      "from": "atlas_4k",
+      "args": [
+        "-t",
+        "10",
+        "-c",
+        "copy"
+      ],
+      "note": "4K real (3840×2160, 60 fps) en 10 s, copia de flujos",
+      "input": [
+        "-ss",
+        "120"
+      ]
+    },
+    {
+      "key": "real_tos_vfr.mkv",
+      "from": "tos_720",
+      "args": [
+        "-t",
+        "20",
+        "-vf",
+        "select='lt(mod(n\\,48)\\,24)+not(mod(n\\,3))'",
+        "-fps_mode",
+        "passthrough",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "23",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k"
+      ],
+      "note": "frecuencia de cuadro VARIABLE: tramos a 24 fps y tramos a 8 fps",
+      "input": [
+        "-ss",
+        "60"
+      ]
+    },
+    {
+      "key": "real_ed_clip.wmv",
+      "from": "ed_480",
+      "args": [
+        "-t",
+        "20",
+        "-c:v",
+        "wmv2",
+        "-b:v",
+        "1200k",
+        "-c:a",
+        "wmav2",
+        "-b:a",
+        "128k",
+        "-f",
+        "asf"
+      ],
+      "note": "Windows Media (WMV8 + WMA2 en ASF)",
+      "input": [
+        "-ss",
+        "60"
+      ]
+    },
+    {
+      "key": "real_bbb_vp9.webm",
+      "from": "bbb_360p",
+      "args": [
+        "-t",
+        "15",
+        "-c:v",
+        "libvpx-vp9",
+        "-deadline",
+        "realtime",
+        "-cpu-used",
+        "8",
+        "-b:v",
+        "800k",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "96k"
+      ],
+      "note": "WebM con VP9 + Opus (el sintético solo tiene VP8 + Vorbis)",
+      "input": [
+        "-ss",
+        "200"
+      ]
+    },
+    {
+      "key": "real_sintel_hevc.mkv",
+      "from": "sintel_720",
+      "args": [
+        "-t",
+        "15",
+        "-c:v",
+        "libx265",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-x265-params",
+        "log-level=error",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k"
+      ],
+      "note": "H.265/HEVC en Matroska"
+    },
+    {
+      "key": "real_bbb_av1.mkv",
+      "from": "bbb_180p",
+      "args": [
+        "-t",
+        "8",
+        "-c:v",
+        "libaom-av1",
+        "-cpu-used",
+        "8",
+        "-row-mt",
+        "1",
+        "-b:v",
+        "300k",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "64k"
+      ],
+      "note": "AV1 + Opus en Matroska",
+      "input": [
+        "-ss",
+        "300"
+      ]
+    },
+    {
+      "key": "real_duck_clip_xvid.avi",
+      "from": "duck_mp4",
+      "args": [
+        "-t",
+        "30",
+        "-c:v",
+        "mpeg4",
+        "-vtag",
+        "xvid",
+        "-q:v",
+        "5",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "96k"
+      ],
+      "note": "AVI con MPEG-4 Part 2 (etiqueta XviD) + MP3, película 4:3 de 1951",
+      "input": [
+        "-ss",
+        "60"
+      ]
+    },
+    {
+      "key": "Vals del minuto (Chopin).mp3",
+      "from": "chopin_waltz",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "libmp3lame",
+        "-q:a",
+        "2"
+      ],
+      "note": "nombre con paréntesis y espacios; MP3 VBR desde ALAC"
+    },
+    {
+      "key": "real_mozart_sinfonia40_1.opus",
+      "from": "mozart40_1",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "96k"
+      ],
+      "note": "Opus 96 kb/s, movimiento completo"
+    },
+    {
+      "key": "real_grieg_manana_clip.aiff",
+      "from": "grieg_morning",
+      "args": [
+        "-t",
+        "30",
+        "-map",
+        "0:a",
+        "-c:a",
+        "pcm_s16be"
+      ],
+      "note": "AIFF (PCM big-endian), 30 s"
+    },
+    {
+      "key": "real_voz_marti_8khz_mono.wav",
+      "from": "marti_01",
+      "args": [
+        "-t",
+        "120",
+        "-map",
+        "0:a",
+        "-ac",
+        "1",
+        "-ar",
+        "8000",
+        "-c:a",
+        "pcm_s16le"
+      ],
+      "note": "WAV mono a 8 kHz (calidad telefónica), voz",
+      "input": [
+        "-ss",
+        "30"
+      ]
+    },
+    {
+      "key": "real_bach_aria_24bit_96khz.flac",
+      "from": "goldberg_aria",
+      "args": [
+        "-t",
+        "45",
+        "-map",
+        "0:a",
+        "-af",
+        "aresample=96000",
+        "-sample_fmt",
+        "s32",
+        "-bits_per_raw_sample",
+        "24",
+        "-c:a",
+        "flac"
+      ],
+      "note": "FLAC 24 bits / 96 kHz (remuestreado desde 44.1 kHz), 45 s"
+    },
+    {
+      "key": "real_girondo_poema_01.aac",
+      "from": "girondo_01",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "64k",
+        "-f",
+        "adts"
+      ],
+      "note": "AAC crudo (ADTS), voz"
+    },
+    {
+      "key": "Entrevista día 2.m4a",
+      "from": "podcast",
+      "args": [
+        "-t",
+        "180",
+        "-map",
+        "0:a",
+        "-c",
+        "copy"
+      ],
+      "note": "nombre con tilde y espacios; 3 min de entrevista por copia de flujo",
+      "input": [
+        "-ss",
+        "300"
+      ]
+    },
+    {
+      "key": "real_domingo_cdmx_clip.ogg",
+      "from": "cdmx",
+      "args": [
+        "-t",
+        "60",
+        "-map",
+        "0:a",
+        "-c:a",
+        "libvorbis",
+        "-q:a",
+        "5"
+      ],
+      "note": "Vorbis calidad 5, 60 s de grabación de campo"
+    },
+    {
+      "key": "real_ed_end_title.wma",
+      "from": "ed_endtitle",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "wmav2",
+        "-b:a",
+        "128k",
+        "-f",
+        "asf"
+      ],
+      "note": "WMA2 en ASF"
+    },
+    {
+      "key": "real_grieg_rey_de_la_montana.wav",
+      "from": "grieg_mountain",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "pcm_s16le"
+      ],
+      "note": "WAV PCM 16 bits, pieza completa"
+    },
+    {
+      "key": "real_esopo_22khz_mono.mp3",
+      "from": "esopo_152",
+      "args": [
+        "-map",
+        "0:a",
+        "-ac",
+        "1",
+        "-ar",
+        "22050",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "32k"
+      ],
+      "note": "MP3 mono 22.05 kHz a 32 kb/s"
+    },
+    {
+      "key": "real_bbb_banda_sonora.mp3",
+      "from": "bbb_480p",
+      "args": [
+        "-map",
+        "0:a",
+        "-c:a",
+        "libmp3lame",
+        "-b:a",
+        "192k"
+      ],
+      "note": "audio completo extraído de la película"
+    },
+    {
+      "key": "real_marti_voz.opus",
+      "from": "marti_00",
+      "args": [
+        "-map",
+        "0:a",
+        "-ac",
+        "1",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "24k",
+        "-application",
+        "voip"
+      ],
+      "note": "Opus mono 24 kb/s en modo voz"
+    },
+    {
+      "key": "real_irazu_panorama.tiff",
+      "from": "irazu_01",
+      "args": [
+        "-vf",
+        "scale=4000:-2",
+        "-c:v",
+        "tiff",
+        "-compression_algo",
+        "lzw",
+        "-frames:v",
+        "1"
+      ],
+      "note": "TIFF con compresión LZW, 4000 px"
+    },
+    {
+      "key": "real_volcan_arenal.bmp",
+      "from": "arenal",
+      "args": [
+        "-vf",
+        "scale=1920:-2",
+        "-frames:v",
+        "1",
+        "-c:v",
+        "bmp"
+      ],
+      "note": "BMP de 24 bits sin compresión"
+    },
+    {
+      "key": "real_bbb_animado.gif",
+      "from": "bbb_360p",
+      "args": [
+        "-vf",
+        "fps=12,scale=320:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse",
+        "-loop",
+        "0"
+      ],
+      "note": "GIF animado de 3 s con paleta optimizada",
+      "input": [
+        "-ss",
+        "45",
+        "-t",
+        "3"
+      ]
+    },
+    {
+      "key": "real_sintel_4k_fotograma.png",
+      "from": "sintel_4k_frame",
+      "args": [
+        "-frames:v",
+        "1",
+        "-c:v",
+        "png",
+        "-pix_fmt",
+        "rgb48be"
+      ],
+      "note": "PNG de 16 bits por canal, 4K"
+    },
+    {
+      "key": "real_icono_estrella_alpha.webp",
+      "from": "emblem",
+      "args": [
+        "-frames:v",
+        "1",
+        "-c:v",
+        "libwebp",
+        "-lossless",
+        "1"
+      ],
+      "note": "WebP sin pérdida con canal alfa"
+    },
+    {
+      "key": "Portada álbum.png",
+      "from": "ed_cover",
+      "args": [
+        "-vf",
+        "scale=1000:-2",
+        "-frames:v",
+        "1"
+      ],
+      "note": "nombre con tilde y espacio"
+    },
+    {
+      "key": "real_nasa_aldrin.tif",
+      "from": "as11",
+      "args": [
+        "-frames:v",
+        "1",
+        "-c:v",
+        "tiff",
+        "-compression_algo",
+        "deflate"
+      ],
+      "note": "TIFF (extensión .tif) con compresión deflate"
+    },
+    {
+      "key": "real_nasa_blue_marble_gris.jpg",
+      "from": "bluemarble",
+      "args": [
+        "-vf",
+        "format=gray",
+        "-frames:v",
+        "1",
+        "-q:v",
+        "3"
+      ],
+      "note": "JPEG en escala de grises (un solo canal)"
+    },
+    {
+      "key": "real_icono_16px.png",
+      "from": "emblem",
+      "args": [
+        "-vf",
+        "scale=16:16",
+        "-frames:v",
+        "1"
+      ],
+      "note": "imagen diminuta (16×16): miniatura más grande que el original"
+    },
+    {
+      "key": "real_orosi_reducida.webp",
+      "from": "orosi",
+      "args": [
+        "-vf",
+        "scale=800:-2",
+        "-frames:v",
+        "1",
+        "-c:v",
+        "libwebp",
+        "-quality",
+        "80"
+      ],
+      "note": "WebP con pérdida, vertical"
+    },
+    {
+      "key": "real_pendulo_newton_animado.webp",
+      "from": "newton_gif",
+      "args": [
+        "-c:v",
+        "libwebp_anim",
+        "-lossless",
+        "0",
+        "-quality",
+        "75",
+        "-loop",
+        "0"
+      ],
+      "note": "WebP ANIMADO"
+    }
+  ],
+  "edge": [
+    {
+      "key": "edge_truncado.mp4",
+      "recipe": "truncate",
+      "from": "bbb_180p",
+      "fraction": 0.3,
+      "type": "video",
+      "format": "mp4",
+      "expected": "failed",
+      "note": "primer 30 % de los bytes de un MP4 con el índice (moov) al final: ffmpeg no encuentra el moov y el worker debe fallar la sub-tarea → el caso cierra partially_completed"
+    },
+    {
+      "key": "edge_vacio.mp4",
+      "recipe": "empty",
+      "type": "video",
+      "format": "mp4",
+      "expected": "failed",
+      "note": "archivo de 0 bytes: el worker debe fallar con «archivo vacío / formato inválido» sin tumbar el caso"
+    },
+    {
+      "key": "edge_mp3_con_extension_mp4.mp4",
+      "recipe": "copy",
+      "from": "ed_wires",
+      "type": "audio",
+      "format": "mp3",
+      "extension": "mp4",
+      "expected": "completed",
+      "note": "MP3 renombrado a .mp4: el coordinador debe olfatear el contenido real (audio) y enrutarlo como audio, no como video"
+    },
+    {
+      "key": "edge_mkv_con_extension_mp4.mp4",
+      "recipe": "copy",
+      "from": "derived:real_sintel_hevc.mkv",
+      "type": "video",
+      "format": "mkv",
+      "extension": "mp4",
+      "expected": "completed",
+      "note": "Matroska (HEVC) renombrado a .mp4: el tipo coincide (video) pero el contenedor real es mkv; convertir a mp4 sí es un cambio real"
+    },
+    {
+      "key": "edge_png_con_extension_jpg.jpg",
+      "recipe": "copy",
+      "from": "png_alpha",
+      "type": "image",
+      "format": "png",
+      "extension": "jpg",
+      "expected": "completed",
+      "note": "PNG con alfa (RGBA) renombrado a .jpg: el olfateo detecta PNG; la miniatura debe aplanar o conservar la transparencia sin error"
+    },
+    {
+      "key": "edge_texto_con_extension_wav.wav",
+      "recipe": "text",
+      "type": "audio",
+      "format": "wav",
+      "expected": "failed",
+      "text": "Esto no es audio. Archivo de prueba de MediaCase: texto plano con extensión .wav para verificar que el worker falla con un error claro y que el caso termina partially_completed.\n",
+      "note": "texto plano con extensión .wav: no hay cabecera RIFF; debe fallar en el worker (o rechazarse al olfatear) con detalle del error"
+    },
+    {
+      "key": "edge_extension_mayusculas.MP4",
+      "recipe": "copy",
+      "from": "sintel_480",
+      "type": "video",
+      "format": "mp4",
+      "extension": "MP4",
+      "expected": "completed",
+      "note": "extensión en MAYÚSCULAS: el routing debe normalizarla y procesarlo como un mp4 cualquiera"
+    },
+    {
+      "key": "edge_bytes_corruptos.mkv",
+      "recipe": "corrupt",
+      "from": "derived:real_tos_vfr.mkv",
+      "offset_fraction": 0.4,
+      "length": 65536,
+      "type": "video",
+      "format": "mkv",
+      "expected": "completed_or_failed",
+      "note": "Matroska válido con 64 KiB puestos en cero al 40 % del archivo: ffmpeg suele terminar con advertencias y un salto visible; si el worker trata los errores de decodificación como fatales, falla. Cualquiera de los dos es aceptable, lo que no debe pasar es que el worker se cuelgue"
+    }
+  ]
+}

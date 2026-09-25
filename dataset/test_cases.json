@@ -1,0 +1,957 @@
+{
+  "description": "Casos de prueba curados del dataset v3. build_manifest.py los copia a dataset/manifest.json (test_cases); check_manifest.py valida que las claves existan y que operación, destino y ancho sean válidos para cada archivo.",
+  "test_cases": [
+    {
+      "id": "tc01-pelicula-formatos",
+      "name": "Película abierta en varios formatos",
+      "kind": "heterogeneous",
+      "description": "Big Buck Bunny en siete contenedores y códecs (mp4, m4v, mov, flv, 3gp, mpg, webm VP9, mkv AV1): conversiones, extracción de audio, miniaturas y metadatos sobre la misma película.",
+      "files": [
+        {
+          "key": "real_bbb_180p.mp4",
+          "operation": "convert",
+          "target": "webm"
+        },
+        {
+          "key": "real_bbb_360p.m4v",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_480p.mov",
+          "operation": "extract_audio",
+          "target": "flac"
+        },
+        {
+          "key": "real_bbb_clip.flv",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_clip.3gp",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "real_bbb_clip.mpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 640
+        },
+        {
+          "key": "real_bbb_vp9.webm",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_av1.mkv",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_sin_audio.mp4",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 1280
+        },
+        {
+          "key": "real_bbb_animado.gif",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 320
+        },
+        {
+          "key": "real_bbb_banda_sonora.mp3",
+          "operation": "convert_audio",
+          "target": "ogg"
+        },
+        {
+          "key": "real_sintel_trailer_1080p.mp4",
+          "operation": "metadata",
+          "target": "json"
+        }
+      ]
+    },
+    {
+      "id": "tc02-album-clasico",
+      "name": "Álbum clásico enriquecido",
+      "kind": "homogeneous",
+      "description": "Doce grabaciones reales de Musopen (flac, mp3, ogg, m4a ALAC) enriquecidas con título, compositor como artista, álbum, año y una nota descriptiva en el campo de letra.",
+      "files": [
+        {
+          "key": "Grieg - La mañana (Peer Gynt).flac",
+          "operation": "enrich_audio",
+          "target": "flac",
+          "enrichment": {
+            "title": "La mañana (Peer Gynt, suite n.º 1)",
+            "artist": "Edvard Grieg",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1875",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental. Abre la suite n.º 1 que Grieg extrajo de su música incidental para el drama Peer Gynt de Ibsen."
+          }
+        },
+        {
+          "key": "real_grieg_rey_de_la_montana.mp3",
+          "operation": "enrich_audio",
+          "target": "mp3",
+          "enrichment": {
+            "title": "En la gruta del rey de la montaña",
+            "artist": "Edvard Grieg",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1875",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental. Un tema breve que se repite cada vez más rápido y más fuerte."
+          }
+        },
+        {
+          "key": "real_grieg_muerte_de_aase.ogg",
+          "operation": "enrich_audio",
+          "target": "ogg",
+          "enrichment": {
+            "title": "La muerte de Aase",
+            "artist": "Edvard Grieg",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1875",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental para cuerdas, de la suite n.º 1 de Peer Gynt."
+          }
+        },
+        {
+          "key": "real_mozart_sinfonia40_1.mp3",
+          "operation": "enrich_audio",
+          "target": "mp3",
+          "enrichment": {
+            "title": "Sinfonía n.º 40, K. 550: I. Molto allegro",
+            "artist": "Wolfgang Amadeus Mozart",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1788",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental. Primer movimiento de una de las dos únicas sinfonías de Mozart en tonalidad menor."
+          }
+        },
+        {
+          "key": "real_mozart_sinfonia40_3.flac",
+          "operation": "enrich_audio",
+          "target": "flac",
+          "enrichment": {
+            "title": "Sinfonía n.º 40, K. 550: III. Menuetto",
+            "artist": "Wolfgang Amadeus Mozart",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1788",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental. Minueto con trío central en sol mayor."
+          }
+        },
+        {
+          "key": "real_mozart_flauta_magica.mp3",
+          "operation": "enrich_audio",
+          "target": "mp3",
+          "enrichment": {
+            "title": "La flauta mágica: obertura",
+            "artist": "Wolfgang Amadeus Mozart",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1791",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental. Obertura del singspiel estrenado en Viena en 1791."
+          }
+        },
+        {
+          "key": "real_suk_meditacion.ogg",
+          "operation": "enrich_audio",
+          "target": "ogg",
+          "enrichment": {
+            "title": "Meditación sobre el coral San Wenceslao",
+            "artist": "Josef Suk",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1914",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra instrumental para cuerdas sobre un antiguo coral checo."
+          }
+        },
+        {
+          "key": "real_bach_goldberg_aria.flac",
+          "operation": "enrich_audio",
+          "target": "flac",
+          "enrichment": {
+            "title": "Variaciones Goldberg, BWV 988: Aria",
+            "artist": "Johann Sebastian Bach",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1741",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra para teclado. El aria sobre cuyo bajo se construyen las treinta variaciones."
+          }
+        },
+        {
+          "key": "real_chopin_nocturno_op9_2.m4a",
+          "operation": "enrich_audio",
+          "target": "m4a",
+          "enrichment": {
+            "title": "Nocturno op. 9 n.º 2",
+            "artist": "Frédéric Chopin",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1832",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra para piano solo, en mi bemol mayor."
+          }
+        },
+        {
+          "key": "real_chopin_vals_op64_1.m4a",
+          "operation": "enrich_audio",
+          "target": "m4a",
+          "enrichment": {
+            "title": "Vals op. 64 n.º 1 («del minuto»)",
+            "artist": "Frédéric Chopin",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1847",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra para piano solo, en re bemol mayor."
+          }
+        },
+        {
+          "key": "real_chopin_mazurka_op7_4.mp3",
+          "operation": "enrich_audio",
+          "target": "mp3",
+          "enrichment": {
+            "title": "Mazurca op. 7 n.º 4",
+            "artist": "Frédéric Chopin",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1832",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra para piano solo, en la bemol mayor."
+          }
+        },
+        {
+          "key": "Vals del minuto (Chopin).mp3",
+          "operation": "enrich_audio",
+          "target": "mp3",
+          "enrichment": {
+            "title": "Vals op. 64 n.º 1 («del minuto»), versión MP3",
+            "artist": "Frédéric Chopin",
+            "album": "Clásicos de dominio público (Musopen)",
+            "date": "1847",
+            "comment": "Grabación de Musopen, dominio público. Dataset MediaCase v3.",
+            "lyrics": "Obra para piano solo. Misma grabación que el m4a, recodificada a MP3."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tc03-fotos-nasa",
+      "name": "Archivo fotográfico NASA",
+      "kind": "homogeneous",
+      "description": "Fotos reales de la NASA (JPEG de hasta 13 MB, PNG, TIFF y JPEG en escala de grises) → miniaturas a 320, 640 y 1280 px en jpg, png y webp.",
+      "files": [
+        {
+          "key": "real_nasa_apolo11_aldrin.jpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 320
+        },
+        {
+          "key": "real_nasa_pilares_de_la_creacion.jpg",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 640
+        },
+        {
+          "key": "real_nasa_blue_marble.jpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 1280
+        },
+        {
+          "key": "real_nasa_huracan_helene.jpg",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 640
+        },
+        {
+          "key": "real_nasa_earthrise.png",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        },
+        {
+          "key": "real_nasa_aldrin.tif",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 1280
+        },
+        {
+          "key": "real_nasa_blue_marble_gris.jpg",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "id": "tc04-podcast-audiolibro",
+      "name": "Podcast y audiolibro",
+      "kind": "heterogeneous",
+      "description": "Voz hablada real: LibriVox (Martí, Girondo, Esopo) y un podcast de la NASA, en mp3, ogg, aac, opus, wav a 8 kHz y m4a/m4b; conversión de audio y extracción de metadatos.",
+      "files": [
+        {
+          "key": "real_marti_edad_de_oro_01.mp3",
+          "operation": "convert_audio",
+          "target": "ogg"
+        },
+        {
+          "key": "real_marti_edad_de_oro_00.mp3",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "real_girondo_poema_01.mp3",
+          "operation": "convert_audio",
+          "target": "wav"
+        },
+        {
+          "key": "real_girondo_20_poemas.m4a",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "real_girondo_poema_01.aac",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_esopo_fabula_151.ogg",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_esopo_fabula_152.mp3",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "real_esopo_22khz_mono.mp3",
+          "operation": "convert_audio",
+          "target": "flac"
+        },
+        {
+          "key": "real_voz_marti_8khz_mono.wav",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_marti_voz.opus",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_nasa_podcast_ep393.m4a",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "Entrevista día 2.m4a",
+          "operation": "convert_audio",
+          "target": "mp3"
+        }
+      ]
+    },
+    {
+      "id": "tc05-formatos-raros",
+      "name": "Formatos raros",
+      "kind": "heterogeneous",
+      "description": "Contenedores y códecs que el dataset sintético no tiene: ts, flv, 3gp, mpeg, wmv, avi Cinepak/XviD, m4v, HEVC, opus, aiff, wma, flac 24/96, bmp, tiff y webp animado.",
+      "files": [
+        {
+          "key": "real_sintel_clip.ts",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_clip.flv",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "real_bbb_clip.3gp",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_duck_and_cover.mpeg",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_ed_clip.wmv",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_duck_and_cover_cinepak.avi",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_tos_clip.m4v",
+          "operation": "convert",
+          "target": "webm"
+        },
+        {
+          "key": "real_sintel_hevc.mkv",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_duck_clip_xvid.avi",
+          "operation": "extract_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_mozart_sinfonia40_1.opus",
+          "operation": "convert_audio",
+          "target": "flac"
+        },
+        {
+          "key": "real_grieg_manana_clip.aiff",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_ed_end_title.wma",
+          "operation": "convert_audio",
+          "target": "ogg"
+        },
+        {
+          "key": "real_bach_aria_24bit_96khz.flac",
+          "operation": "convert_audio",
+          "target": "wav"
+        },
+        {
+          "key": "real_volcan_arenal.bmp",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 640
+        },
+        {
+          "key": "real_irazu_panorama.tiff",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 1280
+        },
+        {
+          "key": "real_pendulo_newton_animado.webp",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        }
+      ]
+    },
+    {
+      "id": "tc06-casos-limite",
+      "name": "Casos límite y fallos",
+      "kind": "heterogeneous",
+      "description": "Los ocho archivos «edge» sin operación (el coordinador olfatea el contenido y decide) más tres controles sanos. Esperado: partially_completed, con el vacío, el texto y el truncado fallidos y el detalle del error en el reporte.",
+      "files": [
+        {
+          "key": "edge_truncado.mp4"
+        },
+        {
+          "key": "edge_vacio.mp4"
+        },
+        {
+          "key": "edge_mp3_con_extension_mp4.mp4"
+        },
+        {
+          "key": "edge_mkv_con_extension_mp4.mp4"
+        },
+        {
+          "key": "edge_png_con_extension_jpg.jpg"
+        },
+        {
+          "key": "edge_texto_con_extension_wav.wav"
+        },
+        {
+          "key": "edge_extension_mayusculas.MP4"
+        },
+        {
+          "key": "edge_bytes_corruptos.mkv"
+        },
+        {
+          "key": "real_sintel_trailer_480p.mp4",
+          "operation": "convert",
+          "target": "webm"
+        },
+        {
+          "key": "real_jilguero_chirripo.ogg",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_icono_16px.png",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 1280
+        }
+      ]
+    },
+    {
+      "id": "tc07-video-pesado",
+      "name": "Carga de video pesado",
+      "kind": "homogeneous",
+      "description": "Solo conversiones de video pesado (reales de 100-370 MB, un 4K a 60 fps y pesados sintéticos de 1080p) para saturar el pool de video y observar la redistribución.",
+      "files": [
+        {
+          "key": "real_tos_720p.mov",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_480p.mov",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "real_nasa_atlas_v_4k.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "real_duck_and_cover.mpeg",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_ed_480p.mov",
+          "operation": "convert",
+          "target": "mp4"
+        },
+        {
+          "key": "real_bbb_360p.m4v",
+          "operation": "convert",
+          "target": "webm"
+        },
+        {
+          "key": "video_heavy_221.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "video_heavy_222.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "video_heavy_223.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "video_heavy_224.mov",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "video_heavy_225.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        },
+        {
+          "key": "video_heavy_226.mp4",
+          "operation": "convert",
+          "target": "mkv"
+        }
+      ]
+    },
+    {
+      "id": "tc08-paisajes-sonoros",
+      "name": "Paisajes y sonidos de campo",
+      "kind": "heterogeneous",
+      "description": "Fotos grandes de Costa Rica (hasta 9917 px, nombres con tildes y espacios) y grabaciones de campo reales (flac MS, wav de 24 MB, un canto de ave de 1.6 s): miniaturas, metadatos, conversión y enriquecimiento.",
+      "files": [
+        {
+          "key": "Volcán Irazú 01.jpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 1280
+        },
+        {
+          "key": "Volcán Irazú 02.jpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 640
+        },
+        {
+          "key": "Refugio Caño Negro.jpg",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 640
+        },
+        {
+          "key": "real_basilica_cartago.jpg",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "Iglesia de Orosi.jpg",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 320
+        },
+        {
+          "key": "real_volcan_arenal.jpg",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 1280
+        },
+        {
+          "key": "real_jilguero_chirripo.ogg",
+          "operation": "enrich_audio",
+          "target": "ogg",
+          "enrichment": {
+            "title": "Solitario carinegro (Myadestes melanops)",
+            "artist": "Claude Humbert",
+            "album": "Sonidos de Costa Rica",
+            "date": "2016",
+            "comment": "Cerro Chirripó. CC BY-SA 3.0, Wikimedia Commons.",
+            "lyrics": "Canto de ave grabado en el Chirripó, Costa Rica."
+          }
+        },
+        {
+          "key": "real_domingo_cdmx.flac",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "Paisaje sonoro Taxqueña.wav",
+          "operation": "convert_audio",
+          "target": "flac"
+        },
+        {
+          "key": "real_cruce_insurgentes.wav",
+          "operation": "convert_audio",
+          "target": "ogg"
+        },
+        {
+          "key": "real_autos_sobre_puente.ogg",
+          "operation": "metadata",
+          "target": "json"
+        },
+        {
+          "key": "real_loyalist_jungle.ogg",
+          "operation": "convert_audio",
+          "target": "mp3"
+        },
+        {
+          "key": "real_domingo_cdmx_clip.ogg",
+          "operation": "convert_audio",
+          "target": "flac"
+        }
+      ]
+    },
+    {
+      "id": "tc09-cine-enriquecido",
+      "name": "Cine con recursos asociados",
+      "kind": "homogeneous",
+      "description": "Enriquecer video: portada (fotograma), título, autor, año y descripción embebidos en mp4/mkv, incluidos un mov y un m4v que salen como mp4.",
+      "files": [
+        {
+          "key": "real_sintel_trailer_720p.mp4",
+          "operation": "enrich_video",
+          "target": "mp4",
+          "enrichment": {
+            "title": "Sintel (tráiler)",
+            "artist": "Blender Foundation",
+            "album": "Cine abierto y de dominio público",
+            "date": "2010",
+            "comment": "Dataset MediaCase v3",
+            "description": "Cortometraje abierto de la Blender Foundation: una joven busca a su dragón. CC BY 3.0."
+          }
+        },
+        {
+          "key": "real_sintel_trailer_1080p.mkv",
+          "operation": "enrich_video",
+          "target": "mkv",
+          "enrichment": {
+            "title": "Sintel (tráiler, DivX Plus HD)",
+            "artist": "Blender Foundation",
+            "album": "Cine abierto y de dominio público",
+            "date": "2010",
+            "comment": "Dataset MediaCase v3",
+            "description": "Mismo tráiler en Matroska. CC BY 3.0."
+          }
+        },
+        {
+          "key": "real_ed_480p.mov",
+          "operation": "enrich_video",
+          "target": "mp4",
+          "enrichment": {
+            "title": "Elephants Dream",
+            "artist": "Orange Open Movie Project",
+            "album": "Cine abierto y de dominio público",
+            "date": "2006",
+            "comment": "Dataset MediaCase v3",
+            "description": "Primera película abierta de la Blender Foundation. CC BY 2.5."
+          }
+        },
+        {
+          "key": "real_tos_clip.m4v",
+          "operation": "enrich_video",
+          "target": "mp4",
+          "enrichment": {
+            "title": "Tears of Steel (fragmento)",
+            "artist": "Blender Foundation",
+            "album": "Cine abierto y de dominio público",
+            "date": "2012",
+            "comment": "Dataset MediaCase v3",
+            "description": "Ciencia ficción filmada en Ámsterdam con efectos hechos en Blender. CC BY 3.0."
+          }
+        },
+        {
+          "key": "Despegue en cámara lenta.mov",
+          "operation": "enrich_video",
+          "target": "mp4",
+          "enrichment": {
+            "title": "Despegue del Atlas V (STP-3)",
+            "artist": "NASA / Kennedy Space Center",
+            "album": "Cine abierto y de dominio público",
+            "date": "2021",
+            "comment": "Dataset MediaCase v3",
+            "description": "Lanzamiento del 7 de diciembre de 2021, a media velocidad. Dominio público."
+          }
+        },
+        {
+          "key": "real_duck_and_cover_512kb.mp4",
+          "operation": "enrich_video",
+          "target": "mp4",
+          "enrichment": {
+            "title": "Duck and Cover",
+            "artist": "Archer Productions",
+            "album": "Cine abierto y de dominio público",
+            "date": "1951",
+            "comment": "Dataset MediaCase v3",
+            "description": "Película de defensa civil estadounidense. Dominio público (Prelinger Archives)."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tc10-imagenes-alfa-animadas",
+      "name": "Transparencia, animación y resoluciones extremas",
+      "kind": "homogeneous",
+      "description": "Miniaturas de PNG con alfa, GIF y WebP animados, un fotograma 4K en TIFF y PNG de 16 bits, y un ícono de 16 px.",
+      "files": [
+        {
+          "key": "real_png_transparencia.png",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        },
+        {
+          "key": "real_dados.png",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 640
+        },
+        {
+          "key": "real_icono_estrella.png",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        },
+        {
+          "key": "real_icono_estrella_alpha.webp",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 640
+        },
+        {
+          "key": "real_sol_poster.png",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 640
+        },
+        {
+          "key": "real_tierra_rotando.gif",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        },
+        {
+          "key": "real_pendulo_newton.gif",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 320
+        },
+        {
+          "key": "real_duck_and_cover.gif",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 320
+        },
+        {
+          "key": "real_sintel_4k_fotograma.png",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 1280
+        },
+        {
+          "key": "real_sintel_4k_fotograma_0301.tif",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 1280
+        },
+        {
+          "key": "Portada álbum.png",
+          "operation": "thumbnail",
+          "target": "webp",
+          "width": 640
+        },
+        {
+          "key": "real_ed_portada.jpg",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 320
+        },
+        {
+          "key": "real_orosi_reducida.webp",
+          "operation": "thumbnail",
+          "target": "jpg",
+          "width": 320
+        },
+        {
+          "key": "real_icono_16px.png",
+          "operation": "thumbnail",
+          "target": "png",
+          "width": 640
+        }
+      ]
+    },
+    {
+      "id": "tc11-mixto-grande",
+      "name": "Caso mixto grande (40 archivos)",
+      "kind": "heterogeneous",
+      "description": "20 archivos reales y 20 sintéticos de los tres tipos y los tres niveles, sin operación indicada: el coordinador enruta cada uno por su tipo (video → convert, audio → convert_audio, imagen → thumbnail).",
+      "files": [
+        {
+          "key": "real_sintel_trailer_480p.mp4"
+        },
+        {
+          "key": "real_sintel_vertical_9x16.mp4"
+        },
+        {
+          "key": "real_atlas_4k_clip.mp4"
+        },
+        {
+          "key": "real_tos_vfr.mkv"
+        },
+        {
+          "key": "real_nasa_como_iremos_a_la_luna.mp4"
+        },
+        {
+          "key": "real_nasa_atlas_v_360p.mp4"
+        },
+        {
+          "key": "real_ed_01_the_wires.mp3"
+        },
+        {
+          "key": "real_ed_02_typewriter_dance.mp3"
+        },
+        {
+          "key": "real_grieg_rey_de_la_montana.wav"
+        },
+        {
+          "key": "real_smetana_moldava.flac"
+        },
+        {
+          "key": "real_loyalist_jungle.ogg"
+        },
+        {
+          "key": "Paisaje sonoro Taxqueña.wav"
+        },
+        {
+          "key": "real_marti_edad_de_oro_00.mp3"
+        },
+        {
+          "key": "Volcán Irazú 02.jpg"
+        },
+        {
+          "key": "Refugio Caño Negro.jpg"
+        },
+        {
+          "key": "real_nasa_huracan_helene.jpg"
+        },
+        {
+          "key": "real_tierra_rotando.gif"
+        },
+        {
+          "key": "real_volcan_arenal.bmp"
+        },
+        {
+          "key": "real_irazu_panorama.tiff"
+        },
+        {
+          "key": "real_dados.png"
+        },
+        {
+          "key": "video_light_1.mp4"
+        },
+        {
+          "key": "video_light_2.mkv"
+        },
+        {
+          "key": "video_light_3.mp4"
+        },
+        {
+          "key": "video_light_4.avi"
+        },
+        {
+          "key": "video_light_5.webm"
+        },
+        {
+          "key": "video_light_6.mp4"
+        },
+        {
+          "key": "video_medium_141.webm"
+        },
+        {
+          "key": "video_medium_142.avi"
+        },
+        {
+          "key": "video_medium_143.mkv"
+        },
+        {
+          "key": "audio_light_1.flac"
+        },
+        {
+          "key": "audio_light_2.flac"
+        },
+        {
+          "key": "audio_light_3.mp3"
+        },
+        {
+          "key": "audio_light_4.wav"
+        },
+        {
+          "key": "audio_light_5.mp3"
+        },
+        {
+          "key": "audio_medium_101.wav"
+        },
+        {
+          "key": "audio_medium_102.wav"
+        },
+        {
+          "key": "image_1.jpg"
+        },
+        {
+          "key": "image_2.webp"
+        },
+        {
+          "key": "image_3.jpg"
+        },
+        {
+          "key": "image_4.png"
+        }
+      ]
+    }
+  ]
+}

@@ -17,16 +17,20 @@
 # Por construcción hay casos homogéneos y heterogéneos al agrupar por sesión: la sesión s1 de
 # cada evento solo tiene video, la s2 solo audio, y s3/s4 mezclan los tres tipos.
 #
+# Escribe dataset/manifest.synthetic.json (versión 2). El manifest que usa el sistema,
+# dataset/manifest.json (versión 3), lo arma dataset/scripts/build_manifest.py mezclando este con
+# el material real de dataset/scripts/fetch_real.sh.
+#
 # Uso:
 #   bash dataset/scripts/generate_dataset.sh                 # perfil full  (492 archivos, ~14 GB, ~1 h)
 #   bash dataset/scripts/generate_dataset.sh --profile quick # perfil quick (38 archivos, ~0.6 GB, ~3 min)
-#   bash dataset/scripts/generate_dataset.sh --seed 7 --out /otra/carpeta --manifest /otra/manifest.json
+#   bash dataset/scripts/generate_dataset.sh --seed 7 --out /otra/carpeta --manifest /otra/manifest.synthetic.json
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 OUT_DIR="$ROOT_DIR/dataset/files"
-MANIFEST="$ROOT_DIR/dataset/manifest.json"
+MANIFEST="$ROOT_DIR/dataset/manifest.synthetic.json"
 PROFILE="full"
 SEED=42
 
@@ -269,9 +273,11 @@ done
   echo "}"
 } > "$MANIFEST"
 
-# Archivos sueltos de corridas anteriores (otra semilla u otro perfil) no pertenecen al dataset
+# Archivos sintéticos sueltos de corridas anteriores (otra semilla u otro perfil) no pertenecen al
+# dataset. Solo se miran los nombres del generador (video_*, audio_*, image_*): el material real y
+# los casos límite de fetch_real.sh conviven en la misma carpeta y no se tocan.
 extra=0
-for f in "$OUT_DIR"/*; do
+for f in "$OUT_DIR"/video_* "$OUT_DIR"/audio_* "$OUT_DIR"/image_*; do
   [[ -f "$f" ]] || continue
   grep -q "\"filename\":\"$(basename "$f")\"" "$MANIFEST" || { rm -f "$f"; extra=$(( extra + 1 )); }
 done
