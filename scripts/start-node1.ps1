@@ -57,12 +57,15 @@ if (Get-Process -Name 'mediacase-coordinator' -ErrorAction SilentlyContinue) {
     # La ruta lleva comillas: Start-Process une los argumentos con espacios y la carpeta puede tenerlos.
     Start-Process powershell -ArgumentList "-NoExit -ExecutionPolicy Bypass -File `"$(Join-Path $PSScriptRoot 'run-coordinator.ps1')`"" `
         -WorkingDirectory $root -WindowStyle Minimized | Out-Null
+    # Hasta 3 min: la ventana compila antes de arrancar y la primera compilacion tras cambios
+    # en el codigo (o con la cache de Go vacia) pasa del minuto.
+    Write-Host '    compilando y arrancando el coordinador (hasta 3 min la primera vez)...'
     $up = $false
-    for ($i = 0; $i -lt 40 -and -not $up; $i++) {
+    for ($i = 0; $i -lt 90 -and -not $up; $i++) {
         Start-Sleep 2
         try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://localhost:8080/api/stats' | Out-Null; $up = $true } catch {}
     }
-    if (-not $up) { Write-Error 'el coordinador no respondio en 80 s; mirar su ventana'; exit 1 }
+    if (-not $up) { Write-Error 'el coordinador no respondio en 3 min; mirar su ventana minimizada'; exit 1 }
     Ok 'coordinador en http://localhost:8080'
 }
 if (Get-Process -Name 'mediacase-worker-host' -ErrorAction SilentlyContinue) {

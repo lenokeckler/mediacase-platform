@@ -20,13 +20,15 @@ import (
 
 const maxUploadMemory = 64 << 20 // lo que se mantiene en RAM; el resto va a disco temporal
 
-var unsafeChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
+// Letras y números de cualquier idioma (tildes, ñ) y espacios se conservan: el dataset ya tiene
+// claves como "Grieg - La mañana (Peer Gynt).flac" y MinIO, el worker y ffmpeg las manejan bien.
+var unsafeChars = regexp.MustCompile(`[^\p{L}\p{N} ._()-]+`)
 
 // safeKey convierte un nombre de archivo en una clave de objeto segura y legible.
 func safeKey(name string) string {
 	base := filepath.Base(strings.ReplaceAll(name, "\\", "/"))
 	base = unsafeChars.ReplaceAllString(base, "_")
-	return strings.Trim(base, "._")
+	return strings.Trim(base, "._ ")
 }
 
 // uploadFiles: multipart con uno o más campos "file". Cada archivo se valida por tipo
