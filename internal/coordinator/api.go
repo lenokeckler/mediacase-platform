@@ -100,7 +100,7 @@ func (a *API) Router() http.Handler {
 	mux.HandleFunc("POST /jobs/{id}/complete", a.jobComplete)
 	mux.HandleFunc("POST /jobs/{id}/fail", a.jobFail)
 
-	return mux
+	return requireUTF8JSON(mux)
 }
 
 // ── Job handlers ─────────────────────────────────────────────────────────────

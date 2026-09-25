@@ -8,6 +8,11 @@ indica; los errores son texto plano con el código HTTP que corresponde.
 
 Tiempos en RFC 3339 UTC. Identificadores UUID v4.
 
+Los cuerpos JSON van en **UTF-8**. Uno con otra codificación (por ejemplo una ñ en Windows-1252,
+como la manda `curl` desde Git Bash o PowerShell 5.1 sin convertir) recibe `400` con la
+explicación, en vez de guardarse con "�" en lugar de la letra. Desde PowerShell:
+`Invoke-RestMethod -Method Post -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($json))`.
+
 ## Casos
 
 ### `POST /cases` — enviar un caso
