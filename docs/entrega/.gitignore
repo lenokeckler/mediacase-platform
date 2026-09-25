@@ -1,0 +1,3 @@
+# Intermedios de Mermaid: build_docx.py los regenera
+diagramas/_m_*.mmd
+diagramas/*_??????????.png
