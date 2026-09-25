@@ -13,20 +13,6 @@
 .source { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; background: var(--surface-2); }
 .sourceTitle { font-size: 13px; font-weight: 600; color: var(--text); }
 .fileInput { font-size: 12px; color: var(--muted); }
-.datasetList { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-.datasetItem { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 6px; border-radius: 6px; cursor: pointer; color: var(--text-2); }
-.datasetItem:hover { background: var(--surface); }
-.chosen { display: flex; flex-direction: column; gap: 6px; }
-.chosenHead { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; padding: 0 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-.chosenRow { display: grid; grid-template-columns: minmax(0, 1fr) 200px 300px 28px; gap: 8px; align-items: center; font-size: 12px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
-.chosenRowOpen { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent); }
-.chosenFile { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.chosenName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-.targetCell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-@media (max-width: 900px) { .chosenHead { display: none; } .chosenRow { grid-template-columns: 1fr; } }
-.type { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-.rmBtn { background: none; border: none; color: var(--muted); cursor: pointer; }
-.rmBtn:hover { color: var(--red); }
 .footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .submitBtn { composes: btn btn-primary from global; padding: 9px 16px; font-size: 13px; }
 .hint { font-size: 12px; color: var(--muted); }

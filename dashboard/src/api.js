@@ -26,6 +26,9 @@ export const api = {
 
     // ── Entradas (bucket dataset en MinIO) ──
     listDataset: (prefix = '') => request('GET', `/dataset?prefix=${encodeURIComponent(prefix)}`),
+    // Casos de prueba predefinidos (homogéneos/heterogéneos) del dataset; el panel de "Nuevo
+    // caso" oculta el selector en silencio si el coordinador todavía no lo expone.
+    listTestCases: () => request('GET', '/dataset/test-cases'),
     uploadFiles: async (fileList) => {
         const form = new FormData()
         for (const f of fileList) form.append('file', f)
@@ -89,6 +92,9 @@ export const OPERATION_HELP = {
     enrich_video: 'Integra dentro del mismo archivo una portada (fotograma), etiquetas (título, artista, álbum, fecha) y una descripción. No recodifica si el formato lo permite.',
 }
 // Operaciones que integran recursos asociados; el formulario les despliega el editor.
+// Nombre del tipo de contenido para mostrar (el modelo usa video/audio/image).
+export const TYPE_LABEL = { video: 'Video', audio: 'Audio', image: 'Imagen' }
+
 export const ENRICH_OPS = ['enrich_audio', 'enrich_video']
 export const isEnrichOp = (op) => ENRICH_OPS.includes(op)
 

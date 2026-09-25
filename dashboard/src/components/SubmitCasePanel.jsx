@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, fileTypeOf, fmtBytes, extOf, targetsFor as catalogTargetsFor, defaultTargetFor, isEnrichOp, DEFAULT_CATALOG, OPERATION_LABEL, OPERATION_HELP, ACCEPT_EXTENSIONS } from '../api'
-import EnrichmentEditor from './EnrichmentEditor'
+import { api, fileTypeOf, targetsFor as catalogTargetsFor, isEnrichOp, DEFAULT_CATALOG, ACCEPT_EXTENSIONS } from '../api'
+import DatasetPicker from './DatasetPicker'
+import ChosenFilesList from './ChosenFilesList'
 import styles from './SubmitCasePanel.module.css'
 
 const PRIORITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -14,7 +15,6 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     const [local, setLocal] = useState([])        // File[] de esta PC
     const [chosen, setChosen] = useState([])      // {key, type, size, source:'dataset'|'local', operation?}
     const [dataset, setDataset] = useState([])
-    const [search, setSearch] = useState('')
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState(null)
     // Catálogo autoritativo del coordinador: qué operaciones y formatos acepta por tipo.
@@ -27,9 +27,11 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     const opsFor = (type) => catalog.ops_by_type[type] || []
     const targetsFor = (op, filename) => catalogTargetsFor(catalog, op, filename)
 
-    const datasetFiltered = useMemo(
-        () => dataset.filter(d => d.type !== 'other' && d.key.toLowerCase().includes(search.toLowerCase())),
-        [dataset, search],
+    // Claves del dataset ya elegidas, en un Set para que DatasetPicker consulte "¿está elegido?"
+    // en O(1) por fila en vez de recorrer `chosen` en cada una (~600 filas).
+    const chosenDatasetKeys = useMemo(
+        () => new Set(chosen.filter(c => c.source === 'dataset').map(c => c.key)),
+        [chosen],
     )
 
     function addLocal(e) {
@@ -45,10 +47,47 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         e.target.value = ''
     }
 
-    function toggleDataset(item) {
-        setChosen(prev => prev.some(c => c.key === item.key && c.source === 'dataset')
-            ? prev.filter(c => !(c.key === item.key && c.source === 'dataset'))
-            : [...prev, { key: item.key, type: item.type, size: item.size_bytes, source: 'dataset' }])
+    // items: [{key, type, size_bytes}], como los trae /api/dataset. selected=true agrega los que
+    // falten, selected=false quita los que estén; usado tanto por el clic/arrastre de una fila
+    // como por "marcar/desmarcar filtrados" y por el caso de prueba.
+    function setDatasetSelection(items, selected) {
+        setChosen(prev => {
+            if (selected) {
+                const existing = new Set(prev.filter(c => c.source === 'dataset').map(c => c.key))
+                const toAdd = items.filter(it => !existing.has(it.key))
+                    .map(it => ({ key: it.key, type: it.type, size: it.size_bytes, source: 'dataset' }))
+                return toAdd.length ? [...prev, ...toAdd] : prev
+            }
+            const drop = new Set(items.map(it => it.key))
+            return prev.filter(c => !(c.source === 'dataset' && drop.has(c.key)))
+        })
+    }
+    function clearDatasetSelection() {
+        setChosen(prev => prev.filter(c => c.source !== 'dataset'))
+    }
+    // Agrega los archivos de un caso de prueba predefinido con su operación/destino/enriquecimiento
+    // ya fijados; el tipo y el tamaño se buscan en el dataset cargado. Si un archivo del caso de
+    // prueba no está en el dataset, se omite en silencio (dataset desactualizado en este nodo).
+    function loadTestCase(tc) {
+        const byKey = new Map(dataset.map(d => [d.key, d]))
+        setChosen(prev => {
+            const existing = new Set(prev.filter(c => c.source === 'dataset').map(c => c.key))
+            const additions = tc.files
+                .map(f => {
+                    const d = byKey.get(f.key)
+                    if (!d || existing.has(f.key)) return null
+                    return {
+                        key: f.key, type: d.type, size: d.size_bytes, source: 'dataset',
+                        ...(f.operation ? { operation: f.operation } : {}),
+                        ...(f.target ? { target: f.target } : {}),
+                        ...(f.width ? { width: f.width } : {}),
+                        ...(f.enrichment ? { enrichment: f.enrichment } : {}),
+                    }
+                })
+                .filter(Boolean)
+            return additions.length ? [...prev, ...additions] : prev
+        })
+        setName(prev => prev.trim() ? prev : tc.name)
     }
 
     function remove(i) {
@@ -74,12 +113,25 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
             return { ...c, enrichment: { ...(c.enrichment || {}), ...shared } }
         }))
     }
-    const enrichCount = chosen.filter(c => isEnrichOp(c.operation)).length
     function setTarget(i, target) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, target: target || undefined } : c))
     }
     function setWidth(i, width) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, width: width ? Number(width) : undefined } : c))
+    }
+    // Copia la operación y el destino (y el ancho, si aplica) del archivo `sourceIndex` a los demás
+    // archivos del mismo tipo; el destino solo se copia si es válido para el archivo de llegada
+    // (misma regla que el coordinador, vía targetsFor), si no vuelve al automático.
+    function applyOpToType(type, sourceIndex) {
+        const src = chosen[sourceIndex]
+        if (!src) return
+        const resolvedOp = src.operation || opsFor(type)[0]
+        setChosen(prev => prev.map((c, k) => {
+            if (k === sourceIndex || c.type !== type) return c
+            const valid = targetsFor(resolvedOp, c.key)
+            const target = src.target && valid.includes(src.target) ? src.target : undefined
+            return { ...c, operation: src.operation, target, width: resolvedOp === 'thumbnail' ? src.width : undefined }
+        }))
     }
 
     async function submit() {
@@ -137,78 +189,23 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
                 </div>
                 <div className={styles.source}>
                     <span className={styles.sourceTitle}>Elegir del dataset ({dataset.length})</span>
-                    <input className={styles.input} placeholder="buscar…" value={search} onChange={e => setSearch(e.target.value)} />
-                    <div className={styles.datasetList}>
-                        {datasetFiltered.slice(0, 200).map(d => {
-                            const on = chosen.some(c => c.key === d.key && c.source === 'dataset')
-                            return (
-                                <label key={d.key} className={styles.datasetItem}>
-                                    <input type="checkbox" checked={on} onChange={() => toggleDataset(d)} />
-                                    <span className={styles.type}>{d.type}</span>
-                                    <span>{d.key}</span>
-                                    <span className={styles.hint}>{fmtBytes(d.size_bytes)}</span>
-                                </label>
-                            )
-                        })}
-                        {datasetFiltered.length === 0 && <span className={styles.hint}>nada que mostrar</span>}
-                    </div>
+                    <DatasetPicker
+                        dataset={dataset}
+                        chosenKeys={chosenDatasetKeys}
+                        onSetMany={setDatasetSelection}
+                        onClear={clearDatasetSelection}
+                        onLoadTestCase={loadTestCase}
+                    />
                 </div>
             </div>
 
             {chosen.length > 0 && (
-                <div className={styles.chosen}>
-                    <span className={styles.label}>Archivos del caso ({chosen.length}) — el coordinador decide la operación por tipo; puede cambiarla</span>
-                    <div className={styles.chosenHead}><span>Archivo</span><span>Operación</span><span>Salida</span><span /></div>
-                    {chosen.map((c, i) => {
-                        const ops = opsFor(c.type)
-                        const op = c.operation || ops[0]
-                        const targets = targetsFor(op, c.key)
-                        const autoTarget = defaultTargetFor(catalog, op, c.key)
-                        const target = c.target || autoTarget
-                        const isThumb = op === 'thumbnail'
-                        const isEnrich = isEnrichOp(op)
-                        return (
-                            <div key={`${c.source}-${c.key}-${i}`} className={`${styles.chosenRow} ${isEnrich ? styles.chosenRowOpen : ''}`} title={OPERATION_HELP[op]}>
-                                <span className={styles.chosenFile}>
-                                    <span className={`chip pool pool-${catalog.pool_by_op[op] || 'metadata'}`}>{c.type}</span>
-                                    <span className={styles.chosenName}>{c.key}</span>
-                                    <span className={styles.hint}>{fmtBytes(c.size)}{c.source === 'local' ? ' · esta PC' : ''}</span>
-                                </span>
-                                <select className={styles.select} value={c.operation || ''} onChange={e => setOp(i, e.target.value)} title="Operación">
-                                    <option value="">{OPERATION_LABEL[ops[0]]} (automática)</option>
-                                    {ops.slice(1).map(o => <option key={o} value={o}>{OPERATION_LABEL[o]}</option>)}
-                                </select>
-                                <span className={styles.targetCell}>
-                                    <span className="mono">{extOf(c.key)} →</span>
-                                    {targets.length > 1 ? (
-                                        <select className={styles.select} value={c.target || ''} onChange={e => setTarget(i, e.target.value)} title="Formato de salida">
-                                            <option value="">{autoTarget.toUpperCase()} (automático)</option>
-                                            {targets.filter(t => t !== autoTarget).map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-                                        </select>
-                                    ) : <span className="mono">{(target || '').toUpperCase()}</span>}
-                                    {isThumb && (
-                                        <select className={styles.select} value={c.width || ''} onChange={e => setWidth(i, e.target.value)} title="Ancho de la miniatura">
-                                            {catalog.thumbnail_widths.map((w, k) => <option key={w} value={k === 0 ? '' : w}>{w} px</option>)}
-                                        </select>
-                                    )}
-                                </span>
-                                <button className={styles.rmBtn} onClick={() => remove(i)} title="Quitar">✕</button>
-                                {isEnrich && (
-                                    <EnrichmentEditor
-                                        value={c.enrichment || {}}
-                                        kind={c.type}
-                                        filename={c.key}
-                                        caseName={name}
-                                        sameFormat={target === extOf(c.key)}
-                                        target={target}
-                                        onChange={patch => setEnrichment(i, patch)}
-                                        onApplyToAll={enrichCount > 1 ? () => applyEnrichmentToAll(i) : null}
-                                    />
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
+                <ChosenFilesList
+                    chosen={chosen}
+                    catalog={catalog}
+                    caseName={name}
+                    actions={{ setOp, setTarget, setWidth, remove, setEnrichment, applyEnrichmentToAll, applyOpToType }}
+                />
             )}
 
             {error && <div className={styles.error}>{error}</div>}

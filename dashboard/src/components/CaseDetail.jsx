@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fmtSeconds, fmtTime, isTerminal, OPERATION_LABEL, opArrow } from '../api'
+import { fmtSeconds, fmtTime, isTerminal, OPERATION_LABEL, opArrow, TYPE_LABEL } from '../api'
 import StatusBadge from './StatusBadge'
 import EnrichmentChips from './EnrichmentChips'
 import styles from './CaseDetail.module.css'
@@ -79,7 +79,7 @@ export default function CaseDetail({ c, report, onCancel, onClose }) {
                     <div className={styles.groups}>
                         {report.by_type_and_operation.map(g => (
                             <span key={`${g.file_type}/${g.operation}`} className={styles.group}>
-                                {g.file_type} · {OPERATION_LABEL[g.operation] || g.operation}{g.target && g.operation !== 'metadata' ? ` → ${g.target.toUpperCase()}` : ''}: {g.completed} ok
+                                {(TYPE_LABEL[g.file_type] || g.file_type).toLowerCase()} · {OPERATION_LABEL[g.operation] || g.operation}{g.target && g.operation !== 'metadata' ? ` → ${g.target.toUpperCase()}` : ''}: {g.completed} ok
                                 {g.failed ? `, ${g.failed} fallida${g.failed === 1 ? '' : 's'}` : ''}
                                 {g.cancelled ? `, ${g.cancelled} cancelada${g.cancelled === 1 ? '' : 's'}` : ''}
                             </span>
@@ -104,8 +104,14 @@ export default function CaseDetail({ c, report, onCancel, onClose }) {
                             return (
                                 <tr key={j.id}>
                                     <td className={styles.file}>{j.file_path}</td>
-                                    <td>{j.file_type}</td>
-                                    <td title={OPERATION_LABEL[j.operation] || j.operation}><span className="mono">{opArrow(j)}</span> <span className="muted">{OPERATION_LABEL[j.operation]}</span><EnrichmentChips job={j} /></td>
+                                    <td>{(TYPE_LABEL[j.file_type] || j.file_type).toLowerCase()}</td>
+                                    <td title={OPERATION_LABEL[j.operation] || j.operation}>
+                                        <span className="mono">{opArrow(j)}</span> <span className="muted">{OPERATION_LABEL[j.operation]}</span>
+                                        <EnrichmentChips job={j} />
+                                        {j.routing_note && (
+                                            <span className="chip chip-yellow" style={{ marginLeft: 6 }} title={j.routing_note}>⚠ aviso</span>
+                                        )}
+                                    </td>
                                     <td><span className={styles.pool}>{j.pool}</span></td>
                                     <td><StatusBadge status={j.status} kind="job" /></td>
                                     <td><Progress job={j} /></td>
