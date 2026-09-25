@@ -14,8 +14,6 @@ function durationOf(c) {
     return (end - new Date(c.started_at)) / 1000
 }
 
-// Lista de casos con su estado agregado. Los conteos de sub-tareas vienen del detalle
-// (GET /cases/{id}) solo para el caso abierto; en la lista se muestra total_jobs.
 export default function CasesPanel({ cases, error, selectedId, onOpen }) {
     const [filter, setFilter] = useState('')
 

@@ -10,19 +10,14 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// Reporte consolidado por caso (consigna §7). Se genera al cerrar el caso e incluye:
-// identificador y momentos de creación/cierre, archivos agrupados por tipo y operación,
-// resultado individual de cada sub-tarea con detalle del error, tiempos de inicio y fin
-// del caso y de cada sub-tarea, worker responsable de cada una, y un resumen agregado.
-
 type SubTaskResult struct {
 	JobID           string             `json:"job_id"`
 	File            string             `json:"file"`
 	FileType        models.FileType    `json:"file_type"`
 	Operation       models.Operation   `json:"operation"`
-	SourceExt       string             `json:"source_ext,omitempty"` // formato de entrada (mkv, flac…)
-	Assignment      string             `json:"assignment,omitempty"` // afinidad | ayuda
-	Target          string             `json:"target,omitempty"`     // formato de salida (mp4, mp3, json…)
+	SourceExt       string             `json:"source_ext,omitempty"`
+	Assignment      string             `json:"assignment,omitempty"`
+	Target          string             `json:"target,omitempty"`
 	Status          models.JobStatus   `json:"status"`
 	WorkerID        string             `json:"worker_id,omitempty"`
 	StartedAt       *time.Time         `json:"started_at,omitempty"`
@@ -30,9 +25,8 @@ type SubTaskResult struct {
 	DurationSeconds float64            `json:"duration_seconds"`
 	ResultURL       string             `json:"result_url,omitempty"`
 	Error           string             `json:"error,omitempty"`
-	Enrichment      *models.Enrichment `json:"enrichment,omitempty"` // recursos integrados (solo enrich_*)
-	// RoutingNote: la inspección de contenido detectó que la extensión no correspondía al
-	// contenido real, o el archivo estaba vacío. "" = extensión OK.
+	Enrichment      *models.Enrichment `json:"enrichment,omitempty"`
+
 	RoutingNote string `json:"routing_note,omitempty"`
 }
 
@@ -66,8 +60,6 @@ type Report struct {
 	Summary            string            `json:"summary"`
 }
 
-// Etiquetas para el resumen: singular y plural por operación; el destino se agrega después
-// ("videos convertidos a MP4", "audios extraídos a FLAC").
 var opLabels = map[models.Operation][2]string{
 	models.OpConvert:      {"video convertido", "videos convertidos"},
 	models.OpConvertAudio: {"audio convertido", "audios convertidos"},
@@ -78,7 +70,6 @@ var opLabels = map[models.Operation][2]string{
 	models.OpEnrichVideo:  {"video enriquecido", "videos enriquecidos"},
 }
 
-// BuildReport arma el reporte a partir del caso y sus sub-tareas. Es una función pura.
 func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 	r := &Report{
 		CaseID: c.ID, Name: c.Name, Status: c.Status,
@@ -126,7 +117,7 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 	for _, g := range groups {
 		r.ByTypeAndOperation = append(r.ByTypeAndOperation, *g)
 	}
-	// Los grupos más numerosos primero (lee natural en el resumen); empate → por tipo y operación.
+
 	sort.Slice(r.ByTypeAndOperation, func(i, k int) bool {
 		a, b := r.ByTypeAndOperation[i], r.ByTypeAndOperation[k]
 		if a.Completed != b.Completed {
@@ -144,8 +135,6 @@ func BuildReport(c *models.Case, jobs []*models.Job) *Report {
 	return r
 }
 
-// Summary produce la línea agregada, p. ej.
-// "de 45 archivos — 30 videos convertidos, 10 audios extraídos, 4 miniaturas generadas, 1 fallido (formato no soportado)".
 func Summary(r *Report) string {
 	parts := make([]string, 0, len(r.ByTypeAndOperation)+3)
 	for _, g := range r.ByTypeAndOperation {
@@ -179,8 +168,6 @@ func Summary(r *Report) string {
 	return fmt.Sprintf("de %s — %s", plural(r.Totals.Total, "archivo", "archivos"), strings.Join(parts, ", "))
 }
 
-// misleadingExtCount cuenta cuántas sub-tareas se enrutaron por su contenido real porque la
-// extensión mentía (ver sniff.go); el resumen agregado los reporta aparte.
 func misleadingExtCount(subs []SubTaskResult) int {
 	n := 0
 	for _, s := range subs {
@@ -198,14 +185,11 @@ func plural(n int, singular, pluralForm string) string {
 	return fmt.Sprintf("%d %s", n, pluralForm)
 }
 
-// maxFailureReasons y maxReasonLen acotan el resumen: los detalles completos están en cada sub-tarea.
 const (
 	maxFailureReasons = 3
 	maxReasonLen      = 90
 )
 
-// failureReasons junta los motivos distintos de las sub-tareas fallidas, en orden de aparición,
-// con "N ×" cuando se repiten; si hay más de maxFailureReasons, el resto va como "…".
 func failureReasons(subs []SubTaskResult) []string {
 	var order []string
 	count := map[string]int{}

@@ -25,7 +25,6 @@ function jobDuration(j) {
     return (end - new Date(j.started_at)) / 1000
 }
 
-// Detalle de un caso: sub-tareas en vivo, cancelación, y el reporte consolidado al cerrar.
 export default function CaseDetail({ c, report, onCancel, onClose }) {
     const [confirming, setConfirming] = useState(false)
     const jobs = c.jobs || []

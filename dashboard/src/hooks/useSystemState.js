@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api } from '../api'
 
-// In dev (npm run dev), Vite proxies /ws → ws://localhost:8080/ws
-// In Docker (built image), nginx proxies /ws → coordinator:8080/ws
-// Either way, we always connect to /ws on the same host.
 const WS_URL = typeof import.meta !== 'undefined' && import.meta.env?.VITE_WS_URL
     ? import.meta.env.VITE_WS_URL
     : `ws://${window.location.host}/ws`
@@ -41,7 +38,6 @@ export function useSystemState() {
             try {
                 const data = JSON.parse(e.data)
 
-                // Filter all jobs by refresh time if refresh was clicked
                 const allJobs = Array.isArray(data.jobs) ? data.jobs : []
                 let filteredJobs = allJobs
 
@@ -52,9 +48,6 @@ export function useSystemState() {
                     })
                 }
 
-                // Los contadores vienen del servidor (cuentan TODAS las sub-tareas, también las
-                // terminadas, que ya no viajan en el snapshot). Tras "Limpiar" se cuentan solo las
-                // vivas creadas después.
                 const srv = data.stats || {}
                 const stats = refreshTimeRef.current
                     ? {
@@ -72,8 +65,6 @@ export function useSystemState() {
                         failed: srv.failed ?? 0,
                     }
 
-                // If refresh was clicked, queue_depth should be 0 (only new jobs in queue)
-                // Otherwise use server data
                 let queue_depth = {}
                 if (refreshTimeRef.current) {
                     queue_depth = { high: 0, normal: 0, low: 0, by_pool: {} }
@@ -87,14 +78,11 @@ export function useSystemState() {
                     }
                 }
 
-                // Filter jobs to only show active ones (pending, assigned, running)
-                // Completed and failed jobs belong in the History tab, not Live Jobs
                 const liveJobs = filteredJobs.filter(job => 
                     job.status === 'pending' || job.status === 'assigned' || job.status === 'running'
                 )
 
                 setState({
-                    // Orden de llegada (registered_at) y por id si empatan: las tarjetas no se mueven.
                     workers: (Array.isArray(data.workers) ? [...data.workers] : []).sort((a, b) =>
                         (a.registered_at || '').localeCompare(b.registered_at || '') || a.id.localeCompare(b.id, 'es')),
                     jobs: liveJobs,
@@ -103,13 +91,11 @@ export function useSystemState() {
                     by_case: Array.isArray(data.by_case) ? data.by_case : [],
                 })
             } catch {
-                // malformed message — ignore silently
             }
         }
 
         ws.onclose = () => {
             setConnected(false)
-            // Reconnect after 3 seconds
             retryRef.current = setTimeout(connect, 3000)
         }
 
@@ -127,9 +113,7 @@ export function useSystemState() {
     }, [connect])
 
     const refresh = useCallback(async () => {
-        // Mark the refresh time - only show jobs created after this moment
         refreshTimeRef.current = Date.now()
-        // Clear the live jobs display, stats, and queue depth in monitor tab
         setState(prev => ({
             ...prev,
             jobs: [],

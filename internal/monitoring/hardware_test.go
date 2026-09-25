@@ -23,7 +23,7 @@ func TestNvidiaReadingFromRow(t *testing.T) {
 	if !ok || r.percent == nil || *r.percent != 37 || r.vramUsed == nil || *r.vramUsed != 1234*1024*1024 || r.tempC == nil || *r.tempC != 61 {
 		t.Errorf("reading: %+v", r)
 	}
-	// nvidia-smi imprime "[N/A]" cuando no soporta un campo: queda en nil, no en 0.
+
 	r, _ = nvidiaReadingFromRow([]string{"0", "[N/A]", "[N/A]", "[N/A]"})
 	if r.percent != nil || r.vramUsed != nil || r.tempC != nil {
 		t.Errorf("N/A debe ser nil: %+v", r)

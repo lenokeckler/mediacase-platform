@@ -1,6 +1,4 @@
-﻿# Compila el worker para Linux (VMs, laptops de los companeros) y Windows (host, PCs ajenas).
-# Binarios estaticos (CGO_ENABLED=0): corren en cualquier distro sin instalar nada.
-Set-Location (Join-Path $PSScriptRoot '..')
+﻿Set-Location (Join-Path $PSScriptRoot '..')
 New-Item -ItemType Directory -Force bin | Out-Null
 $env:CGO_ENABLED = '0'
 $targets = @(

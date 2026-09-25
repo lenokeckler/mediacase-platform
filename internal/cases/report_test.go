@@ -108,8 +108,6 @@ func TestBuildReport_DestinoEnResumenYGrupos(t *testing.T) {
 	}
 }
 
-// Las sub-tareas enriquecidas se cuentan con su etiqueta ("audios enriquecidos"), y el reporte
-// conserva qué recursos se integraron (etiquetas, letra) para que el detalle del caso lo muestre.
 func TestBuildReport_Enriquecidos(t *testing.T) {
 	base := time.Date(2026, 9, 18, 21, 0, 0, 0, time.UTC)
 	c := &models.Case{ID: "C3", Name: "concierto", Status: models.CaseCompleted, TotalJobs: 3, CreatedAt: base}
@@ -131,8 +129,6 @@ func TestBuildReport_Enriquecidos(t *testing.T) {
 	}
 }
 
-// Un archivo cuya extensión no correspondía al contenido real (sniff.go) se enruta por su tipo
-// real y el reporte lo cuenta aparte en el resumen, sin importar el motivo (tipo o solo formato).
 func TestBuildReport_ExtensionEnganosa(t *testing.T) {
 	base := time.Date(2026, 9, 25, 10, 0, 0, 0, time.UTC)
 	c := &models.Case{ID: "C5", Status: models.CaseCompleted, TotalJobs: 3, CreatedAt: base}

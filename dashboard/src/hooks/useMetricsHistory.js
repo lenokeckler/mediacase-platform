@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Historial de 300 muestras (~5 min a 1/s) por nodo y métrica (cpu, mem, gpu0, gpu1…): las
-// tarjetas muestran los últimos 60 s y la vista ampliada los 5 min completos. Se alimenta con cada snapshot del WebSocket (~1/s); si un
-// heartbeat trae la misma muestra (sampled_at igual) no se duplica.
 const MAX = 300
 
 export function useMetricsHistory(workers) {
-    const ref = useRef({}) // { [workerId]: { lastSampledAt, series: { cpu: [], mem: [], gpu0: [] } } }
+    const ref = useRef({})
     const [, force] = useState(0)
 
     useEffect(() => {
@@ -29,7 +26,6 @@ export function useMetricsHistory(workers) {
             for (const g of m?.gpus || []) push(`gpu${g.index}`, g.percent)
             changed = true
         }
-        // Un nodo que se fue: se olvida su historial para no crecer sin límite.
         for (const id of Object.keys(ref.current)) {
             if (!seen.has(id)) { delete ref.current[id]; changed = true }
         }

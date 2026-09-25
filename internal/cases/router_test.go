@@ -11,7 +11,7 @@ func TestDetectFileType(t *testing.T) {
 		"boda.mp4": models.FileVideo, "x.MKV": models.FileVideo, "a.webm": models.FileVideo, "c.mov": models.FileVideo,
 		"discurso.mp3": models.FileAudio, "b.flac": models.FileAudio, "c.wav": models.FileAudio, "d.OGG": models.FileAudio,
 		"foto.jpg": models.FileImage, "d.PNG": models.FileImage, "e.jpeg": models.FileImage,
-		"casos/boda/clip.mp4": models.FileVideo, // claves con "carpeta"
+		"casos/boda/clip.mp4": models.FileVideo,
 	}
 	for name, want := range tests {
 		got, err := DetectFileType(name)
@@ -52,7 +52,7 @@ func TestRouteWith_DestinoYAncho(t *testing.T) {
 	if err != nil || d.Target != "webm" || d.Pool != "video" {
 		t.Fatalf("%+v err=%v", d, err)
 	}
-	d, err = RouteWith("v.mkv", models.OpExtractAudio, "FLAC", 0) // mayúsculas y punto se toleran
+	d, err = RouteWith("v.mkv", models.OpExtractAudio, "FLAC", 0)
 	if err != nil || d.Target != "flac" {
 		t.Fatalf("%+v err=%v", d, err)
 	}
@@ -79,7 +79,7 @@ func TestRoute_MetadatosVaAlPoolLiviano(t *testing.T) {
 			t.Errorf("%s: %+v err=%v", f, d, err)
 		}
 	}
-	// La miniatura de un video también es liviana: pool metadata, no video.
+
 	if d, _ := Route("v.mp4", models.OpThumbnail); d.Pool != "metadata" {
 		t.Errorf("miniatura de video debe ir al pool metadata: %+v", d)
 	}
@@ -127,9 +127,6 @@ func TestPoolFor_CubreTodosLosTipos(t *testing.T) {
 	}
 }
 
-// Convertir un archivo al formato que ya tiene no es una conversión: el formato de origen no se
-// ofrece ni se elige por defecto en convert y convert_audio. En miniatura sí (es un cambio de
-// tamaño, no de formato: png → png 320 px conserva la transparencia).
 func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
 	tests := []struct {
 		file    string
@@ -141,7 +138,7 @@ func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
 		{"v.mkv", models.OpConvert, "mp4", "mkv"},
 		{"a.flac", models.OpConvertAudio, "mp3", "flac"},
 		{"a.mp3", models.OpConvertAudio, "flac", "mp3"},
-		{"a.m4a", models.OpConvertAudio, "flac", "aac"}, // m4a es aac en contenedor mp4
+		{"a.m4a", models.OpConvertAudio, "flac", "aac"},
 	}
 	for _, tc := range tests {
 		d, err := Route(tc.file, tc.op)
@@ -157,8 +154,7 @@ func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
 			t.Errorf("%s %s → %s: debía rechazarse (mismo formato)", tc.file, tc.op, tc.absent)
 		}
 	}
-	// Miniatura y extracción de audio no filtran: el origen nunca coincide o la operación no es
-	// una conversión de formato.
+
 	if d, err := Route("i.png", models.OpThumbnail); err != nil || d.Target != "jpg" {
 		t.Errorf("png thumbnail: %+v err=%v", d, err)
 	}
@@ -168,16 +164,13 @@ func TestRoute_NoOfreceElFormatoDeOrigenEnConversiones(t *testing.T) {
 	if got := TargetsFor(models.OpExtractAudio, "v.mp4"); len(got) != 4 {
 		t.Errorf("extract_audio no debía filtrar: %v", got)
 	}
-	// El catálogo dice qué operaciones excluyen el origen para que el dashboard filtre igual.
+
 	c := GetCatalog()
 	if len(c.IdentityExcludedOps) != 2 || c.ExtAliases["m4a"] != "aac" {
 		t.Errorf("catálogo sin la info de exclusión: %+v", c)
 	}
 }
 
-// "Enriquecer" integra recursos asociados (portada, etiquetas, letra) dentro del mismo archivo:
-// el default es el formato de origen cuando el contenedor los admite, y si no, el primero de la
-// lista (wav → mp3, avi → mp4). Es liviano (remux) → pool metadata.
 func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
 	tests := []struct {
 		file    string
@@ -192,7 +185,7 @@ func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
 		{"a.aac", models.OpEnrichAudio, "mp3"},
 		{"v.mp4", models.OpEnrichVideo, "mp4"},
 		{"v.mkv", models.OpEnrichVideo, "mkv"},
-		{"v.mov", models.OpEnrichVideo, "mp4"}, // QuickTime no guarda portada ni descripción
+		{"v.mov", models.OpEnrichVideo, "mp4"},
 		{"v.avi", models.OpEnrichVideo, "mp4"},
 		{"v.webm", models.OpEnrichVideo, "mp4"},
 	}
@@ -202,18 +195,18 @@ func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
 			t.Errorf("%s %s: %+v err=%v; quería target=%s pool=metadata", tc.file, tc.op, d, err, tc.wantDef)
 		}
 	}
-	// Sigue siendo posible pedir otro contenedor de la lista.
+
 	if d, err := RouteWith("a.mp3", models.OpEnrichAudio, "flac", 0); err != nil || d.Target != "flac" {
 		t.Errorf("mp3 → flac enriquecido: %+v err=%v", d, err)
 	}
-	// No aplica a imágenes ni cruzado de tipo.
+
 	if _, err := Route("i.jpg", models.OpEnrichAudio); err == nil {
 		t.Error("enrich_audio sobre imagen debía rechazarse")
 	}
 	if _, err := Route("a.mp3", models.OpEnrichVideo); err == nil {
 		t.Error("enrich_video sobre audio debía rechazarse")
 	}
-	// La operación por defecto de cada tipo no cambia.
+
 	if d, _ := Route("a.mp3", ""); d.Operation != models.OpConvertAudio {
 		t.Errorf("default de audio cambió: %s", d.Operation)
 	}
@@ -223,9 +216,6 @@ func TestRoute_EnriquecerPrefiereElFormatoDeOrigen(t *testing.T) {
 	}
 }
 
-// El coordinador completa los recursos que el cliente no mandó: título legible a partir del
-// nombre del archivo y álbum = nombre del caso. Lo que el cliente manda, gana. Para las demás
-// operaciones no se genera nada.
 func TestDefaultEnrichment(t *testing.T) {
 	got := DefaultEnrichment(models.OpEnrichAudio, "concierto-s1", "audio_medium_07-final_mix.flac", nil)
 	if got == nil || got.Title != "audio medium 07 final mix" || got.Album != "concierto-s1" {

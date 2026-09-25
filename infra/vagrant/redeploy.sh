@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Copia el binario recien compilado a los nodos y reinicia el servicio, sin re-aprovisionar.
-# Uso (desde infra/vagrant, en Git Bash):  bash redeploy.sh [node2|node3|all]
 set -euo pipefail
 target="${1:-all}"
 nodes=(node2 node3)

@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-# Hito Fase 2: caso heterogéneo (video + audio + imagen) con pools especializados.
-# Cada sub-tarea debe ejecutarse en un worker de SU pool.
-#
-# Requiere: infra arriba, coordinador corriendo, y tres workers conectados con roles distintos.
-# Por defecto espera los IDs node1 (video), node2 (audio), node3 (metadata); se pueden cambiar:
-#   VIDEO_WORKER=w-video AUDIO_WORKER=w-audio META_WORKER=w-meta bash tests/pools_scenario.sh
 set -euo pipefail
 COORD="${COORDINATOR_URL:-http://localhost:8080}"
 VIDEO_WORKER="${VIDEO_WORKER:-node1}"
@@ -19,7 +13,6 @@ curl -s "$COORD/workers" | python -c "
 import sys, json
 for w in json.load(sys.stdin): print(f\"   {w['id']:<12} rol={w.get('role','-'):<9} pools={','.join(w.get('capabilities') or ['(genérico)'])}\")"
 
-# ── entradas: video, audio e imagen ────────────────────────────────────────────────────────
 tmp="$(mktemp -d)"
 ffmpeg -y -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=25" -f lavfi -i "sine=frequency=440" -t 4 -c:v libx264 -c:a aac "$tmp/pool_video.mp4"
 ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=520:sample_rate=44100" -t 4 "$tmp/pool_audio.wav"

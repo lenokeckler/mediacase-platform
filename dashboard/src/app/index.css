@@ -6,10 +6,6 @@
     padding: 0;
 }
 
-/* ── Tokens ──────────────────────────────────────────────────────────────────────────────
-   Un solo acento (índigo); los demás colores son semánticos y solo se usan para estados.
-   Cada tema define superficie, borde, texto y los pares fondo/texto de cada estado; los
-   componentes no usan colores fijos, solo estas variables. */
 :root,
 :root[data-theme="light"] {
     color-scheme: light;
@@ -91,7 +87,6 @@ a { color: var(--accent); }
 button { font-family: inherit; }
 code, pre, .mono { font-family: var(--mono); }
 
-/* scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }

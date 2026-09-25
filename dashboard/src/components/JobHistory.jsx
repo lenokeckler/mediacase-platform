@@ -18,7 +18,6 @@ function fmtDate(dt) { if (!dt) return '—'; const d = new Date(dt); return isN
 function fmtTime(dt) { if (!dt) return '—'; const d = new Date(dt); return isNaN(d) ? '—' : d.toLocaleTimeString() }
 function shortFile(p) { return p ? (p.split(/[\\/]/).pop() || p) : '—' }
 
-// Todas las sub-tareas (también las terminadas) con filtro, búsqueda y detalle desplegable.
 export default function JobHistory() {
     const [jobs, setJobs] = useState([])
     const [loading, setLoading] = useState(false)

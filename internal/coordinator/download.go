@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-// Página "Conectar esta PC" y descarga del worker empaquetado.
-//
-// El ZIP trae el binario, un worker.env ya escrito con la dirección con la que el navegador
-// llegó hasta aquí (cabecera Host), un lanzador, y ffmpeg si está empaquetado en dist/.
-// Quien lo baja no escribe IPs, no abre puertos y no instala nada: descomprime y ejecuta.
-
 const connectHTML = `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MediaCase — conectar esta PC</title>
@@ -63,8 +57,6 @@ func (a *API) connectPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, connectHTML, requestScheme(r)+"://"+r.Host)
 }
 
-// requestScheme dice cómo llegó el navegador: directo (http) o por un túnel/proxy con TLS
-// (cloudflared y cualquier reverse proxy ponen X-Forwarded-Proto). Con https el worker abre wss.
 func requestScheme(r *http.Request) string {
 	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
 		return "https"
@@ -72,9 +64,6 @@ func requestScheme(r *http.Request) string {
 	return "http"
 }
 
-// minioTunnelEndpoint devuelve el host del túnel de MinIO que dejó scripts/tunnel.ps1 en
-// TUNNEL_ENV_FILE (por defecto infra/env/tunnel.env), o "" si no hay túnel abierto. Se lee en
-// cada descarga porque el túnel nace y muere sin reiniciar el coordinador.
 func minioTunnelEndpoint() string {
 	path := os.Getenv("TUNNEL_ENV_FILE")
 	if path == "" {
@@ -92,7 +81,6 @@ func minioTunnelEndpoint() string {
 	return ""
 }
 
-// downloadWorker arma el ZIP al vuelo para el SO pedido.
 func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 	osName := r.URL.Query().Get("os")
 	if osName != "windows" && osName != "linux" {
@@ -100,7 +88,6 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Rutas de los binarios: si faltan, mejor avisar antes de empezar a escribir el ZIP.
 	binPath := filepath.Join("bin", "worker-linux-amd64")
 	if osName == "windows" {
 		binPath = filepath.Join("bin", "worker-windows-amd64.exe")
@@ -116,12 +103,10 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 		minioTunnel = a.tunnel.MinIOHost()
 	}
 	if minioTunnel == "" {
-		minioTunnel = minioTunnelEndpoint() // scripts/tunnel.ps1, el modo manual
+		minioTunnel = minioTunnelEndpoint()
 	}
 	env := workerEnvFor(r.Host, requestScheme(r), minioTunnel, workerRoleParam(r.URL.Query().Get("role")))
 
-	// El servidor corta cualquier respuesta a los 10 s (WriteTimeout). Un ZIP de ~85 MB por WiFi
-	// tarda más: esta respuesta recibe su propio plazo sin relajar el del resto de la API.
 	if err := http.NewResponseController(w).SetWriteDeadline(time.Now().Add(15 * time.Minute)); err != nil {
 		log.Printf("[download] no se pudo extender el plazo de escritura: %v", err)
 	}
@@ -137,7 +122,7 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 			log.Printf("[download] worker.exe: %v", err)
 			return
 		}
-		// ffmpeg empaquetado (opcional): dist/ffmpeg/windows/ffmpeg.exe + ffprobe.exe
+
 		for _, exe := range []string{"ffmpeg.exe", "ffprobe.exe"} {
 			if err := addFile(zw, exe, filepath.Join("dist", "ffmpeg", "windows", exe), 0o755); err != nil {
 				log.Printf("[download] sin %s empaquetado (%v); el usuario necesitará ffmpeg en el PATH", exe, err)
@@ -155,12 +140,6 @@ func (a *API) downloadWorker(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[download] worker para %s entregado a %s (coordinador anunciado: %s://%s)", osName, r.RemoteAddr, requestScheme(r), r.Host)
 }
 
-// workerEnvFor genera el worker.env: el coordinador es la dirección (y esquema) con la que
-// llegó el navegador; MinIO vive en el mismo host, puerto 9000, salvo que MINIO_PUBLIC_ENDPOINT
-// diga otra cosa. Si el navegador llegó por el túnel (https) y hay túnel de MinIO, el worker
-// remoto habla S3 por TLS contra ese túnel; si no lo hay, se avisa en el archivo: el 9000 de
-// la LAN no es alcanzable desde otra red.
-// workerRoleParam valida el rol elegido en /connect; cualquier otra cosa es "all" (genérico).
 func workerRoleParam(role string) string {
 	switch role {
 	case "video", "audio", "metadata":
@@ -207,7 +186,6 @@ WORKER_ID=
 		envOr("MINIO_ACCESS_KEY", "minioadmin"), envOr("MINIO_SECRET_KEY", "minioadmin"), envOr("MINIO_BUCKET", "results"), role)
 }
 
-// Lanzadores. Sin tildes: PowerShell 5.1 lee .ps1 sin BOM como ANSI.
 const startWorkerPS1 = "$env:PATH = \"$PSScriptRoot;$env:PATH\"\r\n" +
 	"Get-Content \"$PSScriptRoot\\worker.env\" | Where-Object { $_ -match '^\\s*[^#].*=' } | ForEach-Object {\r\n" +
 	"    $k, $v = $_ -split '=', 2\r\n" +

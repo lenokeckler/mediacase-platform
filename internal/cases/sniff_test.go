@@ -61,9 +61,7 @@ func TestSniffType_MPEGTS(t *testing.T) {
 }
 
 func TestSniffType_Mp3PorFirmaDeCuadro(t *testing.T) {
-	// Cuadro MPEG1 Layer III, 128 kbps, 44100 Hz, sin CRC: 0xFF 0xFB 0x90 0x00. Largo del
-	// cuadro = 144*128000/44100 = 417 bytes (división entera); se repite en el offset 417 para
-	// que looksLikeMP3 valide el SEGUNDO cuadro (no basta con encontrar un 0xFF suelto).
+
 	frame := []byte{0xFF, 0xFB, 0x90, 0x00}
 	buf := make([]byte, 900)
 	copy(buf[0:], frame)
@@ -73,8 +71,6 @@ func TestSniffType_Mp3PorFirmaDeCuadro(t *testing.T) {
 		t.Fatalf("mp3 por firma de cuadro: %v %v %v", ft, format, ok)
 	}
 
-	// Un solo cuadro válido cuyo "segundo cuadro" (en el offset 417) NO valida (queda en ceros)
-	// no debe reconocerse como mp3: hace falta que el siguiente cuadro también sincronice.
 	oneFrameOnly := make([]byte, 900)
 	copy(oneFrameOnly[0:], frame)
 	if _, _, ok := SniffType(oneFrameOnly); ok {
@@ -92,7 +88,7 @@ func TestSniffType_AmbiguoOVacio(t *testing.T) {
 	if _, _, ok := SniffType([]byte("esto no es ningún formato reconocido")); ok {
 		t.Error("contenido desconocido debe ser ok=false")
 	}
-	// GUID de cabecera ASF: puede ser audio (WMA) o video (WMV); se deja ambiguo a propósito.
+
 	asf := append(append([]byte{}, asfGUID...), []byte("resto del archivo")...)
 	if _, _, ok := SniffType(asf); ok {
 		t.Error("ASF es ambiguo (audio o video): debía quedar ok=false")
@@ -109,20 +105,17 @@ func TestSameFormat_Alias(t *testing.T) {
 }
 
 func TestRouteAs_TipoRealDistintoDeLaExtension(t *testing.T) {
-	// clip.mp4 cuyo contenido real es audio (mp3): el cliente no pidió operación, así que se usa
-	// el default del tipo REAL (convert_audio), no el del video que sugería la extensión.
+
 	d, err := RouteAs(models.FileAudio, "clip.mp4", "", "", 0)
 	if err != nil || d.Operation != models.OpConvertAudio || d.FileType != models.FileAudio {
 		t.Fatalf("%+v err=%v", d, err)
 	}
-	// La operación pedida por el cliente (extract_audio, válida para video) no aplica al tipo
-	// real (audio): RouteAs debe rechazarla; el llamador decide si cae al default.
+
 	if _, err := RouteAs(models.FileAudio, "clip.mp4", models.OpExtractAudio, "", 0); err == nil {
 		t.Error("extract_audio no aplica a un archivo cuyo tipo real es audio")
 	}
 }
 
-// mp4Head arma un encabezado ftyp con la marca dada y una caja hdlr por pista.
 func mp4Head(brand string, handlers ...string) []byte {
 	head := append([]byte{0, 0, 0, 0x18}, append([]byte("ftyp"), []byte(brand)...)...)
 	head = append(head, []byte("\x00\x00\x02\x00moov")...)
@@ -133,7 +126,7 @@ func mp4Head(brand string, handlers ...string) []byte {
 }
 
 func TestSniffType_MP4SinMoovEnElEncabezado(t *testing.T) {
-	// Sin faststart el moov queda al final: no se sabe si es audio o video, manda la extensión.
+
 	if _, _, ok := SniffType(mp4Head("isom")); ok {
 		t.Error("ftyp genérico sin pistas visibles debía quedar indeterminado")
 	}

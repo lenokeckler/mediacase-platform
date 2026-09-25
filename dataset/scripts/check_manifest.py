@@ -1,15 +1,4 @@
 #!/usr/bin/env python3
-"""Valida dataset/manifest.json contra la consigna y resume su composición.
-
-Uso: python dataset/scripts/check_manifest.py dataset/manifest.json [--profile full|quick] [--markdown]
---markdown imprime además las tablas de composición para pegar en docs/dataset.md.
-
-Acepta el manifest v2 (solo sintético, dataset/manifest.synthetic.json) y el v3 (sintético + real +
-casos límite + test_cases, dataset/manifest.json). Sale con código 1 si el perfil "full" no cumple:
-400-600 archivos, audio+video+imagen, los tres niveles de tamaño, >= 3 valores por criterio de
-agrupación, sesiones homogéneas y heterogéneas; en v3 además valida los campos de procedencia y
-que cada test_case use claves existentes y operaciones/destinos/anchos que el coordinador acepta.
-"""
 import json
 import os
 import re
@@ -18,20 +7,18 @@ from collections import Counter, defaultdict
 
 MB = 1024 * 1024
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-TIER_RANGES = {  # sintéticos: franjas estrictas del generador (plan 2, Fase 4)
+TIER_RANGES = {
     "light": (0, 5 * MB),
     "medium": (20 * MB, 50 * MB),
     "heavy": (150 * MB, 400 * MB),
 }
-REAL_TIER_CUTS = (10 * MB, 100 * MB)  # real y edge: nivel más cercano (ver build_manifest.py)
+REAL_TIER_CUTS = (10 * MB, 100 * MB)
 TIERS = ("light", "medium", "heavy")
 TYPES = ("video", "audio", "image")
 SOURCES = ("synthetic", "real", "edge")
 V3_FIELDS = ("source", "origin", "license", "author", "url", "note")
 ENRICH_FIELDS = {"title", "artist", "album", "date", "comment", "lyrics", "description"}
 
-# Reglas del coordinador. Se leen de internal/cases/router.go para no desincronizarse; si el
-# archivo no está o cambió de forma, se usan estos valores (copia del router al 2026-09-25).
 FALLBACK_RULES = {
     "ops_by_type": {
         "video": ["convert", "extract_audio", "thumbnail", "metadata", "enrich_video"],
@@ -47,7 +34,6 @@ FALLBACK_RULES = {
     "aliases": {"jpeg": "jpg", "tiff": "tif", "aiff": "aif", "m4a": "aac", "mpeg": "mpg"},
     "widths": [320, 640, 1280],
 }
-
 
 def load_rules():
     try:
@@ -73,16 +59,13 @@ def load_rules():
     except (OSError, AttributeError, KeyError, ValueError):
         return FALLBACK_RULES, "reglas de respaldo (router.go no legible)"
 
-
 def real_tier(size):
     if size < REAL_TIER_CUTS[0]:
         return "light"
     return "medium" if size < REAL_TIER_CUTS[1] else "heavy"
 
-
 def gb(xs):
     return sum(x["size_bytes"] for x in xs) / MB / 1024
-
 
 def markdown_tables(files, v3):
     names = {"light": "liviano", "medium": "mediano", "heavy": "pesado"}
@@ -133,11 +116,9 @@ def markdown_tables(files, v3):
         hom = sum(1 for t in types.values() if len(t) == 1)
         print(f"| {k} | {len(types)} | {min(sizes.values())}–{max(sizes.values())} | {hom} | {len(types) - hom} |")
 
-
 def norm(ext, aliases):
     ext = ext.lower()
     return aliases.get(ext, ext)
-
 
 def check_test_cases(cases, files, rules, problems):
     by_key = {x["key"]: x for x in files}
@@ -191,7 +172,6 @@ def check_test_cases(cases, files, rules, problems):
             problems.append(f"test_case {cid}: dice homogeneous pero mezcla tipos {sorted(seen_types)} u operaciones {sorted(seen_ops)}")
         if c.get("kind") == "heterogeneous" and homog:
             problems.append(f"test_case {cid}: dice heterogeneous pero todos sus archivos son {seen_types} con {seen_ops}")
-
 
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else "dataset/manifest.json"
@@ -296,7 +276,6 @@ def main():
             print("  -", p)
         sys.exit(1)
     print("\nmanifest OK" + ("" if profile == "full" else " (perfil quick: mínimos de la consigna no exigidos)"))
-
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,3 @@
-/* Primitivas compartidas (globales, sin módulo): tarjeta, tabla, chips, botones, campos.
-   Los componentes las combinan con sus propios módulos; ningún color va fijo aquí. */
-
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -8,7 +5,6 @@
     box-shadow: var(--shadow);
 }
 
-/* ── Tablas ── */
 .tableWrap {
     overflow-x: auto;
     border: 1px solid var(--border);
@@ -37,7 +33,6 @@
 .table .muted { color: var(--muted); }
 .table .empty { text-align: center; padding: 40px; color: var(--muted); }
 
-/* ── Chips de estado y de pool ── */
 .chip {
     display: inline-flex;
     align-items: center;
@@ -63,7 +58,6 @@
 .pool-audio    { background: color-mix(in srgb, var(--pool-audio) 14%, transparent);    color: var(--pool-audio); }
 .pool-metadata { background: color-mix(in srgb, var(--pool-metadata) 16%, transparent); color: var(--pool-metadata); }
 
-/* ── Botones ── */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -88,7 +82,6 @@
 .btn-danger:hover:not(:disabled) { background: var(--red-bg); color: var(--red-fg); }
 .btn-sm { padding: 3px 9px; font-size: 11px; }
 
-/* ── Filtros (chips seleccionables) ── */
 .filters { display: flex; gap: 6px; flex-wrap: wrap; }
 .filter {
     background: var(--surface);
@@ -113,7 +106,6 @@
     font-weight: 700;
 }
 
-/* ── Campos ── */
 .input, .select {
     background: var(--surface);
     border: 1px solid var(--border-strong);
@@ -128,12 +120,10 @@
 .input:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
 .input::placeholder { color: var(--muted); }
 
-/* ── Barra de progreso ── */
 .bar { display: flex; align-items: center; gap: 8px; min-width: 110px; }
 .track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
 .fill { height: 100%; border-radius: 3px; transition: width .3s ease; }
 
-/* ── Avisos ── */
 .alert {
     font-size: 13px;
     padding: 10px 12px;

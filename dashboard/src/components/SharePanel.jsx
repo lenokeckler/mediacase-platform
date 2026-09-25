@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react'
 import { api } from '../api'
 import styles from './SharePanel.module.css'
 
-// Tarjeta "Compartir": cómo sumar otra computadora. En el mismo WiFi basta la URL de la LAN;
-// desde otra red, el botón abre el túnel de Cloudflare (dos procesos que maneja el coordinador)
-// y muestra la URL https. Si la red bloquea el túnel (el WiFi del TEC), el coordinador lo
-// detecta y aquí se ve la pista: encender WARP.
-
 const POLL_MS = 3000
 
 function CopyButton({ text }) {
     const [done, setDone] = useState(false)
     const copy = async () => {
-        try { await navigator.clipboard.writeText(text) } catch { /* http sin clipboard: seleccionar a mano */ }
+        try { await navigator.clipboard.writeText(text) } catch {  }
         setDone(true)
         setTimeout(() => setDone(false), 1500)
     }

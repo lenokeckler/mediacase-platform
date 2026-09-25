@@ -6,18 +6,14 @@ import styles from './SubmitCasePanel.module.css'
 
 const PRIORITIES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-// Un caso: nombre + prioridad + archivos. Los archivos pueden venir de esta PC (se suben al
-// bucket dataset) o del dataset ya cargado. La operación la decide el coordinador; aquí solo
-// se muestra cuál va a elegir y se permite cambiarla entre las válidas para ese tipo.
 export default function SubmitCasePanel({ onCreated, onClose }) {
     const [name, setName] = useState('')
     const [priority, setPriority] = useState(5)
-    const [local, setLocal] = useState([])        // File[] de esta PC
-    const [chosen, setChosen] = useState([])      // {key, type, size, source:'dataset'|'local', operation?}
+    const [local, setLocal] = useState([])
+    const [chosen, setChosen] = useState([])
     const [dataset, setDataset] = useState([])
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState(null)
-    // Catálogo autoritativo del coordinador: qué operaciones y formatos acepta por tipo.
     const [catalog, setCatalog] = useState(DEFAULT_CATALOG)
 
     useEffect(() => {
@@ -27,8 +23,6 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     const opsFor = (type) => catalog.ops_by_type[type] || []
     const targetsFor = (op, filename) => catalogTargetsFor(catalog, op, filename)
 
-    // Claves del dataset ya elegidas, en un Set para que DatasetPicker consulte "¿está elegido?"
-    // en O(1) por fila en vez de recorrer `chosen` en cada una (~600 filas).
     const chosenDatasetKeys = useMemo(
         () => new Set(chosen.filter(c => c.source === 'dataset').map(c => c.key)),
         [chosen],
@@ -47,9 +41,6 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         e.target.value = ''
     }
 
-    // items: [{key, type, size_bytes}], como los trae /api/dataset. selected=true agrega los que
-    // falten, selected=false quita los que estén; usado tanto por el clic/arrastre de una fila
-    // como por "marcar/desmarcar filtrados" y por el caso de prueba.
     function setDatasetSelection(items, selected) {
         setChosen(prev => {
             if (selected) {
@@ -65,9 +56,6 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     function clearDatasetSelection() {
         setChosen(prev => prev.filter(c => c.source !== 'dataset'))
     }
-    // Agrega los archivos de un caso de prueba predefinido con su operación/destino/enriquecimiento
-    // ya fijados; el tipo y el tamaño se buscan en el dataset cargado. Si un archivo del caso de
-    // prueba no está en el dataset, se omite en silencio (dataset desactualizado en este nodo).
     function loadTestCase(tc) {
         const byKey = new Map(dataset.map(d => [d.key, d]))
         setChosen(prev => {
@@ -96,15 +84,12 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
         setChosen(prev => prev.filter((_, k) => k !== i))
     }
 
-    // Al cambiar la operación se vuelve al destino por defecto de esa operación; los recursos
-    // asociados se conservan por si vuelve a "enriquecer".
     function setOp(i, op) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, operation: op || undefined, target: undefined, width: undefined } : c))
     }
     function setEnrichment(i, patch) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, enrichment: { ...(c.enrichment || {}), ...patch } } : c))
     }
-    // Artista, álbum y fecha suelen ser los mismos para todo el caso: se copian a los demás enriquecidos.
     function applyEnrichmentToAll(i) {
         const src = chosen[i].enrichment || {}
         const shared = { artist: src.artist, album: src.album, date: src.date }
@@ -119,9 +104,6 @@ export default function SubmitCasePanel({ onCreated, onClose }) {
     function setWidth(i, width) {
         setChosen(prev => prev.map((c, k) => k === i ? { ...c, width: width ? Number(width) : undefined } : c))
     }
-    // Copia la operación y el destino (y el ancho, si aplica) del archivo `sourceIndex` a los demás
-    // archivos del mismo tipo; el destino solo se copia si es válido para el archivo de llegada
-    // (misma regla que el coordinador, vía targetsFor), si no vuelve al automático.
     function applyOpToType(type, sourceIndex) {
         const src = chosen[sourceIndex]
         if (!src) return

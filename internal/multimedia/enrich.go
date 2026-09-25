@@ -1,8 +1,3 @@
-// "Integración de letras o recursos informativos asociados" (consigna): Enrich devuelve el mismo
-// audio o video con una portada embebida, etiquetas (título, artista, álbum, fecha, comentario) y
-// la letra o descripción, todo dentro del contenedor. Conserva las etiquetas que el archivo ya
-// traía. Primero intenta un remux con -c copy (liviano: por eso corre en el pool metadata); si el
-// contenedor de destino no acepta los códecs del origen, recodifica con la receta del destino.
 package multimedia
 
 import (
@@ -23,11 +18,10 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// Contenedores que admiten portada + etiquetas + letra/descripción, y cómo se les escribe.
 type enrichContainer struct {
 	audioOnly bool
-	recipe    []string // códecs si hay que recodificar
-	lyricsKey string   // clave de la letra (audio) o descripción (video) en ese contenedor
+	recipe    []string
+	lyricsKey string
 }
 
 var enrichContainers = map[string]enrichContainer{
@@ -41,8 +35,6 @@ var enrichContainers = map[string]enrichContainer{
 
 const coverWidth = 640
 
-// Enrich integra los recursos asociados de e en inputPath y devuelve la ruta del archivo
-// resultante con extensión target. e puede ser nil: entonces solo se embebe la portada.
 func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment, cb progressFn) (string, error) {
 	c, ok := enrichContainers[target]
 	if !ok {
@@ -60,7 +52,7 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 		return "", err
 	}
 	if target == "ogg" {
-		// Ogg no acepta una pista de portada: va como bloque de imagen FLAC en los comentarios Vorbis.
+
 		pic, err := vorbisPictureBlock(cover)
 		if err != nil {
 			return "", err
@@ -76,7 +68,7 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 
 	out := outputPath(inputPath, "."+target)
 	build := func(copyStreams bool) []string {
-		// Todas las entradas primero (ffmpeg exige las opciones de salida después de la última -i).
+
 		usesCoverInput := target != "mkv" && target != "ogg"
 		args := []string{"-y", "-i", inputPath}
 		metaIdx := 1
@@ -87,7 +79,7 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 		args = append(args, "-f", "ffmetadata", "-i", metaFile)
 		switch {
 		case target == "mkv":
-			// En Matroska la portada viaja como adjunto, no como pista.
+
 			args = append(args, "-map", "0", "-attach", cover, "-metadata:s:t", "mimetype=image/jpeg", "-metadata:s:t", "filename=cover.jpg")
 		case target == "ogg":
 			args = append(args, "-map", "0:a")
@@ -105,10 +97,10 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 			args = append(args, "-c", "copy")
 		case c.audioOnly:
 			args = append(args, c.recipe...)
-			args = append(args, "-c:v", "copy") // la única pista de video es la portada
+			args = append(args, "-c:v", "copy")
 		default:
 			args = append(args, c.recipe...)
-			args = append(args, "-c:v:1", "copy") // la portada (segunda pista de video) no se recodifica
+			args = append(args, "-c:v:1", "copy")
 		}
 		return append(args, "-progress", "pipe:2", "-nostats", out)
 	}
@@ -118,7 +110,7 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 		if ctx.Err() != nil {
 			return "", err
 		}
-		// Los códecs del origen no caben en el contenedor de destino (wav → mp3, avi → mp4…).
+
 		log.Printf("[enrich] el remux no aplica (%v); recodificando a %s", err, target)
 		if _, err := runWithProgress(ctx, "enrich", build(false), scaleProgress(cb, 20, 100), out); err != nil {
 			return "", err
@@ -131,15 +123,13 @@ func Enrich(ctx context.Context, inputPath, target string, e *models.Enrichment,
 	return out, nil
 }
 
-// makeCover genera la portada: el fotograma del segundo 1 para video, la forma de onda sobre
-// fondo oscuro para audio. Siempre JPEG, que es lo que todos los contenedores y reproductores aceptan.
 func makeCover(ctx context.Context, inputPath string, audioOnly bool) (string, error) {
 	cover := outputPath(inputPath, "_cover.jpg")
 	w := strconv.Itoa(coverWidth)
 	h := strconv.Itoa(coverWidth * 9 / 16)
 	attempts := [][]string{
 		{"-y", "-ss", "1", "-i", inputPath, "-frames:v", "1", "-vf", "scale=" + w + ":-2", "-q:v", "3", cover},
-		{"-y", "-i", inputPath, "-frames:v", "1", "-vf", "scale=" + w + ":-2", "-q:v", "3", cover}, // video de menos de 1 s
+		{"-y", "-i", inputPath, "-frames:v", "1", "-vf", "scale=" + w + ":-2", "-q:v", "3", cover},
 	}
 	if audioOnly {
 		attempts = [][]string{{"-y", "-i", inputPath, "-filter_complex",
@@ -162,7 +152,6 @@ func makeCover(ctx context.Context, inputPath string, audioOnly bool) (string, e
 	return "", fmt.Errorf("enrich: no se pudo generar la portada de %s: %v", inputPath, lastErr)
 }
 
-// mergedTags son las etiquetas del archivo original más las del cliente (que ganan si repiten).
 func mergedTags(ctx context.Context, inputPath string, e *models.Enrichment, lyricsKey string) (map[string]string, error) {
 	tags := map[string]string{}
 	raw, err := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-print_format", "json", "-show_format", inputPath).Output()
@@ -178,7 +167,7 @@ func mergedTags(ctx context.Context, inputPath string, e *models.Enrichment, lyr
 		for k, v := range p.Format.Tags {
 			switch strings.ToLower(k) {
 			case "encoder", "major_brand", "minor_version", "compatible_brands":
-				continue // los pone el propio ffmpeg
+				continue
 			}
 			tags[strings.ToLower(k)] = v
 		}
@@ -194,8 +183,6 @@ func mergedTags(ctx context.Context, inputPath string, e *models.Enrichment, lyr
 	return tags, nil
 }
 
-// writeFFMetadata escribe las etiquetas en el formato ffmetadata (evita los límites y el
-// escapado de la línea de comandos: letras de varias líneas, '=' o ';' en los textos).
 func writeFFMetadata(inputPath string, tags map[string]string) (string, error) {
 	keys := make([]string, 0, len(tags))
 	for k := range tags {
@@ -215,8 +202,6 @@ var ffmetaEscaper = strings.NewReplacer(`\`, `\\`, "=", `\=`, ";", `\;`, "#", `\
 
 func ffmetaEscape(s string) string { return ffmetaEscaper.Replace(s) }
 
-// vorbisPictureBlock arma el bloque PICTURE de FLAC (tipo 3 = portada frontal) en base64, que es
-// como Ogg/Vorbis transporta la carátula (METADATA_BLOCK_PICTURE).
 func vorbisPictureBlock(coverPath string) (string, error) {
 	data, err := os.ReadFile(coverPath)
 	if err != nil {
@@ -247,7 +232,6 @@ func report(cb progressFn, pct int) {
 	}
 }
 
-// scaleProgress reubica el 0-100 de ffmpeg dentro de [lo, hi] del progreso total.
 func scaleProgress(cb progressFn, lo, hi int) progressFn {
 	if cb == nil {
 		return nil

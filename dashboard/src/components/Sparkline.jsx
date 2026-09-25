@@ -1,10 +1,7 @@
-// Mini-gráfica de 60 s como la del Administrador de tareas: área rellena, escala fija 0-100
-// para que dos nodos se comparen a simple vista. null = hueco (muestra no disponible).
 export default function Sparkline({ data = [], max = 100, color = 'var(--accent)', width = 220, height = 44, points = 60 }) {
     const pad = 1
     const n = points
     const stepX = (width - pad * 2) / (n - 1)
-    // Alineado a la derecha: el último valor siempre está en el borde derecho.
     const offset = n - data.length
     const y = v => height - pad - (Math.min(max, Math.max(0, v)) / max) * (height - pad * 2)
 
@@ -18,7 +15,6 @@ export default function Sparkline({ data = [], max = 100, color = 'var(--accent)
         else d += `L${x.toFixed(1)},${y(v).toFixed(1)}`
     })
     if (d) {
-        // Área: misma línea, cerrada por la base (solo si no hay huecos, para no pintar de más).
         if (!data.includes(null) && data.length > 1) {
             const x0 = pad + offset * stepX
             const x1 = pad + (n - 1) * stepX

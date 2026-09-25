@@ -27,14 +27,14 @@ func TestRequireUTF8JSON(t *testing.T) {
 	if code := send(utf8Body, "application/json"); code != http.StatusOK || !bytes.Equal(got, utf8Body) {
 		t.Fatalf("UTF-8 válido: code=%d body=%q; debía pasar intacto", code, got)
 	}
-	// "ñ" como un solo byte 0xF1 (Windows-1252), como lo manda curl desde Git Bash.
+
 	cp1252 := []byte("{\"name\":\"prueba subida enga\xf1osa\"}")
 	for _, ct := range []string{"application/json", "application/x-www-form-urlencoded", ""} {
 		if code := send(cp1252, ct); code != http.StatusBadRequest {
 			t.Errorf("Windows-1252 con Content-Type %q: code=%d; debía ser 400", ct, code)
 		}
 	}
-	// La subida de archivos es binaria: no se revisa.
+
 	if code := send([]byte{0xff, 0xfe, 0xf1}, "multipart/form-data; boundary=x"); code != http.StatusOK {
 		t.Errorf("multipart: code=%d; no debía revisarse", code)
 	}

@@ -1,16 +1,3 @@
-// Telemetría de hardware del nodo, al estilo del Administrador de tareas: CPU, memoria, disco y
-// cada GPU (integrada y dedicada) con su porcentaje de uso, VRAM y temperatura.
-//
-// Lo fijo (modelo de CPU, RAM total, lista de GPUs) se manda al registrarse; lo variable, en cada
-// heartbeat. Lo que una máquina no pueda medir se deja en nil y el dashboard dice "no disponible":
-// nunca se inventa un número.
-//
-// Fuentes por sistema:
-//   - CPU, memoria, disco: gopsutil (Windows y Linux).
-//   - GPU NVIDIA: nvidia-smi (viene con el driver) → nombre, VRAM, % uso, temperatura.
-//   - Windows, cualquier GPU: registro de DirectX (LUID → nombre y VRAM) + contadores PDH
-//     "GPU Engine" / "GPU Adapter Memory", que son los que lee el Administrador de tareas.
-//   - Linux AMD/Intel: /sys/class/drm (gpu_busy_percent, mem_info_vram_*).
 package monitoring
 
 import (
@@ -31,21 +18,17 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-// Los tipos que viajan por la red viven en models; aquí solo alias para leer cómodo.
 type (
 	Hardware   = models.Hardware
 	Metrics    = models.NodeMetrics
 	GPUMetrics = models.GPUMetrics
 )
 
-// GPUInfo es models.GPUInfo más la key interna con la que cada fuente identifica la tarjeta
-// (LUID en Windows, índice de nvidia-smi, cardN en sysfs) para casar las lecturas.
 type GPUInfo struct {
 	models.GPUInfo
 	key string
 }
 
-// gpuReading es lo que devuelve cada fuente para una GPU, identificada por su key.
 type gpuReading struct {
 	key      string
 	percent  *float64
@@ -53,26 +36,22 @@ type gpuReading struct {
 	tempC    *float64
 }
 
-// gpuProbe es una fuente de GPUs específica de cada sistema (ver gpu_windows.go, gpu_linux.go).
 type gpuProbe interface {
-	// list devuelve las GPUs que ve esta fuente, sin índice asignado.
 	list() []GPUInfo
-	// read devuelve las lecturas actuales, por key.
+
 	read() []gpuReading
 	close()
 }
 
-// Collector muestrea el hardware y guarda la última lectura.
 type Collector struct {
 	hw     Hardware
-	gpus   []GPUInfo // con key; hw.GPUs es la vista pública
+	gpus   []GPUInfo
 	probes []gpuProbe
 
 	mu   sync.RWMutex
 	last Metrics
 }
 
-// NewCollector detecta el hardware una vez. Es seguro llamarlo aunque no haya GPU ni drivers.
 func NewCollector() *Collector {
 	c := &Collector{}
 	c.hw = detectHardware()
@@ -89,17 +68,14 @@ func NewCollector() *Collector {
 	return c
 }
 
-// Hardware devuelve la parte fija.
 func (c *Collector) Hardware() Hardware { return c.hw }
 
-// Last devuelve la última muestra.
 func (c *Collector) Last() Metrics {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.last
 }
 
-// Run muestrea cada segundo hasta que ctx termine.
 func (c *Collector) Run(ctx context.Context) {
 	t := time.NewTicker(1 * time.Second)
 	defer t.Stop()
@@ -141,7 +117,7 @@ func (c *Collector) sample() Metrics {
 				readings[r.key] = r
 				continue
 			}
-			// Dos fuentes para la misma GPU (nvidia-smi + PDH): se completa lo que falte.
+
 			if prev.percent == nil {
 				prev.percent = r.percent
 			}
@@ -165,7 +141,6 @@ func (c *Collector) sample() Metrics {
 	return m
 }
 
-// detectHardware llena lo fijo salvo las GPUs.
 func detectHardware() Hardware {
 	hw := Hardware{Arch: runtime.GOARCH, OS: runtime.GOOS}
 	if hi, err := host.Info(); err == nil {
@@ -182,7 +157,6 @@ func detectHardware() Hardware {
 	return hw
 }
 
-// prettyOS: "Microsoft Windows 11 Home" → "Windows 11"; "arch" → "Arch Linux"; "ubuntu 24.04".
 func prettyOS(platform, version, family string) string {
 	p := strings.ToLower(platform)
 	switch {
@@ -203,9 +177,6 @@ func prettyOS(platform, version, family string) string {
 	}
 }
 
-// mergeGPUs junta lo que ven las fuentes en una sola lista con índices estables. Una fuente
-// específica del sistema (registro+PDH, sysfs) manda el orden; nvidia-smi solo completa VRAM y
-// se casa por nombre cuando la misma GPU aparece en las dos.
 func mergeGPUs(probes []gpuProbe) []GPUInfo {
 	var out []GPUInfo
 	var nvidiaOnly []GPUInfo
@@ -226,7 +197,7 @@ func mergeGPUs(probes []gpuProbe) []GPUInfo {
 				if out[i].VRAMTotalBytes == 0 {
 					out[i].VRAMTotalBytes = nv.VRAMTotalBytes
 				}
-				// La lectura de nvidia-smi se casa con la key del sistema.
+
 				nvidiaKeyAlias[nv.key] = out[i].key
 				break
 			}
@@ -242,8 +213,6 @@ func mergeGPUs(probes []gpuProbe) []GPUInfo {
 	return out
 }
 
-// nvidiaKeyAlias traduce la key de nvidia-smi ("nv:0") a la del sistema (LUID) cuando ambas
-// fuentes ven la misma tarjeta.
 var nvidiaKeyAlias = map[string]string{}
 
 func sameGPUName(a, b string) bool {
@@ -256,8 +225,6 @@ func sameGPUName(a, b string) bool {
 	}
 	return norm(a) == norm(b)
 }
-
-// ── nvidia-smi ────────────────────────────────────────────────────────────────────────────
 
 type nvidiaProbe struct{ bin string }
 

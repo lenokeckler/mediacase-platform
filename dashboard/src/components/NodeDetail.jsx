@@ -3,11 +3,7 @@ import { fmtBytes, opArrow, OPERATION_LABEL } from '../api'
 import StatusBadge from './StatusBadge'
 import styles from './NodeDetail.module.css'
 
-// Vista ampliada de un nodo (clic en su tarjeta): las mismas métricas que el Administrador de
-// tareas pero en grande, con los últimos 5 minutos, ejes legibles, el hardware completo y las
-// sub-tareas que ese nodo tiene en curso. Se cierra con Esc, con el botón o con clic afuera.
-
-const POINTS = 300 // 5 min a 1 muestra/s
+const POINTS = 300
 
 function BigChart({ label, device, percent, secondary, series, color, unavailable }) {
     const W = 720, H = 180, padL = 34, padR = 8, padT = 8, padB = 22

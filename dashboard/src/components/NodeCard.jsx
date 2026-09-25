@@ -2,10 +2,6 @@ import Sparkline from './Sparkline'
 import { fmtBytes } from '../api'
 import styles from './NodeCard.module.css'
 
-// Tarjeta de un nodo al estilo Administrador de tareas > Rendimiento: CPU, memoria y cada GPU
-// con porcentaje, valor absoluto y los últimos 60 s. Lo que el nodo no puede medir se muestra
-// como "no disponible", nunca como 0.
-
 const POOL_COLOR = { video: 'var(--pool-video)', audio: 'var(--pool-audio)', metadata: 'var(--pool-metadata)' }
 
 function fmtGB(bytes) {
@@ -46,7 +42,7 @@ export default function NodeCard({ worker, history, onOpen }) {
     const role = (w.role || 'all').toLowerCase()
     const ALL_POOLS = ['video', 'audio', 'metadata']
     const pools = w.capabilities?.length ? w.capabilities : ALL_POOLS
-    const helps = ALL_POOLS.filter(p => !pools.includes(p)) // pools en los que ayuda si está libre
+    const helps = ALL_POOLS.filter(p => !pools.includes(p))
 
     const cpuPct = m ? m.cpu_percent : w.cpu_percent
     const memPct = m ? m.mem_percent : w.mem_percent

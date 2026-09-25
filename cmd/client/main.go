@@ -1,12 +1,3 @@
-// cmd/client/main.go
-// Test client: single job submission and batch/concurrent load testing.
-// Usage:
-//
-//	Caso:    ./client -case -name boda -files boda.mp4,discurso.mp3,foto.jpg -priority 8 -watch
-//	Seguir:  ./client -case-status <id>
-//	Single:  ./client -file <clave-en-minio> -op convert -priority 5 -watch
-//	Batch:   ./client -batch -manifest dataset/manifest.json -concurrency 50 -watch
-//	Stats:   ./client -stats
 package main
 
 import (
@@ -22,8 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 )
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 type submitRequest struct {
 	FilePath  string `json:"file_path"`
@@ -56,8 +45,6 @@ type manifest struct {
 	Total int            `json:"total"`
 	Files []manifestFile `json:"files"`
 }
-
-// ── HTTP helpers ──────────────────────────────────────────────────────────────
 
 func submitJob(coordinatorURL string, req submitRequest) (*jobResponse, error) {
 	body, _ := json.Marshal(req)
@@ -102,8 +89,6 @@ func listJobs(coordinatorURL, status string) ([]jobResponse, error) {
 	json.NewDecoder(resp.Body).Decode(&jobs)
 	return jobs, nil
 }
-
-// ── Single job mode ───────────────────────────────────────────────────────────
 
 func runSingle(coordinatorURL, filePath, operation string, priority int, watch bool) {
 	fmt.Printf("Submitting job: op=%s file=%s priority=%d\n", operation, filePath, priority)
@@ -156,8 +141,6 @@ func watchSingleJob(coordinatorURL, jobID string) {
 	}
 }
 
-// ── Batch mode ────────────────────────────────────────────────────────────────
-
 func runBatch(coordinatorURL, manifestPath string, concurrency, priorityOverride int, watch bool) {
 	raw, err := os.ReadFile(manifestPath)
 	if err != nil {
@@ -168,7 +151,6 @@ func runBatch(coordinatorURL, manifestPath string, concurrency, priorityOverride
 		log.Fatalf("Cannot parse manifest: %v", err)
 	}
 
-	// Expand: one request per (file, operation) pair
 	type task struct {
 		file manifestFile
 		op   string
@@ -251,10 +233,8 @@ func runBatch(coordinatorURL, manifestPath string, concurrency, priorityOverride
 	}
 }
 
-// watchAllJobs polls /jobs every 2 seconds and prints a live summary line
-// until every submitted job is completed or failed.
 func watchAllJobs(coordinatorURL string, jobIDs []string) {
-	// Build a lookup set so we only track OUR jobs, not leftover ones in the DB
+
 	idSet := make(map[string]bool, len(jobIDs))
 	for _, id := range jobIDs {
 		idSet[id] = true
@@ -264,7 +244,6 @@ func watchAllJobs(coordinatorURL string, jobIDs []string) {
 	defer ticker.Stop()
 	start := time.Now()
 
-	// Track per-job processing times for the final report
 	type jobMeta struct {
 		startedAt   time.Time
 		completedAt time.Time
@@ -315,7 +294,7 @@ func watchAllJobs(coordinatorURL string, jobIDs []string) {
 		)
 
 		if done == total {
-			// Final report
+
 			fmt.Printf("\n── All %d jobs finished ─────────────────────────\n", total)
 			fmt.Printf("  ✅ Completed:   %d\n", counts["completed"])
 			fmt.Printf("  ❌ Failed:      %d\n", counts["failed"])
@@ -336,8 +315,6 @@ func watchAllJobs(coordinatorURL string, jobIDs []string) {
 		}
 	}
 }
-
-// ── Stats mode ────────────────────────────────────────────────────────────────
 
 func runStats(coordinatorURL string) {
 	resp, err := http.Get(coordinatorURL + "/stats")
@@ -368,39 +345,32 @@ func runStats(coordinatorURL string) {
 	}
 }
 
-// ── main ──────────────────────────────────────────────────────────────────────
-
 func main() {
 	coordinatorURL := flag.String("coordinator", "",
 		"Coordinator URL (default: $COORDINATOR_URL or http://localhost:8080)")
 
-	// Single job flags
 	filePath := flag.String("file", "", "Path to the input file")
 	operation := flag.String("op", "convert", "Operation: convert | extract_audio | thumbnail")
 	priority := flag.Int("priority", 5, "Job priority 1-10 (10=highest)")
 	watch := flag.Bool("watch", false,
 		"Poll until the single job (or all batch jobs) finish")
 
-	// Batch flags
 	batch := flag.Bool("batch", false, "Enable batch mode (reads -manifest)")
 	manifestPath := flag.String("manifest", "dataset/manifest.json",
 		"Path to dataset manifest.json")
 	concurrency := flag.Int("concurrency", 20,
 		"Number of concurrent submissions in batch mode")
 
-	// Case flags (la unidad de trabajo de la consigna v2.0)
 	caseMode := flag.Bool("case", false, "Enviar un caso: usa -files, -name, -priority, -watch")
 	caseFiles := flag.String("files", "", "Claves en MinIO separadas por coma; 'a.mp4:extract_audio' fuerza la operación")
 	caseName := flag.String("name", "", "Nombre del caso")
 	caseStatus := flag.String("case-status", "", "Seguir un caso existente por id hasta que cierre e imprimir su reporte")
 
-	// Stats flag
 	statsMode := flag.Bool("stats", false,
 		"Print system stats and worker list, then exit")
 
 	flag.Parse()
 
-	// Resolve coordinator URL
 	url := *coordinatorURL
 	if url == "" {
 		url = os.Getenv("COORDINATOR_URL")

@@ -15,13 +15,6 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// GPUs en Windows, como las ve el Administrador de tareas:
-//   - HKLM\SOFTWARE\Microsoft\DirectX\{...}: una clave por adaptador con Description, AdapterLuid
-//     y DedicatedVideoMemory. Se descarta el "Microsoft Basic Render Driver" (software).
-//   - Contadores PDH "\GPU Engine(*)\Utilization Percentage" (una instancia por proceso × motor,
-//     con el LUID en el nombre) y "\GPU Adapter Memory(*)\Dedicated Usage". El % de una GPU es,
-//     como en el Administrador de tareas, el motor más ocupado (suma de todos los procesos).
-
 func hideWindow(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 }
@@ -35,10 +28,8 @@ func openProbes() []gpuProbe {
 	return []gpuProbe{p}
 }
 
-// ── registro de DirectX ─────────────────────────────────────────────────────────────────
-
 type dxAdapter struct {
-	luid string // "0x116f2", como aparece en las instancias PDH (sin ceros a la izquierda)
+	luid string
 	name string
 	vram uint64
 }
@@ -77,15 +68,13 @@ func vendorOf(name string) (vendor string, integrated bool) {
 	case strings.Contains(n, "nvidia"):
 		return "nvidia", false
 	case strings.Contains(n, "amd") || strings.Contains(n, "radeon"):
-		// Las Radeon integradas de los Ryzen se llaman "AMD Radeon Graphics" / "Radeon 740M/760M/780M".
+
 		return "amd", !strings.Contains(n, "rx ")
 	case strings.Contains(n, "intel"):
 		return "intel", !strings.Contains(n, "arc")
 	}
 	return "other", false
 }
-
-// ── PDH ─────────────────────────────────────────────────────────────────────────────────
 
 var (
 	pdh                          = windows.NewLazySystemDLL("pdh.dll")
@@ -105,7 +94,6 @@ const (
 	pdhCStatusNewDat = 1
 )
 
-// PDH_FMT_COUNTERVALUE_ITEM_W en amd64: puntero al nombre + {CStatus uint32, pad, double}.
 type pdhFmtCounterValueItem struct {
 	szName  *uint16
 	cStatus uint32
@@ -145,7 +133,7 @@ func newPDHProbe() (*pdhProbe, error) {
 		p.close()
 		return nil, err
 	}
-	// Los porcentajes necesitan dos muestras; la primera solo ceba el contador.
+
 	pdhCollectQueryData.Call(p.query)
 	return p, nil
 }
@@ -172,7 +160,6 @@ func (p *pdhProbe) read() []gpuReading {
 	engine := p.counterArray(p.engine)
 	memory := p.counterArray(p.memory)
 
-	// % por (LUID, tipo de motor) sumando procesos; el % de la GPU es el motor más alto.
 	byLuidEngine := map[string]map[string]float64{}
 	for name, v := range engine {
 		luid, eng, ok := parseEngineInstance(name)
@@ -206,7 +193,7 @@ func (p *pdhProbe) read() []gpuReading {
 			r.percent = &best
 		} else if p.primed {
 			zero := 0.0
-			r.percent = &zero // sin procesos usando la GPU = 0 %, no "no disponible"
+			r.percent = &zero
 		}
 		if v, ok := vramByLuid[a.luid]; ok {
 			r.vramUsed = &v
@@ -216,7 +203,6 @@ func (p *pdhProbe) read() []gpuReading {
 	return out
 }
 
-// counterArray devuelve {nombre de instancia: valor} de un contador con comodín.
 func (p *pdhProbe) counterArray(h uintptr) map[string]float64 {
 	var size, count uint32
 	r, _, _ := pdhGetFormattedCounterArrayW.Call(h, pdhFmtDouble, uintptr(unsafe.Pointer(&size)), uintptr(unsafe.Pointer(&count)), 0)
@@ -239,8 +225,6 @@ func (p *pdhProbe) counterArray(h uintptr) map[string]float64 {
 	return out
 }
 
-// parseEngineInstance: "pid_22124_luid_0x00000000_0x000116f2_phys_0_eng_0_engtype_3d" →
-// luid "0x116f2", motor "3d".
 func parseEngineInstance(name string) (luid, engine string, ok bool) {
 	parts := strings.Split(name, "_")
 	for i, p := range parts {
@@ -254,7 +238,6 @@ func parseEngineInstance(name string) (luid, engine string, ok bool) {
 	return luid, engine, luid != "" && engine != ""
 }
 
-// parseMemoryInstance: "luid_0x00000000_0x000116f2_phys_0" → "0x116f2".
 func parseMemoryInstance(name string) (string, bool) {
 	parts := strings.Split(name, "_")
 	for i := 0; i+2 < len(parts); i++ {
@@ -265,7 +248,6 @@ func parseMemoryInstance(name string) (string, bool) {
 	return "", false
 }
 
-// normalizeLuid: "0x000116f2" → "0x116f2", para que coincida con fmt.Sprintf("0x%x") del registro.
 func normalizeLuid(s string) string {
 	s = strings.ToLower(strings.TrimPrefix(s, "0x"))
 	s = strings.TrimLeft(s, "0")

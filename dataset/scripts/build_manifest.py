@@ -1,18 +1,4 @@
 #!/usr/bin/env python3
-"""Arma dataset/manifest.json (versión 3) mezclando las tres procedencias del dataset.
-
-  1. sintético: dataset/manifest.synthetic.json (v2, lo escribe generate_dataset.sh), menos los
-     archivos listados en dataset/scripts/dropped_synthetic.txt;
-  2. real:      dataset/real_sources.json → "sources" (descargas) y "derived" (variantes ffmpeg);
-  3. edge:      dataset/real_sources.json → "edge" (casos límite y fallos a propósito);
-
-y agrega los casos de prueba curados de dataset/test_cases.json como "test_cases".
-
-Tamaño, duración y nivel salen del archivo en disco (stat + ffprobe), no del spec: el manifest
-describe lo que realmente hay en dataset/files. Correr después de fetch_real.sh.
-
-Uso: python dataset/scripts/build_manifest.py [--files dataset/files] [--out dataset/manifest.json]
-"""
 import argparse
 import datetime as dt
 import hashlib
@@ -24,32 +10,25 @@ import sys
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 MB = 1024 * 1024
 
-# Nivel por tamaño real. Los sintéticos se generan dentro de franjas estrictas (liviano < 5 MB,
-# mediano 20-50 MB, pesado 150-400 MB). El material real cae donde cae, así que se le asigna el
-# nivel más cercano con cortes redondos: < 10 MB liviano, 10-100 MB mediano, >= 100 MB pesado.
 REAL_TIER_CUTS = (10 * MB, 100 * MB)
 
-EXT_TYPE = {  # mismo mapa que internal/cases/router.go (extToType)
+EXT_TYPE = {
     **dict.fromkeys(["mp4", "mkv", "avi", "mov", "webm", "m4v", "flv", "wmv", "ts", "mts", "3gp", "mpg", "mpeg"], "video"),
     **dict.fromkeys(["mp3", "wav", "flac", "aac", "ogg", "m4a", "opus", "wma", "aiff", "aif", "dsf", "dff"], "audio"),
     **dict.fromkeys(["jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff"], "image"),
 }
 USERS = ("leno", "jennifer", "jonathan")
-SESSIONS_BY_TYPE = {"video": (1, 3, 4), "audio": (2, 3, 4), "image": (3, 4)}  # igual que el generador
+SESSIONS_BY_TYPE = {"video": (1, 3, 4), "audio": (2, 3, 4), "image": (3, 4)}
 BATCH = {"real": "lote-2026-09-20", "derived": "lote-2026-09-21", "edge": "lote-2026-09-22"}
 SYNTHETIC_ORIGIN = "generate_dataset.sh (ffmpeg, semilla 42)"
 
-
 def stable(key, salt, n):
-    """Entero determinista en [0, n) a partir del nombre: misma asignación en cualquier máquina."""
     return int(hashlib.sha1(f"{salt}:{key}".encode("utf-8")).hexdigest(), 16) % n
-
 
 def real_tier(size):
     if size < REAL_TIER_CUTS[0]:
         return "light"
     return "medium" if size < REAL_TIER_CUTS[1] else "heavy"
-
 
 def probe_duration(path):
     try:
@@ -57,17 +36,15 @@ def probe_duration(path):
                              capture_output=True, text=True, timeout=120)
         return int(float(out.stdout.strip().splitlines()[0]))
     except (ValueError, IndexError, subprocess.SubprocessError):
-        return 0  # vacío, texto, truncado sin índice…: no hay duración legible
-
+        return 0
 
 def grouping(key, typ, event, kind):
     if kind == "edge":
-        session = f"{event}-s3"  # todos los casos límite juntos, en una sesión mixta
+        session = f"{event}-s3"
     else:
         opts = SESSIONS_BY_TYPE[typ]
         session = f"{event}-s{opts[stable(key, 'session', len(opts))]}"
     return {"event": event, "session": session, "batch": BATCH[kind], "user": USERS[stable(key, 'user', len(USERS))]}
-
 
 def describe(files_dir, key, typ, fmt, kind, event):
     path = os.path.join(files_dir, key)
@@ -80,10 +57,8 @@ def describe(files_dir, key, typ, fmt, kind, event):
     e.update(grouping(key, typ, event, kind))
     return e
 
-
 def ext_of(key):
     return key.rsplit(".", 1)[-1].lower()
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -180,7 +155,6 @@ def main():
     vol = sum(f["size_bytes"] for f in files)
     print(f"manifest v3: {len(files)} archivos ({counts['synthetic']} sintéticos, {counts['real']} reales, "
           f"{counts['edge']} límite), {vol / MB / 1024:.2f} GB, {len(cases)} casos de prueba → {a.out}")
-
 
 if __name__ == "__main__":
     main()

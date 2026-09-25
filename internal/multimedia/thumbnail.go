@@ -1,5 +1,3 @@
-// internal/multimedia/thumbnail.go
-// Atajo de miniatura con el destino por defecto (JPG, 320 px). Ver ThumbnailTo en ops.go.
 package multimedia
 
 import "context"

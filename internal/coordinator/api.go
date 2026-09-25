@@ -16,33 +16,27 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/storage"
 )
 
-// API groups all HTTP handlers of the coordinator.
 type API struct {
 	queue           *queue.Queue
 	registry        *Registry
-	hub             *Hub       // WebSocket del dashboard
-	workerHub       *WorkerHub // WebSocket de los workers (canal saliente)
+	hub             *Hub
+	workerHub       *WorkerHub
 	db              *sql.DB
-	barrier         *cases.Barrier       // cierra el caso cuando todas sus sub-tareas resolvieron
-	minio           *storage.MinIOClient // entradas (dataset/) y resultados; nil si no está disponible
-	datasetManifest *manifestCache       // metadatos del dataset (GET /dataset, GET /dataset/test-cases)
+	barrier         *cases.Barrier
+	minio           *storage.MinIOClient
+	datasetManifest *manifestCache
 
-	// onWorkerRestart se invoca cuando un worker se registra con un ID conocido pero otra
-	// instancia (proceso nuevo): sus jobs en vuelo deben volver a la cola. Lo conecta el scheduler.
 	onWorkerRestart func(ctx context.Context, workerID string)
-	// onCaseClosed genera el reporte consolidado (también al cancelar). Lo conecta main.
+
 	onCaseClosed func(caseID string)
-	// tunnel publica node-1 en internet desde el dashboard; nil = sin túnel (tests).
+
 	tunnel *Tunnel
 }
 
-// SetTunnel conecta el gestor de túnel (botón "Publicar en internet" del dashboard).
 func (a *API) SetTunnel(t *Tunnel) { a.tunnel = t }
 
-// SetOnCaseClosed conecta la generación del reporte al cierre/cancelación de un caso.
 func (a *API) SetOnCaseClosed(fn func(caseID string)) { a.onCaseClosed = fn }
 
-// SetOnWorkerRestart conecta el reclaim del scheduler al registro de workers.
 func (a *API) SetOnWorkerRestart(fn func(ctx context.Context, workerID string)) {
 	a.onWorkerRestart = fn
 }
@@ -53,44 +47,36 @@ func NewAPI(q *queue.Queue, reg *Registry, hub *Hub, workerHub *WorkerHub, datab
 		datasetManifest: &manifestCache{}}
 }
 
-// Router builds and returns the HTTP mux with all the routes.
 func (a *API) Router() http.Handler {
 	mux := http.NewServeMux()
 
-	// Casos (la unidad de trabajo de la consigna v2.0)
 	mux.HandleFunc("POST /cases", a.submitCase)
 	mux.HandleFunc("GET /cases", a.listCases)
 	mux.HandleFunc("GET /cases/{id}", a.getCase)
 	mux.HandleFunc("GET /cases/{id}/report", a.getCaseReport)
 	mux.HandleFunc("POST /cases/{id}/cancel", a.cancelCase)
 
-	// Jobs sueltos (pruebas y compatibilidad)
 	mux.HandleFunc("POST /jobs", a.submitJob)
 	mux.HandleFunc("GET /jobs", a.listJobs)
 	mux.HandleFunc("GET /jobs/{id}", a.getJob)
 
-	// Workers
 	mux.HandleFunc("POST /workers/register", a.registerWorker)
 	mux.HandleFunc("POST /workers/{id}/heartbeat", a.workerHeartbeat)
-	mux.HandleFunc("GET /workers/{id}/stream", a.workerHub.ServeStream) // canal saliente del worker
-	mux.HandleFunc("POST /workers/{id}/unregister", a.unregisterWorker) // despedida: re-encolar lo suyo ya
+	mux.HandleFunc("GET /workers/{id}/stream", a.workerHub.ServeStream)
+	mux.HandleFunc("POST /workers/{id}/unregister", a.unregisterWorker)
 	mux.HandleFunc("GET /workers", a.listWorkers)
 
-	// Stats + WebSocket + Prometheus
 	mux.HandleFunc("GET /stats", a.getStats)
 	mux.HandleFunc("GET /ws", a.hub.ServeWS)
 	mux.Handle("GET /metrics", MetricsHandler(a.registry, a.queue, a.db))
 
-	// Entradas: subir al bucket dataset/ y listarlo (lo usa el dashboard para armar casos)
 	mux.HandleFunc("POST /upload", a.uploadFiles)
 	mux.HandleFunc("GET /dataset", a.listDataset)
 	mux.HandleFunc("GET /dataset/test-cases", a.datasetTestCases)
 
-	// Conectar otra máquina como worker: página + ZIP con el .env ya escrito
 	mux.HandleFunc("GET /connect", a.connectPage)
 	mux.HandleFunc("GET /download/worker", a.downloadWorker)
 
-	// Compartir node-1: URLs de la LAN y túnel hacia internet manejado desde el dashboard
 	mux.HandleFunc("GET /catalog", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, cases.GetCatalog()) })
 	mux.HandleFunc("GET /share", a.getShare)
 	mux.HandleFunc("POST /tunnel", a.startTunnel)
@@ -103,8 +89,6 @@ func (a *API) Router() http.Handler {
 	return requireUTF8JSON(mux)
 }
 
-// ── Job handlers ─────────────────────────────────────────────────────────────
-
 func (a *API) submitJob(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		FilePath  string           `json:"file_path"`
@@ -116,8 +100,7 @@ func (a *API) submitJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Routing por tipo también aquí: el coordinador valida/decide la operación y el pool.
-	d, err := cases.Route(req.FilePath, req.Operation) // destino por defecto de la operación
+	d, err := cases.Route(req.FilePath, req.Operation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -135,7 +118,7 @@ func (a *API) submitJob(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:  time.Now(),
 	}
 	if job.Priority == 0 {
-		job.Priority = 5 // default: normal
+		job.Priority = 5
 	}
 
 	if err := db.InsertJob(a.db, job); err != nil {
@@ -177,8 +160,6 @@ func (a *API) getJob(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(job)
 }
 
-// ── Worker handlers ───────────────────────────────────────────────────────────
-
 func (a *API) registerWorker(w http.ResponseWriter, r *http.Request) {
 	var info models.WorkerInfo
 	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
@@ -188,7 +169,7 @@ func (a *API) registerWorker(w http.ResponseWriter, r *http.Request) {
 	restarted := a.registry.Register(&info)
 	log.Printf("[api] worker registered: %s (%s) instance=%s", info.ID, info.Hostname, shortID(info.Instance))
 	if restarted && a.onWorkerRestart != nil {
-		// Proceso nuevo con el mismo ID: lo que el proceso anterior tenía en vuelo se perdió.
+
 		log.Printf("[api] worker %s es un proceso nuevo: reclamando sus sub-tareas huérfanas", info.ID)
 		a.onWorkerRestart(r.Context(), info.ID)
 	}
@@ -196,8 +177,6 @@ func (a *API) registerWorker(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "registered"})
 }
 
-// unregisterWorker: el worker se apaga de forma ordenada. Se da de baja y sus sub-tareas
-// asignadas o en ejecución vuelven a la cola de inmediato (sin esperar los 15 s del heartbeat).
 func (a *API) unregisterWorker(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var payload struct {
@@ -205,7 +184,7 @@ func (a *API) unregisterWorker(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewDecoder(r.Body).Decode(&payload)
 	if !a.registry.Remove(id, payload.Instance) {
-		w.WriteHeader(http.StatusNoContent) // ya no estaba (o era una instancia vieja)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	log.Printf("[api] worker %s se despidió; reclamando sus sub-tareas", id)
@@ -221,14 +200,14 @@ func (a *API) workerHeartbeat(w http.ResponseWriter, r *http.Request) {
 		CPU        float64             `json:"cpu_percent"`
 		Mem        float64             `json:"mem_percent"`
 		ActiveJobs int                 `json:"active_jobs"`
-		Metrics    *models.NodeMetrics `json:"metrics"` // telemetría de hardware (opcional)
+		Metrics    *models.NodeMetrics `json:"metrics"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
 	}
 	if !a.registry.Heartbeat(id, payload.CPU, payload.Mem, payload.ActiveJobs, payload.Metrics) {
-		// Worker no estaba registrado — que se registre primero
+
 		http.Error(w, "worker not registered", http.StatusNotFound)
 		return
 	}
@@ -240,13 +219,10 @@ func (a *API) listWorkers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(a.registry.All())
 }
 
-// getStats: conteo de sub-tareas por estado y, además, los casos abiertos con sus sub-tareas
-// agrupadas por estado (consigna: "sub-tareas activas o en espera, agrupadas por caso").
 func (a *API) getStats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, a.StatsSnapshot())
 }
 
-// StatsSnapshot arma el objeto de /stats; lo comparte el snapshot del WebSocket.
 func (a *API) StatsSnapshot() map[string]any {
 	stats, _ := db.GetStats(a.db)
 	out := make(map[string]any, len(stats)+1)
@@ -274,18 +250,14 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// El worker ya no escribe en la base: este handler es la única fuente de verdad
-	// del estado de una sub-tarea, incluidos started_at y completed_at.
 	var err error
 	switch payload.Status {
 	case string(models.StatusRunning):
-		// Los avances de progreso viajan en conexiones distintas a la del cierre: uno rezagado
-		// puede llegar DESPUÉS del completed/failed. Nunca devolver una sub-tarea terminada a
-		// running (dejaba el caso en processing para siempre y a los 15 min la marcaba vencida).
+
 		_, err = a.db.Exec(`UPDATE jobs SET status='running', progress=$1,
 			started_at=COALESCE(started_at, NOW())
 			WHERE id=$2 AND status IN ('pending','assigned','running')`, payload.Progress, id)
-		// La primera sub-tarea que arranca mueve el caso a processing (o lo saca de retrying).
+
 		a.db.Exec(`UPDATE cases SET status='processing', started_at=COALESCE(started_at, NOW())
 			WHERE id=(SELECT case_id FROM jobs WHERE id=$1) AND status IN ('queued','retrying')`, id)
 	case string(models.StatusCompleted):
@@ -311,7 +283,6 @@ func (a *API) jobProgress(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// poolOf devuelve el pool de una sub-tarea (etiqueta de las métricas de throughput).
 func (a *API) poolOf(jobID string) string {
 	var pool sql.NullString
 	if err := a.db.QueryRow(`SELECT pool FROM jobs WHERE id=$1`, jobID).Scan(&pool); err != nil || !pool.Valid || pool.String == "" {
@@ -349,7 +320,6 @@ func (a *API) jobFail(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// resolveCase avisa al barrier que una sub-tarea del caso llegó a un estado final.
 func (a *API) resolveCase(ctx context.Context, jobID string) {
 	if a.barrier == nil {
 		return

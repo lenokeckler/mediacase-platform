@@ -1,9 +1,6 @@
-﻿# Corre el coordinador como proceso nativo del host (node-1) con infra/env/node1.env.
-# Requiere: docker compose -f docker-compose.infra.yml up -d
-. (Join-Path $PSScriptRoot 'env.ps1')
+﻿. (Join-Path $PSScriptRoot 'env.ps1')
 Import-DotEnv (Join-Path $PSScriptRoot '..\infra\env\node1.env')
 Set-Location (Join-Path $PSScriptRoot '..')
-# Compilar a un binario con nombre fijo (no 'go run': deja procesos huerfanos sin nombre en el puerto).
 New-Item -ItemType Directory -Force bin | Out-Null
 if (Get-Command go -ErrorAction SilentlyContinue) {
     go build -o bin/mediacase-coordinator.exe ./cmd/coordinator

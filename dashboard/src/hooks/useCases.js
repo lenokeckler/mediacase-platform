@@ -4,8 +4,6 @@ import { api, isTerminal } from '../api'
 const LIST_INTERVAL_MS = 2000
 const DETAIL_INTERVAL_MS = 1000
 
-// Lista de casos (polling cada 2 s) y detalle del caso abierto (polling cada 1 s mientras
-// no sea terminal; al cerrar, pide el reporte una sola vez).
 export function useCases() {
     const [cases, setCases] = useState([])
     const [error, setError] = useState(null)
@@ -29,7 +27,6 @@ export function useCases() {
         return () => clearInterval(t)
     }, [refresh])
 
-    // Detalle del caso abierto
     useEffect(() => {
         if (!selectedId) {
             setSelected(null)
@@ -57,14 +54,12 @@ export function useCases() {
         }
         tick()
         const t = setInterval(() => {
-            // seguir consultando solo mientras el caso pueda cambiar
             if (!selected || !isTerminal(selected.status)) tick()
         }, DETAIL_INTERVAL_MS)
         return () => {
             stop = true
             clearInterval(t)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedId])
 
     const openCase = useCallback((id) => {

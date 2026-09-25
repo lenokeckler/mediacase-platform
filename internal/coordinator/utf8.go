@@ -9,14 +9,8 @@ import (
 	"unicode/utf8"
 )
 
-// maxJSONBody acota lo que se lee para validar: un POST /cases de cientos de archivos pesa
-// unos cientos de KB, muy por debajo de esto.
 const maxJSONBody = 16 << 20
 
-// requireUTF8JSON rechaza con 400 un cuerpo JSON que no sea UTF-8 válido. El decodificador de
-// Go no falla con bytes inválidos: los cambia en silencio por U+FFFD, y un nombre de caso
-// escrito en una consola Windows-1252 (curl desde Git Bash, PowerShell 5.1 sin -Encoding)
-// quedaba guardado como "enga�osa" para siempre. El navegador siempre manda UTF-8.
 func requireUTF8JSON(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil || r.Method == http.MethodGet || !isJSONRequest(r) {
@@ -46,9 +40,6 @@ func requireUTF8JSON(next http.Handler) http.Handler {
 	})
 }
 
-// isJSONRequest: todo cuerpo que no sea multipart. La API lee JSON en todos sus POST, también
-// cuando el cliente no pone Content-Type o pone el de formulario (curl -d sin -H manda
-// application/x-www-form-urlencoded). Multipart es la subida de archivos: binario, no se revisa.
 func isJSONRequest(r *http.Request) bool {
 	mt, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	return err != nil || !strings.HasPrefix(mt, "multipart/")

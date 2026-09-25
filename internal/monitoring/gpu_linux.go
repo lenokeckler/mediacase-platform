@@ -13,10 +13,6 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// GPUs en Linux vía /sys/class/drm/cardN/device: vendor (0x1002 AMD, 0x8086 Intel, 0x10de
-// NVIDIA), gpu_busy_percent y mem_info_vram_{used,total} (amdgpu). Para NVIDIA el driver
-// propietario no expone esto en sysfs: lo cubre nvidia-smi.
-
 func hideWindow(*exec.Cmd) {}
 
 func openProbes() []gpuProbe {
@@ -65,7 +61,7 @@ func (p *sysfsProbe) list() []GPUInfo {
 		case "0x10de":
 			g.Vendor, g.Name = "nvidia", "NVIDIA"
 		case "0x15ad":
-			g.Vendor, g.Name = "virtual", "VMware SVGA (virtual)" // VirtualBox y VMware
+			g.Vendor, g.Name = "virtual", "VMware SVGA (virtual)"
 		case "0x80ee":
 			g.Vendor, g.Name = "virtual", "VirtualBox Graphics (virtual)"
 		case "0x1234", "0x1b36":

@@ -1,15 +1,3 @@
-"""Genera los Word de entrega a partir de las fuentes Markdown de esta carpeta.
-
-    python docs/entrega/build_docx.py                 # los tres documentos
-    python docs/entrega/build_docx.py 03_informe_de_pruebas.md
-
-Cada documento parte de plantilla_portada.docx (la portada oficial del equipo, copiada de la
-indagatoria de SO), cambia solo los renglones que varían y escribe el cuerpo con el formato de
-entrega: Times New Roman 12, interlineado 1.5, carta, márgenes de 2.54 cm, cuerpo justificado con
-sangría de primera línea de 1.27 cm, títulos sin sangría, portada sin número. La sintaxis de las
-fuentes está en CONVENCIONES.md. Los diagramas Mermaid se dibujan con Chrome sin ventana.
-Después, Word (por COM) actualiza el índice y exporta el PDF.
-"""
 import base64
 import copy
 import hashlib
@@ -51,11 +39,7 @@ CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
 DELIVERY_DATE = "25 de setiembre de 2026"
 
-# Índices de los párrafos de la portada (plantilla_portada.docx) que cambian por documento.
 P_TIPO, P_TITULO, P_SUBTITULO, P_FECHA = 11, 12, 13, 27
-
-
-# ── Utilidades de formato ─────────────────────────────────────────────────────────────────
 
 def set_run_font(run, name=FONT, size=BODY_PT, bold=None, italic=None):
     run.font.name = name
@@ -67,7 +51,6 @@ def set_run_font(run, name=FONT, size=BODY_PT, bold=None, italic=None):
         rpr.insert(0, fonts)
     for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
         fonts.set(qn(attr), name)
-    # La letra por tema (asciiTheme…) le gana a la directa: la plantilla la usa en la portada.
     for attr in ("w:asciiTheme", "w:hAnsiTheme", "w:cstheme", "w:eastAsiaTheme"):
         if fonts.get(qn(attr)) is not None:
             del fonts.attrib[qn(attr)]
@@ -75,7 +58,6 @@ def set_run_font(run, name=FONT, size=BODY_PT, bold=None, italic=None):
         run.bold = bold
     if italic is not None:
         run.italic = italic
-
 
 def para_format(p, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_line=FIRST_LINE_INDENT, spacing=1.5,
                 before=0, after=0, left=None, hanging=None, keep_next=False):
@@ -92,12 +74,9 @@ def para_format(p, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_line=FIRST_LINE_INDEN
     pf.keep_with_next = keep_next
     pf.widow_control = True
 
-
 INLINE_RE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)")
 
-
 def add_inline(p, text, size=BODY_PT, base_bold=False, base_italic=False):
-    """Escribe texto con **negrita**, *cursiva* y `código` en el párrafo."""
     for part in INLINE_RE.split(text):
         if not part:
             continue
@@ -110,7 +89,6 @@ def add_inline(p, text, size=BODY_PT, base_bold=False, base_italic=False):
         else:
             set_run_font(p.add_run(part), size=size, bold=base_bold, italic=base_italic)
 
-
 def shade(cell, fill):
     tcpr = cell._tc.get_or_add_tcPr()
     shd = OxmlElement("w:shd")
@@ -119,9 +97,7 @@ def shade(cell, fill):
     shd.set(qn("w:fill"), fill)
     tcpr.append(shd)
 
-
 def cell_borders(cell, **edges):
-    """edges: top/bottom/left/right = (val, size_eighths, color)."""
     tcpr = cell._tc.get_or_add_tcPr()
     borders = tcpr.find(qn("w:tcBorders"))
     if borders is None:
@@ -134,9 +110,7 @@ def cell_borders(cell, **edges):
         el.set(qn("w:color"), color)
         borders.append(el)
 
-
 def fixed_width(table, widths_cm):
-    """Fija el ancho de la tabla y de sus columnas (Word ignora el de la celda si no)."""
     tblpr = table._tbl.tblPr
     total = sum(widths_cm)
     tblw = tblpr.find(qn("w:tblW"))
@@ -155,7 +129,6 @@ def fixed_width(table, widths_cm):
         for cell, w in zip(row.cells, widths_cm):
             cell.width = Cm(w)
 
-
 def table_no_borders(table):
     tblpr = table._tbl.tblPr
     borders = OxmlElement("w:tblBorders")
@@ -164,7 +137,6 @@ def table_no_borders(table):
         el.set(qn("w:val"), "nil")
         borders.append(el)
     tblpr.append(borders)
-
 
 def paragraph_border(p, edge="bottom", sz=6, color="808080"):
     ppr = p._p.get_or_add_pPr()
@@ -176,7 +148,6 @@ def paragraph_border(p, edge="bottom", sz=6, color="808080"):
     el.set(qn("w:color"), color)
     pbdr.append(el)
     ppr.append(pbdr)
-
 
 def add_field(p, instr, placeholder=""):
     run = p.add_run()
@@ -201,11 +172,7 @@ def add_field(p, instr, placeholder=""):
     for r in (run, run2, run3, run5):
         set_run_font(r)
 
-
-# ── Plantilla y portada ───────────────────────────────────────────────────────────────────
-
 def make_template(source_docx):
-    """Crea plantilla_portada.docx: la indagatoria del equipo sin su cuerpo (solo la portada)."""
     d = docx.Document(source_docx)
     body = d.element.body
     keep = P_FECHA + 1
@@ -220,9 +187,7 @@ def make_template(source_docx):
         body.remove(child)
     d.save(TEMPLATE)
 
-
 def set_paragraph_text(p, text, bold=None):
-    """Cambia el texto conservando el primer run (y su formato); borra el resto."""
     runs = p.runs
     if not runs:
         r = p.add_run(text)
@@ -232,7 +197,6 @@ def set_paragraph_text(p, text, bold=None):
             r._r.getparent().remove(r._r)
         r = runs[0]
     set_run_font(r, bold=bold)
-
 
 def setup_styles(d):
     st = d.styles["Normal"]
@@ -250,8 +214,6 @@ def setup_styles(d):
             del fonts.attrib[qn(attr)]
     st.paragraph_format.line_spacing = 1.5
     st.paragraph_format.space_after = Pt(0)
-    # Títulos APA 7: nivel 1 centrado en negrita, nivel 2 a la izquierda en negrita, nivel 3 en
-    # negrita cursiva. Sin sangría y sin salto de página forzado (la plantilla traía uno).
     for name, align, italic in (("Heading 1", WD_ALIGN_PARAGRAPH.CENTER, False),
                                 ("Heading 2", WD_ALIGN_PARAGRAPH.LEFT, False),
                                 ("Heading 3", WD_ALIGN_PARAGRAPH.LEFT, True)):
@@ -281,12 +243,11 @@ def setup_styles(d):
         pf.space_after = Pt(0)
         pf.keep_with_next = True
 
-
 def setup_page(d):
     for s in d.sections:
         s.page_width, s.page_height = LETTER
         s.left_margin = s.right_margin = s.top_margin = s.bottom_margin = MARGIN
-        s.different_first_page_header_footer = True  # portada sin número
+        s.different_first_page_header_footer = True
         header = s.header
         header.is_linked_to_previous = False
         hp = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
@@ -295,7 +256,6 @@ def setup_page(d):
         hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         add_field(hp, "PAGE", "2")
         s.first_page_header.is_linked_to_previous = False
-        # El número va solo arriba a la derecha (APA 7): se vacían los pies que traía la plantilla.
         for hf in (s.first_page_header, s.footer, s.first_page_footer):
             hf.is_linked_to_previous = False
             for fp in hf.paragraphs:
@@ -303,7 +263,6 @@ def setup_page(d):
                     r._r.getparent().remove(r._r)
                 for fld in fp._p.findall(qn("w:fldSimple")):
                     fp._p.remove(fld)
-
 
 def fill_cover(d, meta):
     ps = d.paragraphs
@@ -317,9 +276,6 @@ def fill_cover(d, meta):
         for r in p.runs:
             set_run_font(r, bold=r.bold)
 
-
-# ── Diagramas Mermaid → PNG con Chrome sin ventana ────────────────────────────────────────
-
 class MermaidRenderer:
     def __init__(self):
         self.proc = None
@@ -327,7 +283,7 @@ class MermaidRenderer:
         self.n = 0
 
     def _start(self):
-        import websocket  # websocket-client
+        import websocket
         profile = tempfile.mkdtemp(prefix="mc-mermaid-")
         self.proc = subprocess.Popen(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
@@ -381,7 +337,6 @@ class MermaidRenderer:
             " const r=s.getBoundingClientRect(); return [r.x,r.y,r.width,r.height]; })()"
             % (self.n, json.dumps(code)))
         x, y, w, h = box
-        # La ventana debe abarcar el diagrama entero: si no, Chrome recorta lo que queda fuera.
         self.call("Emulation.setDeviceMetricsOverride", width=int(x + w) + 40, height=int(y + h) + 40,
                   deviceScaleFactor=1, mobile=False)
         data = self.call("Page.captureScreenshot", format="png", captureBeyondViewport=True,
@@ -393,9 +348,6 @@ class MermaidRenderer:
         if self.proc:
             self.proc.kill()
 
-
-# ── Parser de bloques ─────────────────────────────────────────────────────────────────────
-
 def parse_front_matter(text):
     meta = {}
     if text.startswith("---"):
@@ -405,7 +357,6 @@ def parse_front_matter(text):
             meta[k.strip()] = v.strip()
         text = text[end + 4:]
     return meta, text
-
 
 def build_document(src_name, renderer):
     src = HERE / src_name
@@ -433,7 +384,6 @@ def build_document(src_name, renderer):
         body.remove(t._tbl)
         sectpr.addprevious(t._tbl)
 
-    # Índice
     page_break()
     h = new_par()
     h.style = d.styles["TOC Heading"] if "TOC Heading" in [s.name for s in d.styles] else d.styles["Heading 1"]
@@ -451,7 +401,6 @@ def build_document(src_name, renderer):
     diagram_no = 0
 
     def caption(kind_line, above=True):
-        # "Tabla 3. Título" / "Figura 2. Título" → APA: número en negrita, título en cursiva.
         m = re.match(r"(Tabla|Figura)\s+(\d+)\.?\s*(.*)", kind_line.strip())
         if not m:
             return
@@ -499,7 +448,7 @@ def build_document(src_name, renderer):
             while i < len(lines) and lines[i].strip() != ":::":
                 block.append(lines[i])
                 i += 1
-            i += 1  # cierre :::
+            i += 1
             caption(cap)
             if kind == "diagrama":
                 code = "\n".join(block)
@@ -507,7 +456,6 @@ def build_document(src_name, renderer):
                 diagram_no += 1
                 digest = hashlib.sha1(code.encode("utf-8")).hexdigest()[:10]
                 png = DIAGRAM_DIR / f"{stem}_{diagram_no:02d}_{digest}.png"
-                # Un diagrama exportado de Lucidchart (diagramas/lucid/<doc>_NN.png) reemplaza al de Mermaid.
                 lucid = DIAGRAM_DIR / "lucid" / f"{stem}_{diagram_no:02d}.png"
                 if lucid.exists():
                     png = lucid
@@ -518,7 +466,7 @@ def build_document(src_name, renderer):
                 from PIL import Image
                 with Image.open(png) as im:
                     wpx, hpx = im.size
-                width = min(MAX_IMAGE_WIDTH, Cm(wpx / 2 * 0.0264583))  # px CSS → cm
+                width = min(MAX_IMAGE_WIDTH, Cm(wpx / 2 * 0.0264583))
                 max_h = Cm(19)
                 if width * hpx / wpx > max_h:
                     width = int(max_h * wpx / hpx)
@@ -633,7 +581,7 @@ def build_document(src_name, renderer):
                 lm = re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)", lines[i])
                 if not lm:
                     if lines[i].strip() and lines[i].startswith("   ") and d.paragraphs:
-                        add_inline(d.paragraphs[-1], " " + lines[i].strip())  # continuación del ítem
+                        add_inline(d.paragraphs[-1], " " + lines[i].strip())
                         i += 1
                         continue
                     break
@@ -649,7 +597,6 @@ def build_document(src_name, renderer):
                 i += 1
             continue
 
-        # Párrafo: líneas seguidas hasta una en blanco o un bloque especial.
         block = [stripped]
         i += 1
         while i < len(lines):
@@ -669,9 +616,6 @@ def build_document(src_name, renderer):
     d.save(out)
     return out
 
-
-# ── Word: actualizar índice y exportar PDF ────────────────────────────────────────────────
-
 def word_finalize(docx_paths):
     ps = "$ErrorActionPreference='Stop'; $w = New-Object -ComObject Word.Application; $w.Visible=$false; try {"
     for pth in docx_paths:
@@ -681,7 +625,6 @@ def word_finalize(docx_paths):
                f" $d.Save(); $d.ExportAsFixedFormat('{pdf}', 17); $d.Close();")
     ps += " } finally { $w.Quit() }"
     subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=True)
-
 
 def main(argv):
     DIAGRAM_DIR.mkdir(exist_ok=True)
@@ -702,7 +645,6 @@ def main(argv):
     if outs:
         word_finalize(outs)
         print("índice actualizado y PDF exportado con Word")
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])

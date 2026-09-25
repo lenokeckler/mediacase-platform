@@ -1,19 +1,5 @@
-﻿# Publica el coordinador (8080) y MinIO (9000) en internet con dos "quick tunnels" de Cloudflare,
-# sin abrir puertos ni tener cuenta. Con la URL del coordinador, una PC en OTRA red abre el
-# dashboard y baja el ZIP de /connect: el coordinador ve que llego por https (X-Forwarded-Proto)
-# y escribe un worker.env con COORDINATOR_URL=https://... (el worker abre wss://) y
-# MINIO_ENDPOINT=<tunel de MinIO> con MINIO_USE_SSL=true, leyendo infra/env/tunnel.env,
-# que este script escribe y borra al cerrar.
-#
-# Requiere cloudflared:  winget install --id Cloudflare.cloudflared
-# Uso:  scripts\tunnel.ps1          (Ctrl+C para cerrar los dos tuneles)
-#
-# Limite conocido: Cloudflare corta peticiones con cuerpo > 100 MB; los resultados se suben en
-# un PUT (o en partes de 16 MB si el archivo es grande), asi que en la practica no molesta.
-# Las URLs cambian en cada arranque: el ZIP hay que bajarlo con el tunel ya abierto.
-$cf = Get-Command cloudflared -ErrorAction SilentlyContinue
+﻿$cf = Get-Command cloudflared -ErrorAction SilentlyContinue
 if (-not $cf) {
-    # Recien instalado con winget, el PATH nuevo no llega a las consolas ya abiertas.
     $cf = Get-Command "$env:ProgramFiles (x86)\cloudflared\cloudflared.exe", "$env:ProgramFiles\cloudflared\cloudflared.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 }
 if (-not $cf) {
@@ -28,8 +14,6 @@ New-Item -ItemType Directory -Force $logDir | Out-Null
 function Start-Tunnel([string]$name, [int]$port) {
     $log = Join-Path $logDir "$name.log"
     if (Test-Path $log) { Remove-Item $log -Force }
-    # cloudflared escribe la URL en stderr; se captura a archivo para poder leerla desde aqui.
-    # --protocol http2: el transporte por defecto (QUIC, UDP 7844) lo bloquean muchos WiFi; http2 va por TCP 443.
     $p = Start-Process -FilePath $cf.Source -ArgumentList "tunnel --protocol http2 --url http://localhost:$port" `
         -RedirectStandardError $log -NoNewWindow -PassThru
     $url = $null

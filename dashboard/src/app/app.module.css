@@ -1,4 +1,3 @@
-/* ── Shell: barra lateral fija + contenido ── */
 .shell {
     min-height: 100vh;
     display: grid;
@@ -8,7 +7,7 @@
 .collapsed { grid-template-columns: 68px minmax(0, 1fr); }
 
 .sidebar {
-    position: sticky; /* también ancla el botón de plegar (absolute) */
+    position: sticky;
     top: 0;
     height: 100vh;
     display: flex;
@@ -22,7 +21,6 @@
 .brand { display: flex; align-items: center; gap: 12px; padding: 6px 8px 2px; }
 .brandSub { white-space: nowrap; }
 .brandText { min-width: 0; }
-/* Botón de plegar: pegado al borde derecho de la barra, a la altura del logo, sin robarle espacio. */
 .collapseBtn {
     position: absolute;
     right: -13px;
@@ -39,7 +37,6 @@
 }
 .collapseBtn:hover { color: var(--text); border-color: var(--accent); }
 
-/* Plegada: solo iconos; los textos se ocultan y el botón de plegar baja debajo del logo. */
 .collapsed .sidebar { padding: 20px 10px; }
 .collapsed .brand { justify-content: center; padding: 4px 0 0; }
 .collapsed .brandText, .collapsed .navLabel, .collapsed .navItem span, .collapsed .sideStat, .collapsed .themeBtn span, .collapsed .live span:last-child { display: none; }
@@ -124,7 +121,6 @@
 }
 .themeBtn:hover { border-color: var(--accent); color: var(--text); }
 
-/* ── Contenido ── */
 .main {
     padding: 28px 32px 48px;
     display: flex;
@@ -159,7 +155,6 @@
 
 .empty { padding: 20px; color: var(--muted); font-size: 13px; }
 
-/* ── Móvil ── */
 @media (max-width: 900px) {
     .shell { grid-template-columns: 1fr; }
     .sidebar {

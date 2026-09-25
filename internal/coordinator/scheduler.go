@@ -15,15 +15,13 @@ import (
 	"github.com/lib/pq"
 )
 
-// Scheduler reads jobs from the queue and assigns them to workers.
 type Scheduler struct {
 	queue     *queue.Queue
 	registry  *Registry
 	workerHub *WorkerHub
 	db        *sql.DB
 	barrier   *cases.Barrier
-	// strictPools = true: cada pool solo lo atienden sus workers (modelo puro, para la demo).
-	// false (default): afinidad primero y, si el nodo afín está ocupado, cualquier nodo libre ayuda.
+
 	strictPools bool
 }
 
@@ -37,7 +35,6 @@ func NewScheduler(q *queue.Queue, reg *Registry, workerHub *WorkerHub, db *sql.D
 	return &Scheduler{queue: q, registry: reg, workerHub: workerHub, db: db, barrier: barrier, strictPools: strict}
 }
 
-// Run is the main loop - it runs indefinitely in its own goroutine.
 func (s *Scheduler) Run(ctx context.Context) {
 	log.Println("[scheduler] started")
 	evictTicker := time.NewTicker(10 * time.Second)
@@ -52,7 +49,7 @@ func (s *Scheduler) Run(ctx context.Context) {
 			return
 
 		case <-evictTicker.C:
-			// Evict workers without a recent heartbeat and reclaim their jobs.
+
 			evicted := s.registry.EvictStale()
 			for _, id := range evicted {
 				log.Printf("[scheduler] evicted stale worker: %s", id)
@@ -60,32 +57,29 @@ func (s *Scheduler) Run(ctx context.Context) {
 			}
 
 		case <-stuckTicker.C:
-			// Mark jobs that have been running for too long as failed.
+
 			s.reclaimStuckJobs(ctx)
 
 		default:
-			// Try to dispatch one job per pool.
+
 			if err := s.dispatch(ctx); err != nil {
 				if err != queue.ErrNoMessages && err != errNoWorkers {
 					log.Printf("[scheduler] dispatch error: %v", err)
 				}
-				// Sin trabajo o sin workers: pausa corta para no quemar CPU.
+
 				time.Sleep(200 * time.Millisecond)
 			}
 		}
 	}
 }
 
-// dispatch recorre los pools: para cada uno elige un worker (afinidad → ayuda → carga, ver
-// Registry.PickFor), saca UNA sub-tarea de su cola y se la asigna. Si nadie puede atender un
-// pool, sus sub-tareas esperan en la cola — visible en el dashboard como by_pool.
 func (s *Scheduler) dispatch(ctx context.Context) error {
 	dispatched := false
 	anyWorker := false
 	for _, pool := range queue.Pools {
 		worker, how := s.registry.PickFor(pool, s.strictPools, s.workerHub.IsConnected)
 		if worker == nil {
-			continue // nadie vivo puede atender este pool
+			continue
 		}
 		anyWorker = true
 		job, msgID, err := s.queue.Dequeue(ctx, "coordinator", pool)
@@ -94,7 +88,7 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 			continue
 		}
 		if job == nil {
-			continue // cola de este pool vacía
+			continue
 		}
 		dispatched = true
 		job.Assignment = how
@@ -111,11 +105,9 @@ func (s *Scheduler) dispatch(ctx context.Context) error {
 
 var errNoWorkers = fmt.Errorf("no workers available")
 
-// assign entrega una sub-tarea ya sacada de la cola al worker elegido.
 func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *models.Job, msgID string) {
 	stream := queue.StreamFor(job.Pool, job.Priority)
 
-	// Si el caso se canceló mientras la sub-tarea esperaba en cola, no se ejecuta.
 	var st string
 	s.db.QueryRow(`SELECT status FROM jobs WHERE id=$1`, job.ID).Scan(&st)
 	if st == string(models.StatusCancelled) {
@@ -127,7 +119,7 @@ func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *
 
 	if err := s.updateJobStatus(job.ID, models.StatusAssigned, worker.ID); err != nil {
 		log.Printf("[scheduler] db update failed, skipping job %s: %v", job.ID, err)
-		return // el mensaje queda pendiente en el stream; se reintenta
+		return
 	}
 
 	s.setAssignment(job.ID, job.Assignment)
@@ -139,11 +131,11 @@ func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *
 			}
 			s.updateJobStatus(job.ID, models.StatusPending, "")
 			s.queue.Ack(ctx, stream, msgID)
-			time.Sleep(500 * time.Millisecond) // dar aire al worker
+			time.Sleep(500 * time.Millisecond)
 			return
 		}
 		log.Printf("[scheduler] failed to send job %s to worker %s: %v", job.ID, worker.ID, err)
-		s.requeueJob(ctx, job) // otro worker del pool la tomará (cuenta reintento)
+		s.requeueJob(ctx, job)
 		s.updateJobStatus(job.ID, models.StatusPending, "")
 		s.queue.Ack(ctx, stream, msgID)
 		return
@@ -153,14 +145,10 @@ func (s *Scheduler) assign(ctx context.Context, worker *models.WorkerInfo, job *
 	s.queue.Ack(ctx, stream, msgID)
 }
 
-// sendToWorker entrega la sub-tarea por el canal que el propio worker abrió.
-// El coordinador nunca inicia una conexión hacia el worker.
 func (s *Scheduler) sendToWorker(ctx context.Context, worker *models.WorkerInfo, job *models.Job) error {
 	return s.workerHub.Assign(ctx, worker.ID, job)
 }
 
-// ReclaimWorkerJobs re-enqueues all ASSIGNED or RUNNING jobs of a worker that stopped
-// responding (evicted) or that came back as a new process (re-registered with another instance).
 func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs SET status='pending', worker_id=NULL, progress=0, started_at=NULL
@@ -188,22 +176,13 @@ func (s *Scheduler) ReclaimWorkerJobs(ctx context.Context, workerID string) {
 			affected[job.CaseID] = true
 		}
 	}
-	// Los casos afectados pasan a 'retrying' hasta que alguna sub-tarea vuelva a correr
-	// (jobProgress los regresa a 'processing').
+
 	for caseID := range affected {
 		s.db.ExecContext(ctx, `UPDATE cases SET status='retrying' WHERE id=$1 AND status='processing'`, caseID)
 		log.Printf("[scheduler] caso %s → retrying (sub-tareas re-encoladas)", caseID)
 	}
 }
 
-// reclaimStuckJobs marks as failed any job that has been in 'running' state
-// for longer than 15 minutes — these are jobs whose worker silently dropped them.
-// Jobs of a worker that is still connected are left alone: a 4K conversion can legitimately
-// take longer than that, and a worker that dies is already caught by heartbeat eviction or by
-// its instance changing on re-register (ReclaimWorkerJobs).
-// Also re-queues jobs stuck in 'assigned' for that long: the worker accepted them but its
-// 'running' report never arrived (typically the coordinator was restarting), so nobody knows
-// if they ran; back to the queue is the safe move.
 func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
 	s.requeueStaleAssigned(ctx)
 	rows, err := s.db.QueryContext(ctx,
@@ -236,11 +215,10 @@ func (s *Scheduler) reclaimStuckJobs(ctx context.Context) {
 		log.Printf("[scheduler] marked %d stuck running job(s) as failed", n)
 	}
 	for caseID := range affected {
-		s.barrier.OnJobResolved(ctx, caseID) // una sub-tarea vencida también resuelve el barrier
+		s.barrier.OnJobResolved(ctx, caseID)
 	}
 }
 
-// requeueStaleAssigned devuelve a la cola las sub-tareas asignadas hace > 15 min sin noticias.
 func (s *Scheduler) requeueStaleAssigned(ctx context.Context) {
 	rows, err := s.db.QueryContext(ctx,
 		`UPDATE jobs SET status='pending', worker_id=NULL, progress=0, started_at=NULL
@@ -264,7 +242,6 @@ func (s *Scheduler) requeueStaleAssigned(ctx context.Context) {
 	}
 }
 
-// requeueJob puts a job back in Redis.
 func (s *Scheduler) requeueJob(ctx context.Context, job *models.Job) {
 	job.Retries++
 	if job.Retries >= job.MaxRetries {
@@ -288,7 +265,6 @@ func (s *Scheduler) updateJobStatus(jobID string, status models.JobStatus, worke
 	return err
 }
 
-// setAssignment guarda cómo se eligió el worker (afinidad / ayuda) para el reporte y el dashboard.
 func (s *Scheduler) setAssignment(jobID, how string) {
 	if how == "" {
 		return

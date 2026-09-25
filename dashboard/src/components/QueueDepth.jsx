@@ -2,8 +2,6 @@ import styles from './QueueDepth.module.css'
 
 const POOLS = ['video', 'audio', 'metadata']
 
-// Cuántas sub-tareas esperan un worker, por pool: es la "saturación" que la consigna pide
-// observar. Si VIDEO crece y AUDIO está en cero, falta un nodo de video.
 export default function QueueDepth({ queue_depth }) {
     const byPool = queue_depth?.by_pool || {}
     const total = (queue_depth?.high ?? 0) + (queue_depth?.normal ?? 0) + (queue_depth?.low ?? 0)

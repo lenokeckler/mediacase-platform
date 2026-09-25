@@ -1,8 +1,6 @@
 import StatusBadge from './StatusBadge'
 import styles from './ActiveCases.module.css'
 
-// Consigna (monitoreo): "sub-tareas activas o en espera, agrupadas por caso".
-// Una fila por caso abierto con sus sub-tareas por estado; llega en el snapshot del WebSocket.
 const SEGMENTS = [
     { key: 'completed', label: 'listas', color: 'var(--green)' },
     { key: 'running', label: 'en ejecución', color: 'var(--accent)' },

@@ -104,13 +104,11 @@ func Migrate(db *sql.DB) error {
 	return err
 }
 
-// jobColumns es la lista de columnas que scanJob espera, en ese orden.
 const jobColumns = `id, file_path, operation, status, priority,
 		worker_id, progress, error_msg, result_url, retries, max_retries,
 		created_at, started_at, completed_at, case_id, file_type, pool, target, width, assignment,
 		enrichment, routing_note`
 
-// InsertJob stores a new job in PostgreSQL.
 func InsertJob(db *sql.DB, job *models.Job) error {
 	_, err := db.Exec(`
 		INSERT INTO jobs (id, file_id, file_path, operation, status, priority, max_retries,
@@ -123,7 +121,6 @@ func InsertJob(db *sql.DB, job *models.Job) error {
 	return err
 }
 
-// enrichmentJSON serializa los recursos asociados para la columna JSONB (NULL si no hay).
 func enrichmentJSON(e *models.Enrichment) any {
 	if e == nil {
 		return nil
@@ -135,13 +132,11 @@ func enrichmentJSON(e *models.Enrichment) any {
 	return string(b)
 }
 
-// GetJob returns a job by ID.
 func GetJob(db *sql.DB, id string) (*models.Job, error) {
 	row := db.QueryRow(`SELECT `+jobColumns+` FROM jobs WHERE id=$1`, id)
 	return scanJob(row)
 }
 
-// ListJobs returns all jobs, optionally filtered by status.
 func ListJobs(db *sql.DB, status string) ([]*models.Job, error) {
 	query := `SELECT ` + jobColumns + ` FROM jobs`
 	args := []any{}
@@ -165,9 +160,6 @@ func ListJobs(db *sql.DB, status string) ([]*models.Job, error) {
 	return jobs, nil
 }
 
-// ListLiveJobs devuelve solo las sub-tareas no terminales (pending, assigned, running): es lo
-// que el dashboard dibuja en vivo. Mandar las 2000 más recientes cada segundo por WebSocket
-// pesaba ~1 MB por cliente con el dataset real; el historial se consulta aparte (GET /jobs).
 func ListLiveJobs(db *sql.DB) ([]*models.Job, error) {
 	rows, err := db.Query(`SELECT ` + jobColumns + ` FROM jobs
 		WHERE status IN ('pending', 'assigned', 'running') ORDER BY created_at DESC LIMIT 2000`)
@@ -184,7 +176,6 @@ func ListLiveJobs(db *sql.DB) ([]*models.Job, error) {
 	return jobs, nil
 }
 
-// GetStats returns counts by status for the dashboard.
 func GetStats(db *sql.DB) (map[string]int, error) {
 	rows, err := db.Query(`
 		SELECT status, COUNT(*) FROM jobs GROUP BY status`)
@@ -202,7 +193,6 @@ func GetStats(db *sql.DB) (map[string]int, error) {
 	return stats, nil
 }
 
-// scanJob is a helper to avoid repeating Scan.
 func scanJob(row interface {
 	Scan(...any) error
 }) (*models.Job, error) {

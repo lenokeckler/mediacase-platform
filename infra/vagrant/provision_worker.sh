@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# Aprovisiona un nodo worker: ffmpeg + binario + servicio systemd. Idempotente.
-# Lo ejecuta Vagrant como root con WORKER_ID y WORKER_ROLE en el entorno.
 set -euo pipefail
 
-COORDINATOR_HOST="${COORDINATOR_HOST:-192.168.56.1}"   # el host de VirtualBox
+COORDINATOR_HOST="${COORDINATOR_HOST:-192.168.56.1}"
 
 echo "→ instalando ffmpeg"
 apt-get update -qq
@@ -25,7 +23,6 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=results
 ENV
 
-# Restart=always: si el worker muere o el coordinador no esta, systemd lo relanza cada 3 s.
 cat > /etc/systemd/system/mediacase-worker.service <<'UNIT'
 [Unit]
 Description=MediaCase worker

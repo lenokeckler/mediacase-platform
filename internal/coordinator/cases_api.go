@@ -14,15 +14,12 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// Handlers de casos (consigna §2): recibir el caso, inspeccionar cada archivo y decidir
-// la operación (routing por tipo), registrarlo, descomponerlo en sub-tareas y encolarlas.
-
 type caseFileReq struct {
-	Key       string           `json:"key"`                 // clave del objeto en el bucket de entradas
-	Operation models.Operation `json:"operation,omitempty"` // opcional: si falta, decide el coordinador
-	Target    string           `json:"target,omitempty"`    // opcional: formato de salida (mp4, flac, jpg…)
-	Width     int              `json:"width,omitempty"`     // opcional: ancho de la miniatura
-	// opcional: recursos asociados para enrich_* (título, artista, álbum, letra…)
+	Key       string           `json:"key"`
+	Operation models.Operation `json:"operation,omitempty"`
+	Target    string           `json:"target,omitempty"`
+	Width     int              `json:"width,omitempty"`
+
 	Enrichment *models.Enrichment `json:"enrichment,omitempty"`
 }
 
@@ -48,9 +45,7 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "demasiados archivos en un caso", http.StatusBadRequest)
 		return
 	}
-	// Un caso grande (decenas de archivos: `ingest cases` por evento o sesión) inserta y encola
-	// una sub-tarea por archivo, y con el sistema bajo carga eso supera los 10 s del
-	// WriteTimeout global: el cliente recibía EOF aunque el caso quedaba creado. Plazo propio.
+
 	if err := http.NewResponseController(w).SetWriteDeadline(time.Now().Add(5 * time.Minute)); err != nil {
 		log.Printf("[cases] no se pudo extender el plazo de escritura: %v", err)
 	}
@@ -58,8 +53,6 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		req.Priority = 5
 	}
 
-	// 1. Routing por extensión, de TODOS los archivos, antes de tocar la base: el caso se acepta
-	//    entero o se rechaza entero, y la respuesta dice exactamente qué archivo no sirve.
 	decisions := make([]cases.RouteDecision, len(req.Files))
 	for i, f := range req.Files {
 		if f.Key == "" {
@@ -74,11 +67,8 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		decisions[i] = d
 	}
 
-	// 1.b Inspección de contenido: la extensión puede mentir. Corrige decisions[i] cuando el
-	// contenido real es otro tipo (o el mismo tipo con otro formato) y deja una nota por archivo.
 	routingNotes := inspectContent(r.Context(), a.minio, req.Files, decisions)
 
-	// 2. Registrar el caso.
 	c := &models.Case{
 		ID: uuid.New().String(), Name: req.Name, Status: models.CaseQueued,
 		Priority: req.Priority, TotalJobs: len(req.Files), CreatedAt: time.Now(),
@@ -89,7 +79,6 @@ func (a *API) submitCase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Descomponer en sub-tareas y encolar cada una en su pool.
 	c.Jobs = make([]*models.Job, 0, len(req.Files))
 	for i, f := range req.Files {
 		job := &models.Job{
@@ -133,7 +122,6 @@ func (a *API) getCase(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, c)
 }
 
-// getCaseReport devuelve el reporte consolidado; 409 si el caso aún no cerró.
 func (a *API) getCaseReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	raw, err := db.GetCaseReport(a.db, id)
@@ -154,8 +142,6 @@ func (a *API) getCaseReport(w http.ResponseWriter, r *http.Request) {
 	w.Write(raw)
 }
 
-// cancelCase marca el caso cancelado y sus sub-tareas aún no iniciadas. Las que ya corren
-// terminan, pero el barrier ignora casos terminales, así que el caso no vuelve a cambiar.
 func (a *API) cancelCase(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	res, err := a.db.Exec(`UPDATE cases SET status='cancelled', completed_at=NOW()
@@ -172,12 +158,11 @@ func (a *API) cancelCase(w http.ResponseWriter, r *http.Request) {
 		WHERE case_id=$1 AND status IN ('pending','assigned')`, id)
 	log.Printf("[cases] caso %s cancelado", id)
 	if a.onCaseClosed != nil {
-		a.onCaseClosed(id) // el reporte también se genera para un caso cancelado
+		a.onCaseClosed(id)
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-// caseOf devuelve el case_id de un job ("" si es un job suelto).
 func caseOf(database *sql.DB, jobID string) string {
 	var caseID sql.NullString
 	database.QueryRow(`SELECT case_id FROM jobs WHERE id=$1`, jobID).Scan(&caseID)

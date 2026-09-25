@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Sube un archivo local al bucket de entradas (dataset/<nombre>) usando el mc de la imagen de MinIO.
-# Uso:  bash tests/upload_input.sh <ruta-local> [clave]
 set -euo pipefail
 SRC="${1:?uso: upload_input.sh <ruta-local> [clave]}"
 KEY="${2:-$(basename "$SRC")}"

@@ -1,30 +1,4 @@
 #!/usr/bin/env bash
-# Genera el dataset multimedia de prueba (consigna §"Dataset"): 400-600 archivos con audio,
-# video e imágenes, formatos variados, TRES NIVELES POR TAMAÑO REAL (liviano < 5 MB,
-# mediano 20-50 MB, pesado 150-400 MB) y metadatos de agrupación (evento, sesión, lote,
-# usuario) en dataset/manifest.json para que cmd/ingest arme casos automáticamente.
-#
-# Cómo se logra el tamaño: cada archivo recibe un tamaño objetivo dentro de su nivel y la
-# duración se calcula a partir del bitrate del códec; después de codificar se mide con `stat`
-# y, si se sale del rango, se reintenta una vez reescalando el bitrate (video) o la duración
-# (audio). Si aun así no entra, el script aborta. Ningún archivo queda fuera de rango.
-#
-# Reproducible: usa un generador congruencial propio (no $RANDOM, que bash ≥ 5.1 re-siembra
-# en cada subshell), así que con la misma semilla salen los mismos nombres, formatos,
-# duraciones y metadatos en cualquier máquina. Reanudable: salta los archivos que ya existen
-# y están dentro de rango.
-#
-# Por construcción hay casos homogéneos y heterogéneos al agrupar por sesión: la sesión s1 de
-# cada evento solo tiene video, la s2 solo audio, y s3/s4 mezclan los tres tipos.
-#
-# Escribe dataset/manifest.synthetic.json (versión 2). El manifest que usa el sistema,
-# dataset/manifest.json (versión 3), lo arma dataset/scripts/build_manifest.py mezclando este con
-# el material real de dataset/scripts/fetch_real.sh.
-#
-# Uso:
-#   bash dataset/scripts/generate_dataset.sh                 # perfil full  (492 archivos, ~14 GB, ~1 h)
-#   bash dataset/scripts/generate_dataset.sh --profile quick # perfil quick (38 archivos, ~0.6 GB, ~3 min)
-#   bash dataset/scripts/generate_dataset.sh --seed 7 --out /otra/carpeta --manifest /otra/manifest.synthetic.json
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,41 +22,38 @@ command -v ffmpeg  >/dev/null || { echo "falta ffmpeg en el PATH"; exit 1; }
 command -v ffprobe >/dev/null || { echo "falta ffprobe en el PATH"; exit 1; }
 mkdir -p "$OUT_DIR"
 
-# ── Cantidades por perfil: (liviano mediano pesado) por tipo ──────────────────────────────
 case "$PROFILE" in
-  full)  V_LIGHT=140; V_MED=80; V_HEAVY=30;  A_LIGHT=100; A_MED=60; A_HEAVY=12;  IMG=70 ;;   # 492 archivos, ~14 GB
-  quick) V_LIGHT=10;  V_MED=4;  V_HEAVY=1;   A_LIGHT=8;   A_MED=4;  A_HEAVY=1;   IMG=10 ;;   # 38 archivos, ~0.6 GB
+  full)  V_LIGHT=140; V_MED=80; V_HEAVY=30;  A_LIGHT=100; A_MED=60; A_HEAVY=12;  IMG=70 ;;
+  quick) V_LIGHT=10;  V_MED=4;  V_HEAVY=1;   A_LIGHT=8;   A_MED=4;  A_HEAVY=1;   IMG=10 ;;
   *) echo "perfil desconocido: $PROFILE (full|quick)"; exit 1 ;;
 esac
 
 MB=1048576
 VIDEO_FORMATS=(mp4 mkv avi mov webm)
 AUDIO_FORMATS=(mp3 wav flac aac ogg)
-HEAVY_AUDIO_FORMATS=(wav flac)         # comprimidos a 150+ MB serían horas de audio
+HEAVY_AUDIO_FORMATS=(wav flac)
 IMAGE_FORMATS=(jpg png webp)
 VIDEO_SOURCES=(testsrc2 mandelbrot life cellauto smptebars)
 EVENTS=(boda concierto clase entrevista partido documental)
 USERS=(leno jennifer jonathan)
 
-# ── PRNG propio (LCG de glibc) — determinista, sin subshells ──────────────────────────────
 RS=$SEED
 next() { RS=$(( (RS * 1103515245 + 12345) & 0x7fffffff )); R=$(( RS >> 8 )); }
-rnd()  { next; R=$(( $1 + R % ($2 - $1 + 1) )); }          # entero en [a, b] → $R
-pick() { local -n arr=$1; next; R=${arr[$(( R % ${#arr[@]} ))]}; }   # elemento → $R
+rnd()  { next; R=$(( $1 + R % ($2 - $1 + 1) )); }
+pick() { local -n arr=$1; next; R=${arr[$(( R % ${#arr[@]} ))]}; }
 
-# ── Rangos por nivel (bytes) y objetivo aleatorio dentro de una franja segura ─────────────
-tier_range() {   # → LO HI
+tier_range() {
   case "$1" in
     light)  LO=0;             HI=$(( 5 * MB )) ;;
     medium) LO=$(( 20 * MB ));  HI=$(( 50 * MB )) ;;
     heavy)  LO=$(( 150 * MB )); HI=$(( 400 * MB )) ;;
   esac
 }
-tier_target() {  # → R (bytes objetivo, lejos de los bordes para absorber ±10 % del códec)
+tier_target() {
   case "$1" in
-    light)  rnd 1536 4096 ;;         # 1.5 – 4 MB
-    medium) rnd 25600 46080 ;;       # 25 – 45 MB
-    heavy)  rnd 174080 266240 ;;     # 170 – 260 MB
+    light)  rnd 1536 4096 ;;
+    medium) rnd 25600 46080 ;;
+    heavy)  rnd 174080 266240 ;;
   esac
   R=$(( R * 1024 ))
 }
@@ -94,15 +65,11 @@ manifest_entries=()
 count=0
 total=$(( V_LIGHT + V_MED + V_HEAVY + A_LIGHT + A_MED + A_HEAVY + IMG ))
 
-# ── Video ─────────────────────────────────────────────────────────────────────────────────
-# encode_video <out> <fmt> <dur_s> <w> <h> <kbps> <fuente>
 encode_video() {
   local out=$1 fmt=$2 dur=$3 w=$4 h=$5 kbps=$6 src=$7
   local vargs=() acodec="aac"
   case "$fmt" in
-    # libvpx dobla el tamaño si se le pasa -minrate/-maxrate; solo con -b:v respeta la tasa
     webm) vargs=(-c:v libvpx -deadline realtime -cpu-used 8 -b:v "${kbps}k"); acodec="libvorbis" ;;
-    # x264 en CBR estricto (nal-hrd=cbr rellena si el contenido es simple): tamaño = bitrate × duración
     *)    vargs=(-c:v libx264 -preset ultrafast -x264-params nal-hrd=cbr:force-cfr=1
                  -b:v "${kbps}k" -minrate "${kbps}k" -maxrate "${kbps}k" -bufsize "$(( kbps * 2 ))k")
           [[ "$fmt" == avi ]] && acodec="mp3" ;;
@@ -113,7 +80,6 @@ encode_video() {
     -t "$dur" "${vargs[@]}" -c:a "$acodec" -b:a 128k -pix_fmt yuv420p -shortest "$out"
 }
 
-# make_video <nombre> <fmt> <tier> <fuente> <bytes_objetivo>
 make_video() {
   local name=$1 fmt=$2 tier=$3 src=$4 target=$5
   local out="$OUT_DIR/$name.$fmt" w h kbps
@@ -122,8 +88,6 @@ make_video() {
     medium) w=1280; h=720;  kbps=4000 ;;
     heavy)  w=1920; h=1080; kbps=6000 ;;
   esac
-  # mandelbrot se vuelve más lento conforme avanza el zoom: solo para livianos. VP8 solo
-  # controla bien la tasa con fuentes de complejidad estable: en webm siempre testsrc2.
   if [[ "$tier" != light && "$src" == mandelbrot ]]; then src=testsrc2; fi
   if [[ "$fmt" == webm ]]; then src=testsrc2; fi
   local dur=$(( target / ((kbps + 128) * 125) )); (( dur < 3 )) && dur=3
@@ -143,20 +107,17 @@ make_video() {
   register "$name.$fmt" video "$fmt" "$tier" "$src ${dur}s $(( SECONDS - t0 ))s"
 }
 
-# ── Audio ─────────────────────────────────────────────────────────────────────────────────
-# bytes/segundo medidos por formato (estéreo 44.1 kHz): define la duración para un tamaño dado
 audio_bps() {
   case "$1" in
     wav) echo 176400 ;; flac) echo 92700 ;; mp3) echo 24000 ;; aac) echo 20300 ;; ogg) echo 45800 ;;
   esac
 }
-# encode_audio <out> <fmt> <dur_s> <freq_hz>
 encode_audio() {
   local out=$1 fmt=$2 dur=$3 freq=$4 aargs=()
   case "$fmt" in
     mp3)  aargs=(-c:a libmp3lame -b:a 192k) ;;
     aac)  aargs=(-c:a aac -b:a 160k) ;;
-    ogg)  aargs=(-c:a libvorbis -q:a 10) ;;   # ~370 kbps: menos minutos de audio por MB
+    ogg)  aargs=(-c:a libvorbis -q:a 10) ;;
     flac) aargs=(-c:a flac) ;;
     wav)  aargs=(-c:a pcm_s16le) ;;
   esac
@@ -167,7 +128,6 @@ encode_audio() {
     -t "$dur" -ac 2 "${aargs[@]}" "$out"
 }
 
-# make_audio <nombre> <fmt> <tier> <freq> <bytes_objetivo>
 make_audio() {
   local name=$1 fmt=$2 tier=$3 freq=$4 target=$5
   local out="$OUT_DIR/$name.$fmt"
@@ -189,8 +149,6 @@ make_audio() {
   register "$name.$fmt" audio "$fmt" "$tier" "${freq}Hz ${dur}s $(( SECONDS - t0 ))s"
 }
 
-# ── Imágenes (siempre livianas) ───────────────────────────────────────────────────────────
-# make_image <nombre> <fmt> <fuente> <ancho> <alto>
 make_image() {
   local name=$1 fmt=$2 src=$3 w=$4 h=$5
   local out="$OUT_DIR/$name.$fmt"
@@ -202,8 +160,6 @@ make_image() {
   register "$name.$fmt" image "$fmt" light "$src ${w}x${h}"
 }
 
-# ── Manifest ──────────────────────────────────────────────────────────────────────────────
-# register <archivo> <tipo> <formato> <tier> <nota>  → mide el archivo y asigna metadatos
 register() {
   local file=$1 type=$2 fmt=$3 tier=$4 note=$5
   local size; size=$(fsize "$OUT_DIR/$file")
@@ -212,7 +168,6 @@ register() {
     dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT_DIR/$file"); dur=${dur%.*}
   fi
   pick EVENTS; local ev=$R
-  # s1 = solo video, s2 = solo audio, s3/s4 = mezcla → casos homogéneos y heterogéneos garantizados
   local sess_choices
   case "$type" in video) sess_choices=(1 3 4) ;; audio) sess_choices=(2 3 4) ;; *) sess_choices=(3 4) ;; esac
   pick sess_choices; local sess="$ev-s$R"
@@ -273,9 +228,6 @@ done
   echo "}"
 } > "$MANIFEST"
 
-# Archivos sintéticos sueltos de corridas anteriores (otra semilla u otro perfil) no pertenecen al
-# dataset. Solo se miran los nombres del generador (video_*, audio_*, image_*): el material real y
-# los casos límite de fetch_real.sh conviven en la misma carpeta y no se tocan.
 extra=0
 for f in "$OUT_DIR"/video_* "$OUT_DIR"/audio_* "$OUT_DIR"/image_*; do
   [[ -f "$f" ]] || continue

@@ -10,7 +10,7 @@ const (
 	StatusRunning   JobStatus = "running"
 	StatusCompleted JobStatus = "completed"
 	StatusFailed    JobStatus = "failed"
-	StatusCancelled JobStatus = "cancelled" // el caso se canceló antes de que empezara
+	StatusCancelled JobStatus = "cancelled"
 )
 
 type Operation string
@@ -20,43 +20,38 @@ const (
 	OpExtractAudio Operation = "extract_audio"
 	OpThumbnail    Operation = "thumbnail"
 	OpConvertAudio Operation = "convert_audio"
-	OpMetadata     Operation = "metadata" // ffprobe → JSON con duración, códecs, resolución, etiquetas
-	// "Integración de letras o recursos informativos asociados" (consigna): el mismo archivo con
-	// portada, etiquetas y letra/descripción embebidas. Remux liviano, sin recodificar.
+	OpMetadata     Operation = "metadata"
+
 	OpEnrichAudio Operation = "enrich_audio"
 	OpEnrichVideo Operation = "enrich_video"
 )
 
-// Enrichment son los recursos asociados que se integran en una sub-tarea enrich_*. Los llena el
-// cliente (formulario o ingest desde el manifest) y el coordinador completa los defaults.
 type Enrichment struct {
 	Title   string `json:"title,omitempty"`
-	Artist  string `json:"artist,omitempty"`  // artista / autor
-	Album   string `json:"album,omitempty"`   // álbum / evento
-	Date    string `json:"date,omitempty"`    // año o fecha
-	Comment string `json:"comment,omitempty"` // sesión, lote, nota
-	Lyrics  string `json:"lyrics,omitempty"`  // letra (audio) o descripción (video)
+	Artist  string `json:"artist,omitempty"`
+	Album   string `json:"album,omitempty"`
+	Date    string `json:"date,omitempty"`
+	Comment string `json:"comment,omitempty"`
+	Lyrics  string `json:"lyrics,omitempty"`
 }
 
-// IsEmpty dice si no hay ningún recurso que integrar además de la portada.
 func (e *Enrichment) IsEmpty() bool {
 	return e == nil || (e.Title == "" && e.Artist == "" && e.Album == "" && e.Date == "" && e.Comment == "" && e.Lyrics == "")
 }
 
 type Job struct {
 	ID         string      `json:"id"`
-	CaseID     string      `json:"case_id,omitempty"` // caso al que pertenece ("" = job suelto)
+	CaseID     string      `json:"case_id,omitempty"`
 	FileID     string      `json:"file_id"`
-	FilePath   string      `json:"file_path"` // clave del objeto en el bucket de entradas
-	FileType   FileType    `json:"file_type"` // decidido por el coordinador (routing por tipo)
-	Pool       string      `json:"pool"`      // pool de workers que la ejecuta
+	FilePath   string      `json:"file_path"`
+	FileType   FileType    `json:"file_type"`
+	Pool       string      `json:"pool"`
 	Operation  Operation   `json:"operation"`
-	Target     string      `json:"target,omitempty"`     // formato de salida: mp4, mp3, flac, jpg, json…
-	Assignment string      `json:"assignment,omitempty"` // afinidad | ayuda: cómo el planificador eligió el worker
-	Width      int         `json:"width,omitempty"`      // ancho de la miniatura (solo thumbnail)
-	Enrichment *Enrichment `json:"enrichment,omitempty"` // recursos asociados (solo enrich_*)
-	// RoutingNote: cuando la inspección de contenido (internal/cases/sniff.go) detectó que la
-	// extensión no correspondía al contenido real, o el archivo estaba vacío. "" = extensión OK.
+	Target     string      `json:"target,omitempty"`
+	Assignment string      `json:"assignment,omitempty"`
+	Width      int         `json:"width,omitempty"`
+	Enrichment *Enrichment `json:"enrichment,omitempty"`
+
 	RoutingNote string     `json:"routing_note,omitempty"`
 	OutputPath  string     `json:"output_path"`
 	Status      JobStatus  `json:"status"`
@@ -74,25 +69,22 @@ type Job struct {
 
 type WorkerInfo struct {
 	ID           string    `json:"id"`
-	Instance     string    `json:"instance,omitempty"` // identifica al PROCESO: cambia en cada arranque
+	Instance     string    `json:"instance,omitempty"`
 	Hostname     string    `json:"hostname"`
-	Role         string    `json:"role,omitempty"`         // video | audio | metadata | all
-	Capabilities []string  `json:"capabilities,omitempty"` // pools que este worker atiende
-	Capacity     int       `json:"capacity,omitempty"`     // sub-tareas simultáneas; 0 = worker viejo que no la informa
+	Role         string    `json:"role,omitempty"`
+	Capabilities []string  `json:"capabilities,omitempty"`
+	Capacity     int       `json:"capacity,omitempty"`
 	Status       string    `json:"status"`
 	ActiveJobs   int       `json:"active_jobs"`
 	CPUPercent   float64   `json:"cpu_percent"`
 	MemPercent   float64   `json:"mem_percent"`
 	LastSeen     time.Time `json:"last_seen"`
-	RegisteredAt time.Time `json:"registered_at"` // primera vez que llegó: fija el orden en el dashboard
+	RegisteredAt time.Time `json:"registered_at"`
 
-	// Telemetría de hardware al estilo del Administrador de tareas. Hardware llega al
-	// registrarse; Metrics en cada heartbeat. nil = el worker no lo manda o no pudo medirlo.
 	Hardware *Hardware    `json:"hardware,omitempty"`
 	Metrics  *NodeMetrics `json:"metrics,omitempty"`
 }
 
-// Hardware es la parte fija de un nodo: CPU, RAM total y sus GPUs.
 type Hardware struct {
 	OS            string    `json:"os"`
 	Arch          string    `json:"arch"`
@@ -103,17 +95,15 @@ type Hardware struct {
 	GPUs          []GPUInfo `json:"gpus"`
 }
 
-// GPUInfo describe una GPU; Index sigue el orden del sistema (GPU 0, GPU 1...).
 type GPUInfo struct {
 	Index          int    `json:"index"`
 	Name           string `json:"name"`
-	Vendor         string `json:"vendor"` // nvidia | amd | intel | other
+	Vendor         string `json:"vendor"`
 	Integrated     bool   `json:"integrated"`
 	VRAMTotalBytes uint64 `json:"vram_total_bytes,omitempty"`
-	Source         string `json:"source"` // nvidia-smi | directx+pdh | sysfs
+	Source         string `json:"source"`
 }
 
-// NodeMetrics es la parte variable, muestreada cada segundo en el worker.
 type NodeMetrics struct {
 	SampledAt     time.Time    `json:"sampled_at"`
 	CPUPercent    float64      `json:"cpu_percent"`
@@ -124,7 +114,6 @@ type NodeMetrics struct {
 	GPUs          []GPUMetrics `json:"gpus"`
 }
 
-// GPUMetrics son las lecturas de una GPU; nil = no disponible en esa máquina.
 type GPUMetrics struct {
 	Index         int      `json:"index"`
 	Percent       *float64 `json:"percent"`

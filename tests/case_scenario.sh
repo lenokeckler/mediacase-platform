@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
-# Hito Fase 1: caso heterogéneo (video + audio + archivo corrupto) enviado como UNA solicitud,
-# sin indicar operaciones → el coordinador enruta por tipo, las sub-tareas corren en paralelo,
-# el barrier cierra el caso como partially_completed y el reporte consolidado lo resume.
-#
-# Requiere: infra arriba, coordinador corriendo, al menos un worker conectado.
 set -euo pipefail
 COORD="${COORDINATOR_URL:-http://localhost:8080}"
 export PYTHONIOENCODING=utf-8
 py() { python -c "import sys,json; d=json.load(sys.stdin); print($1)"; }
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# ── entradas: dos válidas + una corrupta (texto con extensión .mp4) ─────────────────────────
 tmp="$(mktemp -d)"
 ffmpeg -y -loglevel error -f lavfi -i "testsrc2=size=320x240:rate=25" -f lavfi -i "sine=frequency=440" -t 3 -c:v libx264 -c:a aac "$tmp/hito_video.mp4"
 ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=330:sample_rate=44100" -t 3 "$tmp/hito_audio.wav"
@@ -21,7 +15,6 @@ done
 rm -rf "$tmp"
 echo "→ entradas en MinIO: hito_video.mp4, hito_audio.wav, hito_corrupto.mp4"
 
-# ── el caso, sin operaciones: decide el coordinador ────────────────────────────────────────
 ID=$(curl -s -X POST "$COORD/cases" -H 'Content-Type: application/json' -d '{
   "name":"hito-fase-1","priority":8,
   "files":[{"key":"hito_video.mp4"},{"key":"hito_audio.wav"},{"key":"hito_corrupto.mp4"}]}' | py "d['id']")
@@ -41,7 +34,6 @@ for i in $(seq 1 90); do
   sleep 2
 done
 
-# ── verificaciones ─────────────────────────────────────────────────────────────────────────
 [[ "$ST" == "partially_completed" ]] || { echo "FALLÓ: esperaba partially_completed, fue $ST"; exit 1; }
 REP=$(curl -s "$COORD/cases/$ID/report")
 echo "$REP" | python -c "

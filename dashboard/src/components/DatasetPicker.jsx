@@ -10,11 +10,6 @@ const SOURCE_ORDER = ['real', 'synthetic', 'edge']
 const SOURCE_LABEL = { real: 'Real', synthetic: 'Sintético', edge: 'Límite' }
 const SOURCE_CHIP_TONE = { real: 'chip-green', synthetic: 'chip-gray', edge: 'chip-yellow' }
 
-// Selector del dataset ya cargado en MinIO: búsqueda + filtros rápidos (tipo, formato, tamaño,
-// origen), selección por arrastre y por rango (shift+clic), acciones masivas, y carga de un caso
-// de prueba predefinido. No sube nada ni conoce la operación elegida: solo informa al padre qué
-// claves quedan elegidas ({ key, type, size_bytes, ... }); el padre decide cómo mezclarlas en
-// `chosen`.
 export default function DatasetPicker({ dataset, chosenKeys, onSetMany, onClear, onLoadTestCase }) {
     const [search, setSearch] = useState('')
     const [typeFilter, setTypeFilter] = useState([])
@@ -25,14 +20,10 @@ export default function DatasetPicker({ dataset, chosenKeys, onSetMany, onClear,
 
     useEffect(() => {
         let alive = true
-        // Silencioso a propósito: en un coordinador viejo este endpoint no existe (404) y el
-        // selector de "caso de prueba" simplemente no aparece.
         api.listTestCases().then(list => { if (alive) setTestCases(Array.isArray(list) ? list : []) }).catch(() => {})
         return () => { alive = false }
     }, [])
 
-    // Un solo recorrido del dataset para las cuentas de cada filtro (independientes entre sí,
-    // no se recalculan según los otros filtros activos).
     const facets = useMemo(() => {
         const types = {}, formats = {}, tiers = {}, sources = {}
         for (const d of dataset) {

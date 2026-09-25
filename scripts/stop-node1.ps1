@@ -1,7 +1,4 @@
-﻿# Apaga node-1 completo (lo llama MediaCase-detener.bat): coordinador, worker local, tuneles y
-# los contenedores de la infra (stop, no down: los datos quedan). Docker Desktop se cierra
-# tambien para liberar RAM; si se quiere dejar abierto, correr con -KeepDocker.
-param([switch]$KeepDocker)
+﻿param([switch]$KeepDocker)
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 & (Join-Path $PSScriptRoot 'stop-all.ps1')

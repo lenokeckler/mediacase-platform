@@ -12,7 +12,7 @@ func TestRoleCapabilities(t *testing.T) {
 		{"metadata", []string{"metadata"}},
 		{"all", []string{"video", "audio", "metadata"}},
 		{"", []string{"video", "audio", "metadata"}},
-		{"bogus", []string{"video", "audio", "metadata"}}, // rol desconocido → genérico, no ocioso
+		{"bogus", []string{"video", "audio", "metadata"}},
 	}
 	for _, tc := range tests {
 		got := RoleCapabilities(tc.role)

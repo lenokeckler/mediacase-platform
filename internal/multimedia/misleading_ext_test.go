@@ -11,11 +11,6 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// Un archivo mp3 real con extensión .mp4 (nombre engañoso) debe: (a) detectarse como audio/mp3
-// por su contenido real (cases.SniffType, no la extensión) y (b) seguir procesándose bien en
-// ffmpeg pese al nombre falso, porque el demuxer prueba el contenido, no la extensión. Esto es
-// justo lo que permite que el coordinador re-enrute por inspección de contenido sin que el
-// worker se rompa al ejecutar la operación que decidió.
 func TestSniffAndConvert_ExtensionEnganosa(t *testing.T) {
 	mp3 := makeSyntheticAudio(t, "mp3")
 	raw, err := os.ReadFile(mp3)

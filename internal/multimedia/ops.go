@@ -1,5 +1,3 @@
-// Operaciones con formato de salida explícito. Cada destino tiene su receta de ffmpeg; el
-// coordinador decide el destino (routing) y el worker solo lo ejecuta.
 package multimedia
 
 import (
@@ -13,17 +11,12 @@ import (
 	"strings"
 )
 
-// Recetas de códecs por formato de salida.
 var videoRecipes = map[string][]string{
 	"mp4":  {"-c:v", "libx264", "-preset", "fast", "-crf", "23", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart"},
 	"mkv":  {"-c:v", "libx264", "-preset", "fast", "-crf", "23", "-c:a", "aac", "-b:a", "128k"},
 	"webm": {"-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-crf", "33", "-b:v", "0", "-c:a", "libopus", "-b:a", "96k"},
 }
 
-// videoNormalize se agrega al convertir: x264 y VP9 exigen ancho y alto pares (un 640x359 real
-// falla) y yuv420p es lo único que reproduce cualquier equipo (evita salidas 4:4:4 o de 10 bits
-// cuando el origen es HEVC/AV1 de alta gama). Va aparte de las recetas porque enrich las reutiliza
-// con una portada adjunta, y ahí un filtro de video tocaría también la imagen.
 var videoNormalize = []string{"-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-pix_fmt", "yuv420p"}
 
 var audioRecipes = map[string][]string{
@@ -34,7 +27,6 @@ var audioRecipes = map[string][]string{
 	"ogg":  {"-c:a", "libvorbis", "-q:a", "5"},
 }
 
-// ConvertTo transcodifica un video al formato pedido (mp4, mkv, webm).
 func ConvertTo(ctx context.Context, inputPath, target string, cb progressFn) (string, error) {
 	recipe, ok := videoRecipes[target]
 	if !ok {
@@ -53,7 +45,6 @@ func ConvertTo(ctx context.Context, inputPath, target string, cb progressFn) (st
 	return runWithProgress(ctx, "convert", args, cb, out)
 }
 
-// ExtractAudioTo saca la pista de audio de un video al formato pedido (mp3, wav, flac, aac).
 func ExtractAudioTo(ctx context.Context, inputPath, target string, cb progressFn) (string, error) {
 	recipe, ok := audioRecipes[target]
 	if !ok {
@@ -71,7 +62,6 @@ func ExtractAudioTo(ctx context.Context, inputPath, target string, cb progressFn
 	return runWithProgress(ctx, "extract_audio", args, cb, out)
 }
 
-// ConvertAudioTo convierte un audio al formato pedido (flac, mp3, wav, aac, ogg).
 func ConvertAudioTo(ctx context.Context, inputPath, target string, cb progressFn) (string, error) {
 	recipe, ok := audioRecipes[target]
 	if !ok {
@@ -89,8 +79,6 @@ func ConvertAudioTo(ctx context.Context, inputPath, target string, cb progressFn
 	return runWithProgress(ctx, "convert_audio", args, cb, out)
 }
 
-// ThumbnailTo genera una miniatura (jpg, png, webp) del ancho pedido: el primer fotograma de un
-// video o imagen; para audio, la forma de onda.
 func ThumbnailTo(ctx context.Context, inputPath, target string, width int, cb progressFn) (string, error) {
 	if target != "jpg" && target != "png" && target != "webp" {
 		return "", fmt.Errorf("thumbnail: formato de salida %q no soportado", target)
@@ -109,7 +97,7 @@ func ThumbnailTo(ctx context.Context, inputPath, target string, width int, cb pr
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
 	lowerPriority(cmd)
 	if out2, err := cmd.CombinedOutput(); err != nil {
-		// Sin fotograma (audio puro): forma de onda.
+
 		log.Printf("[thumbnail] sin fotograma (%v), probando forma de onda", err)
 		log.Printf("[thumbnail] ffmpeg: %s", firstLines(string(out2), 3))
 		h := strconv.Itoa(width * 5 / 16)
@@ -128,8 +116,6 @@ func ThumbnailTo(ctx context.Context, inputPath, target string, width int, cb pr
 	return out, nil
 }
 
-// Metadata es la operación "consulta de metadatos" de la consigna: ffprobe → JSON con formato,
-// duración, tamaño, bitrate, cada pista (códec, resolución, fps, canales, muestreo) y etiquetas.
 func Metadata(ctx context.Context, inputPath string, cb progressFn) (string, error) {
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-print_format", "json",
 		"-show_format", "-show_streams", inputPath)
@@ -151,7 +137,6 @@ func Metadata(ctx context.Context, inputPath string, cb progressFn) (string, err
 	return out, nil
 }
 
-// summarizeProbe deja el JSON de ffprobe legible: lo esencial arriba y el detalle completo debajo.
 func summarizeProbe(raw []byte) ([]byte, error) {
 	var p struct {
 		Format struct {
@@ -232,7 +217,6 @@ func firstLines(s string, n int) string {
 	return strings.Join(lines, " | ")
 }
 
-// runWithProgress ejecuta ffmpeg leyendo -progress de stderr para reportar el porcentaje.
 func runWithProgress(ctx context.Context, op string, args []string, cb progressFn, out string) (string, error) {
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
 	lowerPriority(cmd)

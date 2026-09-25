@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# Tolerancia a fallos con casos: un worker de video muere a mitad de un caso (kill -9, sin
-# despedirse). El coordinador lo expulsa por falta de heartbeat, re-encola sus sub-tareas, el
-# caso pasa a `retrying`, OTRO worker del mismo pool las toma, y el caso cierra `completed` sin
-# ninguna sub-tarea fallida. Al final el worker caído se vuelve a levantar.
-#
-# Requiere (node-1): infra, coordinador y el worker local node1 (video, diagnóstico en :8090)
-# arriba, dataset subido, bin/ingest. El script levanta él un segundo worker de video temporal.
-#   bash tests/failure_scenario.sh            # mata node1 (diag :8090)
-#   VICTIM=node1 VICTIM_PORT=8090 bash tests/failure_scenario.sh
 set -euo pipefail
 COORD="${COORDINATOR_URL:-http://localhost:8080}"
 VICTIM="${VICTIM:-node1}"; VICTIM_PORT="${VICTIM_PORT:-8090}"
@@ -19,7 +10,6 @@ WORKER_BIN="$here/bin/mediacase-worker-host.exe"; [[ -x "$WORKER_BIN" ]] || WORK
 [[ -x "$WORKER_BIN" ]] || fail "falta el binario del worker (scripts/run-worker.ps1 lo compila)"
 ENVFILE="$here/infra/env/worker-host.env"; [[ -f "$ENVFILE" ]] || fail "falta $ENVFILE"
 
-# ── 0. un segundo worker de video, temporal, para que haya a quién redistribuir ────────────
 echo "→ levantando worker temporal 'tmp-video' (pool video)"
 ( set -a; source "$ENVFILE"; set +a
   WORKER_ID=tmp-video WORKER_ROLE=video WORKER_POOL_SIZE=4 WORKER_DIAG_ADDR= "$WORKER_BIN" >/tmp/tmp-video.log 2>&1 ) &
@@ -30,7 +20,6 @@ done
 curl -s "$COORD/workers" | grep -q '"id":"tmp-video"' || fail "tmp-video no se registró (ver /tmp/tmp-video.log)"
 curl -s "$COORD/workers" | grep -q "\"id\":\"$VICTIM\"" || fail "$VICTIM no está conectado"
 
-# ── 1. un caso de videos medianos, prioridad alta para que entre ya ────────────────────────
 echo "→ caso de 8 videos medianos (prioridad 9)"
 FILES=$(python -c "
 import json
@@ -41,7 +30,6 @@ ID=$(curl -s -X POST "$COORD/cases" -H 'Content-Type: application/json' \
   -d "{\"name\":\"fallo-worker\",\"priority\":9,\"files\":$FILES}" | py "d['id']")
 echo "   caso $ID"
 
-# ── 2. esperar a que la víctima tenga sub-tareas corriendo, y matarla sin aviso ────────────
 for i in $(seq 1 60); do
   N=$(curl -s "$COORD/cases/$ID" | py "sum(1 for j in d['jobs'] if j['status']=='running' and j.get('worker_id')=='$VICTIM')")
   (( N >= 2 )) && break; sleep 1
@@ -60,7 +48,6 @@ else
 fi
 T0=$(date +%s)
 
-# ── 3. el coordinador expulsa, re-encola y el caso pasa a retrying ─────────────────────────
 SEEN_RETRY=0; SEEN_EVICT=0
 for i in $(seq 1 90); do
   ST=$(curl -s "$COORD/cases/$ID" | py "d['status']")
@@ -74,7 +61,6 @@ done
 (( SEEN_RETRY )) || echo "   (el caso no pasó por retrying visible: las sub-tareas se re-asignaron entre dos consultas)"
 [[ "$ST" == completed ]] || fail "el caso terminó $ST, esperaba completed"
 
-# ── 4. verificaciones: las sub-tareas de la víctima las terminó otro worker ───────────────
 curl -s "$COORD/cases/$ID" | python -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -90,7 +76,6 @@ print(f'   {len(moved)} sub-tareas redistribuidas, {len(d[\"jobs\"])}/{len(d[\"j
 "
 echo "   cierre completo $(( $(date +%s) - T0 )) s después de la caída"
 
-# ── 5. dejar todo como estaba ──────────────────────────────────────────────────────────────
 kill "$TMP_PID" 2>/dev/null || true
 echo "→ relanzando $VICTIM"
 ( set -a; source "$ENVFILE"; set +a

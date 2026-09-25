@@ -12,10 +12,6 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// El worker abre un WebSocket hacia el coordinador y lo mantiene vivo; el coordinador
-// le envía las asignaciones por ese canal. Así el worker nunca necesita un puerto
-// abierto ni una IP alcanzable: funciona detrás de cualquier router o firewall.
-
 var (
 	ErrNotConnected  = errors.New("worker sin canal abierto")
 	ErrWorkerBusy    = errors.New("worker rechazó la sub-tarea (pool lleno)")
@@ -24,22 +20,20 @@ var (
 
 const assignTimeout = 5 * time.Second
 
-// wsMsg es el mensaje que viaja en ambas direcciones por el canal.
 type wsMsg struct {
-	Type   string      `json:"type"`             // "assign" | "accept" | "reject" | "ping" | "pong"
-	Job    *models.Job `json:"job,omitempty"`    // en "assign"
-	JobID  string      `json:"job_id,omitempty"` // en "accept" / "reject"
-	Reason string      `json:"reason,omitempty"` // en "reject"
+	Type   string      `json:"type"`
+	Job    *models.Job `json:"job,omitempty"`
+	JobID  string      `json:"job_id,omitempty"`
+	Reason string      `json:"reason,omitempty"`
 }
 
 type workerConn struct {
 	conn    *websocket.Conn
-	sendMu  sync.Mutex            // un escritor a la vez sobre el socket
-	pendMu  sync.Mutex            // protege pending
-	pending map[string]chan wsMsg // job_id → respuesta accept/reject
+	sendMu  sync.Mutex
+	pendMu  sync.Mutex
+	pending map[string]chan wsMsg
 }
 
-// WorkerHub mantiene el canal abierto de cada worker conectado.
 type WorkerHub struct {
 	mu    sync.RWMutex
 	conns map[string]*workerConn
@@ -49,8 +43,6 @@ func NewWorkerHub() *WorkerHub {
 	return &WorkerHub{conns: make(map[string]*workerConn)}
 }
 
-// ServeStream atiende GET /workers/{id}/stream. El worker se conecta y se queda; cada
-// mensaje que manda se despacha a quien esté esperando la respuesta de esa sub-tarea.
 func (h *WorkerHub) ServeStream(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -62,7 +54,7 @@ func (h *WorkerHub) ServeStream(w http.ResponseWriter, r *http.Request) {
 
 		h.mu.Lock()
 		if old, ok := h.conns[id]; ok {
-			old.conn.Close() // reconexión: cerrar el canal viejo
+			old.conn.Close()
 		}
 		h.conns[id] = wc
 		h.mu.Unlock()
@@ -102,7 +94,6 @@ func (wc *workerConn) send(m wsMsg) error {
 	return websocket.JSON.Send(wc.conn, m)
 }
 
-// IsConnected indica si el worker tiene un canal abierto ahora mismo.
 func (h *WorkerHub) IsConnected(workerID string) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -110,7 +101,6 @@ func (h *WorkerHub) IsConnected(workerID string) bool {
 	return ok
 }
 
-// Connected devuelve los IDs de los workers con canal abierto.
 func (h *WorkerHub) Connected() []string {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -121,8 +111,6 @@ func (h *WorkerHub) Connected() []string {
 	return ids
 }
 
-// Assign envía la sub-tarea al worker y espera su accept/reject.
-// ErrWorkerBusy equivale al antiguo HTTP 429: re-encolar sin contar reintento.
 func (h *WorkerHub) Assign(ctx context.Context, workerID string, job *models.Job) error {
 	h.mu.RLock()
 	wc, ok := h.conns[workerID]

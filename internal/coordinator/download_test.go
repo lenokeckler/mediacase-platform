@@ -36,8 +36,7 @@ func TestWorkerEnvFor_RespetaMinIOPublicoSiEsRemoto(t *testing.T) {
 }
 
 func TestWorkerEnvFor_IgnoraLocalhost(t *testing.T) {
-	// El coordinador corre con MINIO_PUBLIC_ENDPOINT=localhost:9000 en desarrollo;
-	// eso no le sirve a otra máquina: se reemplaza por el host real.
+
 	t.Setenv("MINIO_PUBLIC_ENDPOINT", "localhost:9000")
 	env := workerEnvFor("192.168.1.10:8080", "http", "", "all")
 	if strings.Contains(env, "localhost") {
@@ -46,8 +45,7 @@ func TestWorkerEnvFor_IgnoraLocalhost(t *testing.T) {
 }
 
 func TestWorkerEnvFor_TunelHTTPSConMinIOPorTunel(t *testing.T) {
-	// El navegador llegó por un quick tunnel (cloudflared pone X-Forwarded-Proto: https) y
-	// scripts/tunnel.ps1 dejó el host del túnel de MinIO: el worker remoto usa https/wss y S3 por TLS.
+
 	t.Setenv("MINIO_PUBLIC_ENDPOINT", "172.24.87.192:9000")
 	env := workerEnvFor("abc-def.trycloudflare.com", "https", "minio-xyz.trycloudflare.com", "all")
 	for _, want := range []string{
@@ -66,8 +64,7 @@ func TestWorkerEnvFor_TunelHTTPSConMinIOPorTunel(t *testing.T) {
 }
 
 func TestWorkerEnvFor_TunelSinMinIOAvisa(t *testing.T) {
-	// Túnel abierto solo para el 8080: el ZIP sigue sirviendo (wss), pero MinIO queda en la LAN
-	// y el archivo lo dice, para que quien lo abra entienda por qué fallan las descargas.
+
 	t.Setenv("MINIO_PUBLIC_ENDPOINT", "172.24.87.192:9000")
 	env := workerEnvFor("abc-def.trycloudflare.com", "https", "", "all")
 	if !strings.Contains(env, "COORDINATOR_URL=https://abc-def.trycloudflare.com\n") {

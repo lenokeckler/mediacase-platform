@@ -1,6 +1,5 @@
 import styles from './StatsBar.module.css'
 
-// Contadores de sub-tareas de todo el sistema; el color es semántico (estado), no decorativo.
 const STAT_CONFIG = [
     { key: 'pending', label: 'Pendientes', color: 'var(--gray)', hint: 'en cola, sin worker todavía' },
     { key: 'assigned', label: 'Asignadas', color: 'var(--blue)', hint: 'entregadas a un worker' },

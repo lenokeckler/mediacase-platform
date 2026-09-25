@@ -1,6 +1,3 @@
-// cmd/client/cases.go
-// Modo -case: envía un caso (varios archivos como UNA solicitud), sigue su estado agregado
-// y al cerrar imprime el reporte consolidado.
 package main
 
 import (
@@ -44,7 +41,6 @@ type caseResponse struct {
 	Jobs      []caseJob `json:"jobs"`
 }
 
-// parseFiles acepta "a.mp4,b.mp3" y también "a.mp4:extract_audio" para forzar una operación.
 func parseFiles(spec string) []caseFile {
 	var out []caseFile
 	for _, item := range strings.Split(spec, ",") {
@@ -98,7 +94,6 @@ func runCase(coordinatorURL, name, files string, priority int, watch bool) {
 	watchCase(coordinatorURL, c.ID)
 }
 
-// watchCase muestra el avance hasta que el caso cierre, y entonces imprime el reporte.
 func watchCase(coordinatorURL, id string) {
 	start := time.Now()
 	last := ""

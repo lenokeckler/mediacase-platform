@@ -1,7 +1,5 @@
 import { CASE_STATUS_LABEL, JOB_STATUS_LABEL } from '../api'
 
-// Chip de estado, compartido por casos y sub-tareas. El color es semántico y viene del tema
-// (ui.css): verde = terminó bien, ámbar = parcial, rojo = falló, violeta = reintentando…
 const TONE = {
     queued: 'gray', pending: 'gray',
     assigned: 'blue',

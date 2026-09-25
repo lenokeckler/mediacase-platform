@@ -13,7 +13,6 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// fakeWorker conecta al hub y responde a cada "assign" según decide(job).
 func fakeWorker(t *testing.T, srvURL, id string, decide func(*models.Job) string) *websocket.Conn {
 	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(srvURL, "http") + "/workers/" + id + "/stream"
@@ -105,7 +104,6 @@ func TestWorkerHub_ReconexionReemplazaCanal(t *testing.T) {
 	old := fakeWorker(t, srv.URL, "w1", func(*models.Job) string { return "reject" })
 	waitConnected(t, hub, "w1")
 
-	// El mismo worker vuelve a conectar (p. ej. tras un corte de red): el canal nuevo manda.
 	nu := fakeWorker(t, srv.URL, "w1", func(*models.Job) string { return "accept" })
 	defer nu.Close()
 	time.Sleep(100 * time.Millisecond)
@@ -123,7 +121,7 @@ func TestWorkerHub_ReconexionReemplazaCanal(t *testing.T) {
 func TestWorkerHub_TimeoutSiElWorkerNoResponde(t *testing.T) {
 	hub, srv := newHubServer(t)
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http") + "/workers/mudo/stream"
-	c, err := websocket.Dial(wsURL, "", srv.URL) // conecta pero nunca responde
+	c, err := websocket.Dial(wsURL, "", srv.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

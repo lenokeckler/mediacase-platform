@@ -45,7 +45,7 @@ func TestLanIPv4s_FiltraLoopbackVirtualesYNoPrivadas(t *testing.T) {
 		{Name: "Wi-Fi", IP: net.ParseIP("172.24.87.192")},
 		{Name: "Loopback Pseudo-Interface 1", IP: net.ParseIP("127.0.0.1")},
 		{Name: "VirtualBox Host-Only Ethernet Adapter", IP: net.ParseIP("192.168.56.1")},
-		{Name: "Ethernet 3", IP: net.ParseIP("192.168.56.1")}, // el mismo adaptador, como lo nombra Windows
+		{Name: "Ethernet 3", IP: net.ParseIP("192.168.56.1")},
 		{Name: "vEthernet (WSL (Hyper-V firewall))", IP: net.ParseIP("172.31.0.1")},
 		{Name: "CloudflareWARP", IP: net.ParseIP("172.16.0.2")},
 		{Name: "Wi-Fi", IP: net.ParseIP("fe80::1")},

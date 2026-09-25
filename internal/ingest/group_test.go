@@ -12,7 +12,7 @@ func sample() []ManifestFile {
 		{Key: "a1.mp3", Type: "audio", Event: "boda", Session: "boda-s2", Batch: "lote-1", User: "leno"},
 		{Key: "i1.jpg", Type: "image", Event: "clase", Session: "clase-s1", Batch: "lote-1", User: "jonathan"},
 		{Key: "a2.wav", Type: "audio", Event: "clase", Session: "clase-s1", Batch: "lote-2", User: "jonathan"},
-		{Key: "casos/sesion3/v3.mp4", Type: "video"}, // manifest v1: sin metadatos, solo carpeta
+		{Key: "casos/sesion3/v3.mp4", Type: "video"},
 	}
 }
 
@@ -39,7 +39,7 @@ func TestGroupBy_SessionProduceHomogeneosYHeterogeneos(t *testing.T) {
 	groups, _ := GroupBy(sample(), "session")
 	hom := Filter(groups, "homogeneous")
 	het := Filter(groups, "heterogeneous")
-	if len(hom) != 2 { // boda-s1 (2 videos) y boda-s2 (1 audio)
+	if len(hom) != 2 {
 		t.Errorf("homogéneos: %d %+v", len(hom), hom)
 	}
 	if len(het) != 1 || het[0].Value != "clase-s1" {
@@ -67,7 +67,7 @@ func TestGroupBy_OmiteSinValorYRechazaCriterioMalo(t *testing.T) {
 	for _, g := range groups {
 		total += len(g.Files)
 	}
-	if total != 5 { // el archivo v1 sin user se omite
+	if total != 5 {
 		t.Errorf("archivos agrupados por user: %d, quería 5", total)
 	}
 	if _, err := GroupBy(sample(), "color"); err == nil {
@@ -95,9 +95,6 @@ func TestToRequest(t *testing.T) {
 	}
 }
 
-// Con -enrich, los audios y videos del grupo van como enrich_* con los recursos del manifest
-// (usuario → artista, evento → álbum, sesión y lote → comentario); las imágenes siguen con la
-// operación que decide el coordinador.
 func TestToRequestEnriched(t *testing.T) {
 	groups, _ := GroupBy(sample(), "event")
 	var boda Group
@@ -120,12 +117,12 @@ func TestToRequestEnriched(t *testing.T) {
 	if a := byKey["a1.mp3"]; a.Operation != "enrich_audio" || a.Enrichment == nil || a.Enrichment.Artist != "leno" {
 		t.Errorf("audio: %+v %+v", a, a.Enrichment)
 	}
-	// Sin -enrich no cambia nada.
+
 	plain := boda.ToRequestWith(5, false)
 	if plain.Files[0].Operation != "" || plain.Files[0].Enrichment != nil {
 		t.Errorf("sin enrich: %+v", plain.Files[0])
 	}
-	// Un archivo sin metadatos (manifest v1) igual va a enriquecer, solo sin artista ni álbum.
+
 	groups, _ = GroupBy(sample(), "folder")
 	for _, g := range groups {
 		for _, f := range g.ToRequestWith(5, true).Files {
@@ -136,8 +133,6 @@ func TestToRequestEnriched(t *testing.T) {
 	}
 }
 
-// Un caso de prueba del manifest (v3, "test_cases") se envía tal cual: operación, destino, ancho
-// y recursos asociados por archivo, sin pasar por GroupBy.
 func TestTestCase_ToRequest(t *testing.T) {
 	tc := TestCase{
 		ID: "heterogeneo-1", Name: "caso de prueba heterogéneo", Kind: "heterogeneous",
@@ -156,9 +151,6 @@ func TestTestCase_ToRequest(t *testing.T) {
 	}
 }
 
-// El manifest describe la "descripción" de un video enriquecido con la clave "description"; el
-// coordinador solo entiende "lyrics" (letra o descripción según el tipo), así que se alía a ese
-// campo al deserializar.
 func TestEnrichment_DescriptionEsAliasDeLyrics(t *testing.T) {
 	var e Enrichment
 	if err := json.Unmarshal([]byte(`{"title":"Apertura","description":"discurso de bienvenida"}`), &e); err != nil {
@@ -167,7 +159,7 @@ func TestEnrichment_DescriptionEsAliasDeLyrics(t *testing.T) {
 	if e.Title != "Apertura" || e.Lyrics != "discurso de bienvenida" {
 		t.Errorf("alias description → lyrics: %+v", e)
 	}
-	// Si vienen los dos, gana "lyrics".
+
 	var e2 Enrichment
 	json.Unmarshal([]byte(`{"lyrics":"letra real","description":"no debería ganar"}`), &e2)
 	if e2.Lyrics != "letra real" {

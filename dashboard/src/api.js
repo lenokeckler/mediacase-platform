@@ -1,5 +1,3 @@
-// Cliente HTTP del dashboard. En desarrollo (npm run dev) Vite manda /api al coordinador;
-// en producción el propio coordinador sirve el dashboard y atiende /api.
 const BASE = '/api'
 
 async function request(method, path, body) {
@@ -15,7 +13,6 @@ async function request(method, path, body) {
 }
 
 export const api = {
-    // ── Casos (la unidad de trabajo) ──
     submitCase: (name, priority, files) =>
         request('POST', '/cases', { name, priority: Number(priority), files }),
     listCases: (status = '') =>
@@ -24,34 +21,27 @@ export const api = {
     getCaseReport: (id) => request('GET', `/cases/${id}/report`),
     cancelCase: (id) => request('POST', `/cases/${id}/cancel`),
 
-    // ── Entradas (bucket dataset en MinIO) ──
     listDataset: (prefix = '') => request('GET', `/dataset?prefix=${encodeURIComponent(prefix)}`),
-    // Casos de prueba predefinidos (homogéneos/heterogéneos) del dataset; el panel de "Nuevo
-    // caso" oculta el selector en silencio si el coordinador todavía no lo expone.
     listTestCases: () => request('GET', '/dataset/test-cases'),
     uploadFiles: async (fileList) => {
         const form = new FormData()
         for (const f of fileList) form.append('file', f)
         const r = await fetch(`${BASE}/upload`, { method: 'POST', body: form })
         if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
-        return r.json() // { keys: [...] }
+        return r.json()
     },
 
-    // ── Sub-tareas sueltas, workers, estadísticas ──
     submitJob: (filePath, operation, priority) =>
         request('POST', '/jobs', { file_path: filePath, operation, priority: Number(priority) }),
     listJobs: () => request('GET', '/jobs'),
     getStats: () => request('GET', '/stats'),
     listWorkers: () => request('GET', '/workers'),
 
-    // ── Compartir node-1: URLs de la LAN y túnel a internet ──
     getCatalog: () => request('GET', '/catalog'),
     getShare: () => request('GET', '/share'),
     startTunnel: () => request('POST', '/tunnel'),
     stopTunnel: () => request('DELETE', '/tunnel'),
 }
-
-// ── Utilidades compartidas por los componentes ──
 
 export const CASE_STATUS_LABEL = {
     queued: 'en cola',
@@ -72,7 +62,6 @@ export const JOB_STATUS_LABEL = {
     cancelled: 'cancelada',
 }
 
-// Operaciones: nombre corto, verbo para tablas y descripción para el formulario.
 export const OPERATION_LABEL = {
     convert: 'convertir video',
     convert_audio: 'convertir audio',
@@ -91,15 +80,11 @@ export const OPERATION_HELP = {
     enrich_audio: 'Integra dentro del mismo archivo una portada (forma de onda), etiquetas (título, artista, álbum, fecha) y la letra. No recodifica si el formato lo permite.',
     enrich_video: 'Integra dentro del mismo archivo una portada (fotograma), etiquetas (título, artista, álbum, fecha) y una descripción. No recodifica si el formato lo permite.',
 }
-// Operaciones que integran recursos asociados; el formulario les despliega el editor.
-// Nombre del tipo de contenido para mostrar (el modelo usa video/audio/image).
 export const TYPE_LABEL = { video: 'Video', audio: 'Audio', image: 'Imagen' }
 
 export const ENRICH_OPS = ['enrich_audio', 'enrich_video']
 export const isEnrichOp = (op) => ENRICH_OPS.includes(op)
 
-// Catálogo por defecto (misma tabla que internal/cases/router.go). El coordinador sirve la versión
-// autoritativa en GET /catalog; esto solo cubre el arranque y el caso sin red.
 export const DEFAULT_CATALOG = {
     ops_by_type: {
         video: ['convert', 'extract_audio', 'thumbnail', 'metadata', 'enrich_video'],
@@ -117,16 +102,11 @@ export const DEFAULT_CATALOG = {
     },
     pool_by_op: { convert: 'video', extract_audio: 'video', convert_audio: 'audio', thumbnail: 'metadata', metadata: 'metadata', enrich_audio: 'metadata', enrich_video: 'metadata' },
     thumbnail_widths: [320, 640, 1280],
-    // En las conversiones el formato de origen no se ofrece (mp4 → mp4 no es una conversión).
     identity_excluded_ops: ['convert', 'convert_audio'],
-    // Al enriquecer, el default es el formato de origen si el contenedor admite portada y etiquetas.
     identity_preferred_ops: ['enrich_audio', 'enrich_video'],
     ext_aliases: { jpeg: 'jpg', tiff: 'tif', aiff: 'aif', m4a: 'aac', mpeg: 'mpg' },
 }
 
-// Formatos de salida válidos para una operación sobre un archivo concreto: la lista del catálogo
-// menos el formato de origen cuando la operación es una conversión (misma regla que el
-// coordinador en internal/cases/router.go, TargetsFor).
 export function targetsFor(catalog, op, filename) {
     const all = catalog.targets_by_op[op] || []
     if (!(catalog.identity_excluded_ops || []).includes(op)) return all
@@ -136,7 +116,6 @@ export function targetsFor(catalog, op, filename) {
     return all.filter(t => norm(t) !== src)
 }
 
-// Formato que el coordinador elige si el usuario no pide ninguno (misma regla que DefaultTargetFor).
 export function defaultTargetFor(catalog, op, filename) {
     const valid = targetsFor(catalog, op, filename)
     if ((catalog.identity_preferred_ops || []).includes(op)) {
@@ -147,7 +126,6 @@ export function defaultTargetFor(catalog, op, filename) {
 }
 export const OPS_BY_TYPE = DEFAULT_CATALOG.ops_by_type
 
-// "mkv → MP4": cómo se muestra una sub-tarea en tablas y reportes.
 export function opArrow(job) {
     const src = extOf(job.file_path || job.file || '')
     const dst = job.target || ''

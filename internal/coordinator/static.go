@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-// El coordinador sirve él mismo el dashboard compilado (dashboard/dist): una sola URL para
-// la interfaz, la API (bajo /api/) y /connect. Así ningún nodo necesita nginx ni Docker para
-// ver el sistema, y desde otra máquina basta con http://<ip-del-coordinador>:8080.
-
-// spaHandler sirve los archivos del dashboard y devuelve index.html para cualquier ruta que
-// no sea un archivo (recarga de una pestaña, rutas del lado del cliente).
 func spaHandler(dir string) http.Handler {
 	fs := http.FileServer(http.Dir(dir))
 	index := filepath.Join(dir, "index.html")
@@ -27,21 +21,18 @@ func spaHandler(dir string) http.Handler {
 			return
 		}
 		if strings.HasPrefix(r.URL.Path, "/assets/") {
-			http.NotFound(w, r) // un asset inexistente no debe devolver index.html
+			http.NotFound(w, r)
 			return
 		}
 		http.ServeFile(w, r, index)
 	})
 }
 
-// apiPrefixes son las rutas de la API que siguen existiendo sin el prefijo /api
-// (las usan el worker, el cliente CLI, los scripts de prueba y la página /connect).
 var apiPrefixes = []string{
 	"/jobs", "/jobs/", "/cases", "/cases/", "/workers", "/workers/",
 	"/stats", "/ws", "/upload", "/dataset", "/dataset/test-cases", "/connect", "/download/", "/metrics",
 }
 
-// Handler compone la API (en / y bajo /api/), el WebSocket y el dashboard estático.
 func (a *API) Handler(staticDir string) http.Handler {
 	api := a.Router()
 	root := http.NewServeMux()

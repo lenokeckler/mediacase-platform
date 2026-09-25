@@ -1,8 +1,5 @@
 import styles from './EnrichmentEditor.module.css'
 
-// Editor de los recursos asociados que la operación "enriquecer" integra dentro del archivo:
-// etiquetas (título, artista, álbum, fecha) y letra o descripción. La portada la genera el worker.
-// Los placeholders muestran lo que el coordinador pone si el campo queda vacío.
 export default function EnrichmentEditor({ value, kind, filename, caseName, sameFormat, target, onChange, onApplyToAll }) {
     const isAudio = kind === 'audio'
     const titleDefault = titleFromFilename(filename)
@@ -58,7 +55,6 @@ export default function EnrichmentEditor({ value, kind, filename, caseName, same
     )
 }
 
-// "audio_medium_07-final_mix.flac" → "audio medium 07 final mix" (misma regla que el coordinador).
 export function titleFromFilename(name) {
     const base = (name || '').split('/').pop().replace(/\.[^.]+$/, '')
     return base.replace(/[_-]+/g, ' ').trim().replace(/\s+/g, ' ')

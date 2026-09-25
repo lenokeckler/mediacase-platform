@@ -155,13 +155,13 @@ docs/                   arquitectura, API, manual de usuario, dataset, informe d
 | [`docs/api.md`](docs/api.md) | todos los endpoints con ejemplos reales |
 | [`docs/dataset.md`](docs/dataset.md) | composición, criterios de agrupación, volumen, uso |
 | [`docs/informe-pruebas.md`](docs/informe-pruebas.md) | carga, distribución, casos heterogéneos, fallos, saturación y redistribución, hardware real |
-| [`docs/plan/`](docs/plan/) | los planes de implementación con cada tarea y su verificación |
+| [`docs/entrega/salida/`](docs/entrega/salida/) | documentos de entrega en Word y PDF: arquitectura, manual de usuario e informe de pruebas |
 
 ## Estado del proyecto
 
-Fases 0-5 del plan cerradas con hito verificado (distribución real, capa de casos, pools
-especializados, dashboard por caso, dataset e ingesta, monitoreo completo). En curso: documentación
-final y despliegue en las tres laptops del equipo. Ver `docs/plan/2026-09-11-plan-2-entrega.md`.
+Sistema completo y probado en hardware real: distribución en varias máquinas, capa de casos con
+barrier y reporte consolidado, pools especializados, dashboard por caso, dataset con ingesta y
+monitoreo. La documentación de entrega está en `docs/entrega/salida/`.
 
 ## Licencia
 

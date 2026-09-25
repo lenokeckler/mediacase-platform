@@ -1,19 +1,10 @@
 #!/usr/bin/env bash
-# Informe de tiempos: consulta PostgreSQL y resume, con números reales, lo que la consigna pide
-# poder analizar — tiempos a nivel de sub-tarea (por operación, por pool, por nivel de tamaño)
-# y a nivel de caso (por clase homogéneo/heterogéneo), distribución entre workers, espera en
-# cola y throughput. Correrlo DESPUÉS de una carga (ingest load / dataset_scenario.sh).
-#
-#   bash tests/measure_times.sh                # todo el historial
-#   SINCE='2 hours' bash tests/measure_times.sh   # solo lo creado en las últimas 2 horas
-#   bash tests/measure_times.sh --markdown     # tablas Markdown para docs/informe-pruebas.md
 set -euo pipefail
 SINCE="${SINCE:-100 years}"
 FMT="table"; [[ "${1:-}" == "--markdown" ]] && FMT="markdown"
 PSQL=(docker compose -f docker-compose.infra.yml exec -T postgres psql -U media -d mediacase -v ON_ERROR_STOP=1)
 export PYTHONIOENCODING=utf-8
 
-# run <título> <sql>: imprime la consulta como tabla psql o como tabla Markdown
 run() {
   local title=$1 sql=$2
   echo; echo "## $title"; echo

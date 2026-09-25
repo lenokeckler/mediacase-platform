@@ -1,7 +1,3 @@
-# Prometheus corre en Docker (docker-compose.infra.yml); el coordinador es un proceso nativo del
-# host, por eso host.docker.internal. Los workers remotos NO exponen puerto (abren ellos la
-# conexión hacia el coordinador): sus CPU/memoria/carga las re-exporta el coordinador en
-# /metrics a partir del heartbeat (mediacase_worker_*).
 global:
   scrape_interval: 5s
 

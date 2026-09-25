@@ -22,7 +22,6 @@ import (
 func main() {
 	log.Println("[coordinator] starting...")
 
-	// ── Conexión a infraestructura ─────────────────────────────────────────
 	database, err := db.Connect(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalf("db connect: %v", err)
@@ -39,19 +38,16 @@ func main() {
 	q.EnsureGroups(ctx)
 	log.Println("[coordinator] queue ready")
 
-	// ── Inicializar componentes ────────────────────────────────────────────
 	registry := coordinator.NewRegistry(database)
-	hub := coordinator.NewHub()             // dashboard
-	workerHub := coordinator.NewWorkerHub() // canal saliente de cada worker
+	hub := coordinator.NewHub()
+	workerHub := coordinator.NewWorkerHub()
 
-	// MinIO (opcional para el coordinador): guarda una copia del reporte junto a los resultados.
 	minioClient, err := storage.NewMinIOClient()
 	if err != nil {
 		log.Printf("[coordinator] MinIO no disponible (%v): los reportes solo quedan en Postgres", err)
 		minioClient = nil
 	}
 
-	// Barrier/join: cierra el caso cuando todas sus sub-tareas resolvieron y genera el reporte.
 	barrier := cases.NewBarrier(database, nil)
 	buildReport := func(caseID string) {
 		c, err := db.GetCase(database, caseID)
@@ -85,15 +81,13 @@ func main() {
 
 	scheduler := coordinator.NewScheduler(q, registry, workerHub, database, barrier)
 	api := coordinator.NewAPI(q, registry, hub, workerHub, database, barrier, minioClient)
-	api.SetOnWorkerRestart(scheduler.ReclaimWorkerJobs) // proceso nuevo con ID conocido → re-encolar lo suyo
-	api.SetOnCaseClosed(buildReport)                    // al cancelar también hay reporte
+	api.SetOnWorkerRestart(scheduler.ReclaimWorkerJobs)
+	api.SetOnCaseClosed(buildReport)
 
-	// ── WebSocket broadcast loop ───────────────────────────────────────────
 	hub.StartBroadcastLoop(func() coordinator.SystemSnapshot {
-		jobs, _ := db.ListLiveJobs(database) // solo lo vivo; el historial va por GET /jobs
+		jobs, _ := db.ListLiveJobs(database)
 		stats := api.StatsSnapshot()
 
-		// Profundidad de colas en vivo: por prioridad (para el dashboard actual) y por pool.
 		d := q.Depth(ctx)
 		byPool := make(map[string]int, len(d.ByPool))
 		for p, n := range d.ByPool {
@@ -113,16 +107,14 @@ func main() {
 		}
 	})
 
-	// ── Scheduler en su propia goroutine ──────────────────────────────────
 	go scheduler.Run(ctx)
 	log.Println("[coordinator] scheduler running")
 
-	// ── HTTP server ───────────────────────────────────────────────────────
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	// Túnel a internet desde el dashboard: publica este puerto y el de MinIO (9000 en node-1).
+
 	tunnel := coordinator.NewTunnel(port, minioPortFromEnv())
 	api.SetTunnel(tunnel)
 	defer tunnel.Stop()
@@ -140,12 +132,11 @@ func main() {
 		}
 	}()
 
-	// ── Graceful shutdown ─────────────────────────────────────────────────
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("[coordinator] shutting down...")
-	_ = tunnel.Stop() // cloudflared son procesos hijos: que no queden huérfanos
+	_ = tunnel.Stop()
 	cancel()
 	shutCtx, shutCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutCancel()
@@ -153,7 +144,6 @@ func main() {
 	log.Println("[coordinator] stopped")
 }
 
-// minioPortFromEnv saca el puerto de MINIO_ENDPOINT (localhost:9000 en node-1) para el túnel.
 func minioPortFromEnv() string {
 	if _, p, err := net.SplitHostPort(os.Getenv("MINIO_ENDPOINT")); err == nil && p != "" {
 		return p
@@ -161,7 +151,6 @@ func minioPortFromEnv() string {
 	return "9000"
 }
 
-// dashboardDir es la carpeta del dashboard compilado que sirve el coordinador.
 func dashboardDir() string {
 	if v := os.Getenv("DASHBOARD_DIR"); v != "" {
 		return v

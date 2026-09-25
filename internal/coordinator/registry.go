@@ -25,11 +25,10 @@ func NewRegistry(db *sql.DB) *Registry {
 		workers: make(map[string]*models.WorkerInfo),
 		db:      db,
 	}
-	r.loadFromDB() // recupera workers al reiniciar
+	r.loadFromDB()
 	return r
 }
 
-// loadFromDB recupera workers registrados recientemente al arrancar.
 func (r *Registry) loadFromDB() {
 	rows, err := r.db.Query(`
 		SELECT id, hostname, COALESCE(role,''), COALESCE(capabilities,''), COALESCE(hardware::text,'null'),
@@ -49,7 +48,7 @@ func (r *Registry) loadFromDB() {
 		if hw != "" && hw != "null" {
 			var h models.Hardware
 			if json.Unmarshal([]byte(hw), &h) == nil {
-				w.Hardware = &h // el worker que sigue vivo no se re-registra: recuperar lo fijo de aquí
+				w.Hardware = &h
 			}
 		}
 		w.LastSeen = time.Now()
@@ -59,11 +58,8 @@ func (r *Registry) loadFromDB() {
 	}
 }
 
-// Register da de alta (o refresca) un worker. Devuelve true si el ID ya existía pero
-// con OTRA instancia: es un proceso nuevo, y los jobs del proceso anterior quedaron huérfanos.
 func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
-	// La instancia anterior se lee de la BD antes de pisarla: si el coordinador también se
-	// reinició, la memoria está vacía y es la única forma de saber que el proceso cambió.
+
 	var persisted string
 	r.db.QueryRow(`SELECT instance FROM worker_registry WHERE id=$1`, w.ID).Scan(&persisted)
 	restarted = r.registerNoDB(w)
@@ -71,9 +67,8 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 		restarted = true
 	}
 
-	// Persistir en DB para sobrevivir reinicios (fuera del lock: es I/O)
-	hw, _ := json.Marshal(w.Hardware) // "null" si el worker no lo manda
-	// registered_at solo se fija al insertar: un re-registro no cambia el orden de llegada.
+	hw, _ := json.Marshal(w.Hardware)
+
 	r.db.Exec(`
 		INSERT INTO worker_registry (id, hostname, last_seen, role, capabilities, hardware, registered_at, instance, capacity)
 		VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7, $8)
@@ -83,7 +78,6 @@ func (r *Registry) Register(w *models.WorkerInfo) (restarted bool) {
 	return restarted
 }
 
-// registerNoDB es la parte en memoria de Register (probable sin base de datos).
 func (r *Registry) registerNoDB(w *models.WorkerInfo) (restarted bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -91,7 +85,7 @@ func (r *Registry) registerNoDB(w *models.WorkerInfo) (restarted bool) {
 	if known && prev.Instance != "" && w.Instance != "" && prev.Instance != w.Instance {
 		restarted = true
 	}
-	// El orden de llegada se conserva aunque el worker se reinicie o se re-registre.
+
 	if known && !prev.RegisteredAt.IsZero() {
 		w.RegisteredAt = prev.RegisteredAt
 	} else if w.RegisteredAt.IsZero() {
@@ -123,17 +117,13 @@ func (r *Registry) Heartbeat(id string, cpu, mem float64, activeJobs int, metric
 		w.Status = "busy"
 	}
 
-	// Actualizar timestamp en DB
 	r.db.Exec(`
 		UPDATE worker_registry SET last_seen=NOW() WHERE id=$1`, id)
 	return true
 }
 
-// LeastLoaded elige el worker vivo con menos carga, sin filtrar por pool.
 func (r *Registry) LeastLoaded() *models.WorkerInfo { return r.LeastLoadedFor("") }
 
-// LeastLoadedFor elige, entre los workers vivos de un pool, el que tiene menos sub-tareas
-// activas (empate: menor CPU). nil si no hay ninguno. Es el selector estricto; ver PickFor.
 func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -149,33 +139,16 @@ func (r *Registry) LeastLoadedFor(pool string) *models.WorkerInfo {
 	return best
 }
 
-// Cómo se asignó una sub-tarea: por afinidad (el pool principal del nodo coincide) o por ayuda
-// (un nodo libre de otro pool la tomó para no quedarse de brazos cruzados).
 const (
 	AssignAffinity = "afinidad"
 	AssignHelp     = "ayuda"
 )
 
-// Umbrales de saturación: un nodo por encima de esto va de último en la elección (pero no se
-// excluye: si todos están saturados, igual se reparte).
 const (
 	overloadedMemPercent = 90
 	overloadedCPUPercent = 95
 )
 
-// PickFor elige el worker para una sub-tarea del pool dado.
-//
-// Orden de preferencia: (1) afinidad —nodos cuyo pool principal coincide—, (2) ayuda —cualquier
-// nodo con canal abierto— cuando no hay afín o el afín va por la mitad de su capacidad (o está
-// saturado) y el otro está proporcionalmente más libre. Dentro de cada grupo: primero los no
-// saturados (RAM < 90 %, CPU < 95 % según sus métricas reales), luego la menor fracción ocupada
-// (activas ÷ capacidad, que el worker calcula con sus núcleos y su RAM), a igualdad el nodo de
-// más capacidad y por último menos CPU. Los nodos llenos no se consideran. Es la conexión con
-// la Unidad 1: la heterogeneidad se usa como preferencia (el video a la máquina potente) y la
-// capacidad de cada máquina decide cuánto trabajo recibe, en vez de un número fijo para todas.
-//
-// strict = true vuelve al modelo de pools puros (solo afinidad). connected dice qué workers
-// tienen el canal WebSocket abierto ahora mismo.
 func (r *Registry) PickFor(pool string, strict bool, connected func(id string) bool) (*models.WorkerInfo, string) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -203,13 +176,8 @@ func (r *Registry) PickFor(pool string, strict bool, connected func(id string) b
 	return nil, ""
 }
 
-// helpThreshold: el nodo afín se llena hasta la mitad de su capacidad antes de pedir ayuda.
-// Así el pool especializado conserva su trabajo (la afinidad sigue viéndose en la demo) y aun
-// así los nodos libres entran antes de que el afín se sature.
 const helpThreshold = 0.5
 
-// shouldPreferHelp: el nodo de ayuda está sano y proporcionalmente menos cargado, y el afín
-// está saturado, lleno o al menos a la mitad de su capacidad.
 func shouldPreferHelp(aff, help *models.WorkerInfo) bool {
 	if isOverloaded(help) || loadRatio(help) >= loadRatio(aff) {
 		return false
@@ -217,8 +185,6 @@ func shouldPreferHelp(aff, help *models.WorkerInfo) bool {
 	return isOverloaded(aff) || loadRatio(aff) >= helpThreshold
 }
 
-// legacyCapacity es la capacidad que se supone a un worker que no la informa (el ZIP viejo
-// traía WORKER_POOL_SIZE=2 fijo).
 const legacyCapacity = 2
 
 func capacityOf(w *models.WorkerInfo) int {
@@ -228,20 +194,14 @@ func capacityOf(w *models.WorkerInfo) int {
 	return legacyCapacity
 }
 
-// loadRatio es la fracción ocupada: 2 activas pesan distinto en un nodo de 8 cupos que en uno de 2.
 func loadRatio(w *models.WorkerInfo) float64 {
 	return float64(w.ActiveJobs) / float64(capacityOf(w))
 }
 
-// isFull: el worker declaró su capacidad y ya la tiene cubierta; mandarle más solo produciría
-// un rechazo ("pool lleno") y un reencolado. A un worker viejo (capacidad 0) no se le salta.
 func isFull(w *models.WorkerInfo) bool {
 	return w.Capacity > 0 && w.ActiveJobs >= w.Capacity
 }
 
-// NoteAssigned cuenta en el acto una sub-tarea recién entregada. El heartbeat (cada 1 s) trae
-// después el número real; sin esto, en una ráfaga todas irían al mismo worker porque su carga
-// no cambia hasta el siguiente latido.
 func (r *Registry) NoteAssigned(id string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -259,8 +219,6 @@ func isOverloaded(w *models.WorkerInfo) bool {
 	return mem >= overloadedMemPercent || cpu >= overloadedCPUPercent
 }
 
-// lessLoaded ordena: no saturado antes que saturado, menor fracción ocupada (activas ÷
-// capacidad), a igualdad el de más capacidad (el nodo potente primero), y por último menos CPU.
 func lessLoaded(a, b *models.WorkerInfo) bool {
 	oa, ob := isOverloaded(a), isOverloaded(b)
 	if oa != ob {
@@ -304,8 +262,7 @@ func (r *Registry) All() []*models.WorkerInfo {
 		cp := *w
 		list = append(list, &cp)
 	}
-	// Orden de llegada (y por id si empatan): un mapa de Go itera al azar y el dashboard, que
-	// recibe esta lista cada segundo, movía las tarjetas de lugar.
+
 	sort.Slice(list, func(i, j int) bool {
 		if !list[i].RegisteredAt.Equal(list[j].RegisteredAt) {
 			return list[i].RegisteredAt.Before(list[j].RegisteredAt)
@@ -334,7 +291,7 @@ func (r *Registry) isAlive(w *models.WorkerInfo) bool {
 
 func hasCapability(w *models.WorkerInfo, pool string) bool {
 	if len(w.Capabilities) == 0 {
-		return true // worker sin rol declarado: genérico
+		return true
 	}
 	for _, c := range w.Capabilities {
 		if c == pool {

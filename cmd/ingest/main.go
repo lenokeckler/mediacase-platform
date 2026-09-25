@@ -1,11 +1,3 @@
-// cmd/ingest/main.go
-// Ingesta del dataset y generación automática de casos (consigna §5) + generador de carga.
-//
-//	ingest upload --dir dataset/files --manifest dataset/manifest.json      # sube al bucket dataset/
-//	ingest cases  --group-by session [--dry-run] [--limit N] [--only homogeneous|heterogeneous]
-//	ingest load   --cases 20 --concurrency 5 --group-by session [--wait]    # carga concurrente
-//
-// Variables: COORDINATOR_URL (http://localhost:8080), MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY.
 package main
 
 import (
@@ -62,8 +54,6 @@ func usage() {
 	os.Exit(2)
 }
 
-// ── upload ───────────────────────────────────────────────────────────────────
-
 func cmdUpload(args []string) {
 	fs := flag.NewFlagSet("upload", flag.ExitOnError)
 	dir := fs.String("dir", "dataset/files", "carpeta con los archivos")
@@ -75,7 +65,7 @@ func cmdUpload(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// MINIO_ENDPOINT por defecto: localhost (la ingesta corre en node-1)
+
 	if os.Getenv("MINIO_ENDPOINT") == "" {
 		os.Setenv("MINIO_ENDPOINT", "localhost:9000")
 	}
@@ -85,7 +75,6 @@ func cmdUpload(args []string) {
 	}
 	ctx := context.Background()
 
-	// Lo que ya está (misma clave y mismo tamaño) se salta: la ingesta es reanudable.
 	existing := map[string]int64{}
 	if objs, err := mc.ListObjects(ctx, storage.DatasetBucket, ""); err == nil {
 		for _, o := range objs {
@@ -126,8 +115,6 @@ func cmdUpload(args []string) {
 	fmt.Printf("upload: %d subidos (%.2f GB), %d ya estaban, %d fallidos, %s\n",
 		done.Load(), float64(bytesUp.Load())/1e9, skipped.Load(), failed.Load(), time.Since(start).Round(time.Second))
 
-	// El manifest también queda en el bucket (clave ".manifest.json"): así el coordinador puede
-	// enriquecer GET /dataset y servir GET /dataset/test-cases sin depender de un archivo local.
 	if err := mc.UploadObject(ctx, storage.DatasetBucket, ".manifest.json", *manifestPath); err != nil {
 		log.Printf("  ✗ no se pudo subir el manifest (%s): %v", *manifestPath, err)
 	} else {
@@ -138,8 +125,6 @@ func cmdUpload(args []string) {
 		os.Exit(1)
 	}
 }
-
-// ── cases ────────────────────────────────────────────────────────────────────
 
 type caseResp struct {
 	ID        string `json:"id"`
@@ -223,8 +208,6 @@ func cmdCases(args []string) {
 	fmt.Printf("\n%d homogéneos, %d heterogéneos\n", hom, het)
 }
 
-// cmdTestCases envía los casos de prueba ya armados en el manifest (v3, "test_cases") tal cual
-// están definidos (operación, destino, ancho y recursos asociados por archivo), sin agruparlos.
 func cmdTestCases(manifestPath, ids string, priority int, dryRun bool, coord string) {
 	m, err := ingest.LoadManifest(manifestPath)
 	if err != nil {
@@ -266,8 +249,6 @@ func cmdTestCases(manifestPath, ids string, priority int, dryRun bool, coord str
 	fmt.Printf("\n%d casos de prueba enviados\n", sent)
 }
 
-// ── load ─────────────────────────────────────────────────────────────────────
-
 func cmdLoad(args []string) {
 	fs := flag.NewFlagSet("load", flag.ExitOnError)
 	manifestPath := fs.String("manifest", "dataset/manifest.json", "manifest del dataset")
@@ -284,7 +265,7 @@ func cmdLoad(args []string) {
 	if len(groups) == 0 {
 		log.Fatal("no hay grupos")
 	}
-	// Si piden más casos que grupos, se repiten grupos (casos concurrentes sobre los mismos archivos).
+
 	reqs := make([]ingest.CaseRequest, 0, *nCases)
 	for i := 0; i < *nCases; i++ {
 		g := groups[i%len(groups)]
@@ -326,7 +307,6 @@ func cmdLoad(args []string) {
 		return
 	}
 
-	// Esperar el cierre de todos y resumir.
 	fmt.Println("esperando a que cierren…")
 	for {
 		time.Sleep(3 * time.Second)

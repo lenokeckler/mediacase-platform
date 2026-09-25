@@ -15,24 +15,16 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/storage"
 )
 
-// Entradas del sistema: viven en el bucket "dataset" de MinIO. El dashboard sube archivos
-// aquí (POST /upload) y lista los existentes (GET /dataset) para armar un caso.
+const maxUploadMemory = 64 << 20
 
-const maxUploadMemory = 64 << 20 // lo que se mantiene en RAM; el resto va a disco temporal
-
-// Letras y números de cualquier idioma (tildes, ñ) y espacios se conservan: el dataset ya tiene
-// claves como "Grieg - La mañana (Peer Gynt).flac" y MinIO, el worker y ffmpeg las manejan bien.
 var unsafeChars = regexp.MustCompile(`[^\p{L}\p{N} ._()-]+`)
 
-// safeKey convierte un nombre de archivo en una clave de objeto segura y legible.
 func safeKey(name string) string {
 	base := filepath.Base(strings.ReplaceAll(name, "\\", "/"))
 	base = unsafeChars.ReplaceAllString(base, "_")
 	return strings.Trim(base, "._ ")
 }
 
-// uploadFiles: multipart con uno o más campos "file". Cada archivo se valida por tipo
-// (routing) y se sube a dataset/<clave>. Devuelve las claves, en el mismo orden.
 func (a *API) uploadFiles(w http.ResponseWriter, r *http.Request) {
 	if a.minio == nil {
 		http.Error(w, "MinIO no disponible en el coordinador", http.StatusServiceUnavailable)
@@ -48,7 +40,6 @@ func (a *API) uploadFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validar todo antes de subir nada: la respuesta dice exactamente qué archivo no sirve.
 	keys := make([]string, len(headers))
 	for i, h := range headers {
 		k := safeKey(h.Filename)
@@ -105,8 +96,7 @@ type datasetItem struct {
 	Size         int64     `json:"size_bytes"`
 	Type         string    `json:"type"`
 	LastModified time.Time `json:"last_modified"`
-	// Metadatos opcionales del manifest del dataset (bucket dataset/.manifest.json, o el archivo
-	// local si el bucket no lo tiene), cuando existen para esta clave.
+
 	Format   string `json:"format,omitempty"`
 	Tier     string `json:"tier,omitempty"`
 	Source   string `json:"source,omitempty"`
@@ -117,9 +107,6 @@ type datasetItem struct {
 	Note     string `json:"note,omitempty"`
 }
 
-// listDataset lista las entradas disponibles en el bucket (opcionalmente bajo un prefijo),
-// enriquecidas con los metadatos del manifest cuando existen para esa clave. Los objetos internos
-// (p. ej. ".manifest.json") no son entradas del dataset y se ocultan.
 func (a *API) listDataset(w http.ResponseWriter, r *http.Request) {
 	if a.minio == nil {
 		http.Error(w, "MinIO no disponible en el coordinador", http.StatusServiceUnavailable)
@@ -152,8 +139,6 @@ func (a *API) listDataset(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(items)
 }
 
-// isHiddenKey dice si una clave del bucket es un objeto interno (nombre de archivo que empieza
-// con ".", como ".manifest.json"), no una entrada del dataset.
 func isHiddenKey(key string) bool {
 	base := key
 	if i := strings.LastIndexByte(base, '/'); i >= 0 {

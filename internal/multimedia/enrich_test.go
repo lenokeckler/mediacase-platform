@@ -12,8 +12,6 @@ import (
 	"github.com/lenokeckler/mediacase-platform/internal/models"
 )
 
-// probeResult es lo que ffprobe ve en el archivo enriquecido: si trae portada (pista
-// attached_pic o adjunto de imagen) y las etiquetas del contenedor, con las claves en minúscula.
 type probeResult struct {
 	cover bool
 	tags  map[string]string
@@ -50,7 +48,7 @@ func probeEnrichment(t *testing.T, path string) probeResult {
 		if s.CodecType == "attachment" && strings.HasPrefix(s.Tags["mimetype"], "image/") {
 			r.cover = true
 		}
-		// En algunos contenedores (ogg) las etiquetas viven en la pista, no en el formato.
+
 		for k, v := range s.Tags {
 			if _, dup := r.tags[strings.ToLower(k)]; !dup {
 				r.tags[strings.ToLower(k)] = v
@@ -67,8 +65,6 @@ func sampleEnrichment() *models.Enrichment {
 	}
 }
 
-// Cada contenedor soportado sale con portada, etiquetas y letra/descripción legibles por ffprobe.
-// Cuando origen y destino coinciden no se recodifica; cuando no, se usa la receta del destino.
 func TestEnrich_PortadaEtiquetasYLetraPorContenedor(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -129,7 +125,6 @@ func hasText(tags map[string]string, s string) bool {
 	return false
 }
 
-// Sin recursos de texto igual se embebe la portada (el archivo queda con carátula).
 func TestEnrich_SoloPortadaSiNoHayEtiquetas(t *testing.T) {
 	in := makeSyntheticAudio(t, "mp3")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -153,8 +148,6 @@ func TestEnrich_RechazaDestinoNoSoportado(t *testing.T) {
 	}
 }
 
-// Las etiquetas que el archivo ya traía se conservan; las del cliente ganan si repiten. La letra
-// puede tener varias líneas y caracteres que la línea de comandos trataría mal.
 func TestEnrich_ConservaEtiquetasOriginalesYLetraMultilinea(t *testing.T) {
 	in := makeSyntheticAudio(t, "flac")
 	tagged := filepath.Join(t.TempDir(), "tagged.flac")

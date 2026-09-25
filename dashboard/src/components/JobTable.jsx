@@ -19,7 +19,6 @@ const FILTER_LABEL = { all: 'todas', pending: 'pendientes', assigned: 'asignadas
 
 function shortFile(p) { return p ? (p.split(/[\\/]/).pop() || p) : '—' }
 
-// Sub-tareas vivas (pendientes, asignadas, en ejecución). Las terminadas están en Historial.
 export default function JobTable({ jobs }) {
     const [filter, setFilter] = useState('all')
     const [search, setSearch] = useState('')

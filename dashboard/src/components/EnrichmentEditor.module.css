@@ -1,4 +1,3 @@
-/* Ocupa todo el ancho de la fila del archivo (la fila es un grid de 4 columnas). */
 .box {
     grid-column: 1 / -1;
     display: flex;

@@ -16,7 +16,6 @@ import SharePanel from '../components/SharePanel'
 import NodeDetail from '../components/NodeDetail'
 import styles from './app.module.css'
 
-// Navegación: una entrada por pestaña; el hash de la URL la fija (http://…:8080/#monitor).
 const NAV = [
     { key: 'Casos', hash: '#casos', icon: CasesIcon, hint: 'Enviar y seguir casos' },
     { key: 'Monitor', hash: '#monitor', icon: MonitorIcon, hint: 'Nodos, rendimiento y colas' },
@@ -43,22 +42,18 @@ export default function App() {
     const history = useMetricsHistory(workers)
     const { theme, toggle } = useTheme()
     const [tab, setTab] = useState(() => NAV.find(n => n.hash === window.location.hash)?.key || 'Casos')
-    const [showNew, setShowNew] = useState(() => window.location.hash === '#nuevo') // #nuevo abre el formulario
-    // Barra lateral plegada (solo iconos): se recuerda en el navegador.
+    const [showNew, setShowNew] = useState(() => window.location.hash === '#nuevo')
     const [collapsed, setCollapsed] = useState(() => {
         const q = new URLSearchParams(window.location.search).get('sidebar')
         if (q === 'collapsed' || q === 'open') return q === 'collapsed'
         try { return localStorage.getItem('mediacase.sidebar') === 'collapsed' } catch { return false }
     })
-    const toggleSidebar = () => setCollapsed(c => { try { localStorage.setItem('mediacase.sidebar', c ? 'open' : 'collapsed') } catch { /* privado */ } return !c })
-    // Nodo abierto en grande (#nodo=<id> también lo abre).
+    const toggleSidebar = () => setCollapsed(c => { try { localStorage.setItem('mediacase.sidebar', c ? 'open' : 'collapsed') } catch {  } return !c })
     const [openNode, setOpenNode] = useState(() => (window.location.hash.match(/^#nodo=(.+)$/) || [])[1] || null)
 
-    // #caso=<id> abre directamente ese caso (enlaces desde el informe, Grafana o un compañero).
     useEffect(() => {
         const m = window.location.hash.match(/^#caso=([0-9a-f-]+)/)
         if (m) casesState.openCase(m[1])
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const go = (key) => {
@@ -70,7 +65,6 @@ export default function App() {
 
     return (
         <div className={`${styles.shell} ${collapsed ? styles.collapsed : ''}`}>
-            {/* ── Barra lateral ── */}
             <aside className={styles.sidebar}>
                 <div className={styles.brand}>
                     <img className={styles.brandMark} src="/logo.png" alt="" width="40" height="40" />
@@ -117,7 +111,6 @@ export default function App() {
                 </div>
             </aside>
 
-            {/* ── Contenido ── */}
             <main className={styles.main}>
                 <header className={styles.pageHeader}>
                     <div>
@@ -209,7 +202,6 @@ export default function App() {
     )
 }
 
-// ── Iconos (SVG inline, 16 px, color del texto) ──
 const I = ({ children }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 function CasesIcon() { return <I><path d="M3 7h18M3 12h18M3 17h12" /></I> }
 function MonitorIcon() { return <I><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></I> }

@@ -1,8 +1,6 @@
 import { isEnrichOp } from '../api'
 import styles from './EnrichmentChips.module.css'
 
-// Resumen de lo que una sub-tarea "enriquecer" integró en el archivo: portada (siempre), cuántas
-// etiquetas y si lleva letra/descripción. El tooltip muestra los valores.
 export default function EnrichmentChips({ job }) {
     if (!isEnrichOp(job.operation)) return null
     const e = job.enrichment || {}

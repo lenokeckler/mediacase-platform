@@ -5,12 +5,8 @@ import styles from './ChosenFilesList.module.css'
 
 const TYPE_ORDER = ['video', 'audio', 'image']
 const TYPE_LABEL_PLURAL = { video: 'videos', audio: 'audios', image: 'imágenes' }
-// "todos los videos" pero "todas las imágenes".
 const ALL_OF_TYPE = { video: 'todos los videos', audio: 'todos los audios', image: 'todas las imágenes' }
 
-// "Archivos del caso" agrupados por tipo. Cada grupo puede copiar la operación y el formato de
-// salida de su primer archivo a los demás del mismo tipo (solo si ese destino es válido para
-// cada uno — misma regla que el coordinador en internal/cases/router.go, vía targetsFor).
 export default function ChosenFilesList({ chosen, catalog, caseName, actions }) {
     const groups = useMemo(() => {
         const byType = {}

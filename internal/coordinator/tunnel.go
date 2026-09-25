@@ -19,16 +19,8 @@ import (
 	"time"
 )
 
-// Túnel hacia internet manejado por el coordinador, para que node-1 se publique con un botón
-// del dashboard en vez de un script. Abre DOS "quick tunnels" de Cloudflare (coordinador y
-// MinIO): el worker remoto necesita ambos. cloudflared es un proceso hijo; se cierra con el
-// túnel o con el coordinador.
-//
-// Las URLs cambian en cada arranque: el ZIP de /connect hay que bajarlo con el túnel abierto.
-
-// TunnelState es lo que ve el dashboard.
 type TunnelState struct {
-	Status         string `json:"status"` // off | starting | on | error
+	Status         string `json:"status"`
 	CoordinatorURL string `json:"coordinator_url,omitempty"`
 	MinIOURL       string `json:"minio_url,omitempty"`
 	Error          string `json:"error,omitempty"`
@@ -36,7 +28,6 @@ type TunnelState struct {
 	StartedAt      string `json:"started_at,omitempty"`
 }
 
-// Tunnel controla los dos procesos cloudflared.
 type Tunnel struct {
 	coordPort, minioPort string
 
@@ -56,7 +47,6 @@ func (t *Tunnel) State() TunnelState {
 	return t.state
 }
 
-// MinIOHost es el host del túnel de MinIO cuando está abierto, "" si no. Lo usa el ZIP.
 func (t *Tunnel) MinIOHost() string {
 	st := t.State()
 	if st.Status != "on" || st.MinIOURL == "" {
@@ -65,11 +55,8 @@ func (t *Tunnel) MinIOHost() string {
 	return strings.TrimPrefix(st.MinIOURL, "https://")
 }
 
-// registerTimeout es cuánto se espera a que cloudflared consiga URL y registre la conexión.
-// En una red que bloquea el 7844 reintenta para siempre: hay que cortar y explicar.
 const registerTimeout = 45 * time.Second
 
-// Start abre los dos túneles. Vuelve enseguida; el estado pasa a "on" o "error" solo.
 func (t *Tunnel) Start() error {
 	t.mu.Lock()
 	if t.state.Status == "starting" || t.state.Status == "on" {
@@ -94,7 +81,6 @@ func (t *Tunnel) Start() error {
 	return nil
 }
 
-// Stop cierra los dos procesos. No es error cerrar un túnel que no está abierto.
 func (t *Tunnel) Stop() error {
 	t.mu.Lock()
 	cancel, done := t.cancel, t.done
@@ -108,8 +94,6 @@ func (t *Tunnel) Stop() error {
 	return nil
 }
 
-// run lanza los dos cloudflared, lee sus logs y decide el estado. Termina cuando ctx se cancela
-// o cuando alguno de los dos procesos muere.
 func (t *Tunnel) run(ctx context.Context, bin string, done chan struct{}) {
 	defer close(done)
 	type proc struct {
@@ -223,7 +207,7 @@ func (t *Tunnel) run(ctx context.Context, bin string, done chan struct{}) {
 func (t *Tunnel) fail(msg, hint string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	if t.state.Status == "off" { // lo cerraron a propósito mientras arrancaba
+	if t.state.Status == "off" {
 		return
 	}
 	t.state = TunnelState{Status: "error", Error: msg, Hint: hint}
@@ -232,14 +216,11 @@ func (t *Tunnel) fail(msg, hint string) {
 
 var tunnelURLRe = regexp.MustCompile(`https://[a-z0-9-]+\.trycloudflare\.com`)
 
-// parseTunnelURL saca la URL pública de una línea de log de cloudflared.
 func parseTunnelURL(line string) (string, bool) {
 	m := tunnelURLRe.FindString(line)
 	return m, m != ""
 }
 
-// classifyTunnelError traduce los logs de cloudflared a un mensaje para el dashboard. El caso
-// que importa: una red que corta el 7844 (el WiFi del TEC) → la salida es encender WARP.
 func classifyTunnelError(logs string) (msg, hint string) {
 	l := strings.ToLower(logs)
 	switch {
@@ -255,8 +236,6 @@ func classifyTunnelError(logs string) (msg, hint string) {
 	}
 }
 
-// findCloudflared busca el binario en PATH y, en Windows, donde lo deja winget (el PATH nuevo no
-// llega a un coordinador ya abierto).
 func findCloudflared() (string, error) {
 	if p, err := exec.LookPath("cloudflared"); err == nil {
 		return p, nil
@@ -275,18 +254,13 @@ func findCloudflared() (string, error) {
 	return "", errors.New("cloudflared no está instalado en esta máquina")
 }
 
-// ── Direcciones de la LAN para la tarjeta "Compartir" ─────────────────────────────────────
-
 type ifaceAddr struct {
 	Name string
 	IP   net.IP
 }
 
-// virtualIfaceHints son adaptadores que tienen IP privada pero no sirven para que otra PC
-// llegue hasta aquí: redes internas de VirtualBox, WSL/Hyper-V y la VPN de WARP.
 var virtualIfaceHints = []string{"virtualbox", "vethernet", "wsl", "hyper-v", "warp", "vmware", "docker", "loopback"}
 
-// lanIPv4s filtra las direcciones por las que otra máquina de la red puede llegar al coordinador.
 func lanIPv4s(addrs []ifaceAddr) []string {
 	var out []string
 	for _, a := range addrs {
@@ -294,8 +268,7 @@ func lanIPv4s(addrs []ifaceAddr) []string {
 		if ip4 == nil || ip4.IsLoopback() || !ip4.IsPrivate() {
 			continue
 		}
-		// Red host-only por defecto de VirtualBox: en Windows el adaptador se llama "Ethernet N",
-		// así que el nombre no delata nada; solo las VMs de Vagrant llegan por ahí.
+
 		if ip4[0] == 192 && ip4[1] == 168 && ip4[2] == 56 {
 			continue
 		}
@@ -338,7 +311,6 @@ func systemLanIPv4s() []string {
 	return lanIPv4s(addrs)
 }
 
-// ShareInfo es la respuesta de GET /share: cómo llegar a este coordinador desde otra máquina.
 type ShareInfo struct {
 	PrimaryURL           string      `json:"primary_url"`
 	LanURLs              []string    `json:"lan_urls"`
@@ -346,8 +318,6 @@ type ShareInfo struct {
 	CloudflaredInstalled bool        `json:"cloudflared_installed"`
 }
 
-// buildShareInfo arma las URLs de la LAN. La primaria es la IP que ya se anuncia a los workers
-// (MINIO_PUBLIC_ENDPOINT, autodetectada al arrancar); si no hay, la primera de la lista.
 func buildShareInfo(ips []string, port string) ShareInfo {
 	s := ShareInfo{}
 	sort.Strings(ips)

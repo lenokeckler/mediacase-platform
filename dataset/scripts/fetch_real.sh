@@ -1,20 +1,4 @@
 #!/usr/bin/env bash
-# Descarga el material REAL del dataset (películas abiertas de Blender, NASA, Wikimedia Commons,
-# Musopen, LibriVox, Prelinger), verifica el sha256 de cada descarga contra dataset/real_sources.json
-# y después genera, de forma determinista, las variantes derivadas con ffmpeg y los casos límite.
-#
-# Todo lo que hace está descrito en el archivo de especificación (versionado); este script solo lo
-# ejecuta. Es reanudable: salta lo que ya está en dataset/files con el hash correcto, retoma
-# descargas cortadas (curl -C -) y no vuelve a codificar derivados que ya existen.
-#
-# Uso:
-#   bash dataset/scripts/fetch_real.sh                  # descarga + derivados + casos límite
-#   bash dataset/scripts/fetch_real.sh --pin            # (mantenimiento) anota en el spec los sha256 que falten
-#   bash dataset/scripts/fetch_real.sh --force-derived  # vuelve a generar derivados y casos límite
-#   bash dataset/scripts/fetch_real.sh --keep-cache     # conserva los .zip descargados en dataset/.cache
-# Después: python dataset/scripts/build_manifest.py   (arma dataset/manifest.json v3)
-#
-# Requisitos: bash (Git Bash sirve), curl, unzip, sha256sum, python 3, ffmpeg y ffprobe en el PATH.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,12 +29,9 @@ export PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 mkdir -p "$OUT_DIR" "$CACHE_DIR"
 PINS="$CACHE_DIR/pins.tsv"
 : > "$PINS"
-# Si ffmpeg falla a mitad de un derivado, no dejar el archivo temporal en dataset/files.
 trap 'rm -f "$OUT_DIR"/.derivando_*' EXIT
 T0=$SECONDS
 
-# Lee el spec con python y lo entrega como campos separados por NUL (los nombres llevan espacios
-# y tildes; NUL es lo único que no puede aparecer en ellos).
 spec_stream() {
   python - "$SPEC" "$1" <<'PY'
 import json, sys
@@ -87,7 +68,6 @@ mb()     { local t=$(( $1 * 10 / 1048576 )); echo "$(( t / 10 )).$(( t % 10 ))";
 UA=""
 while IFS= read -r -d '' f; do UA=$f; done < <(spec_stream ua)
 
-# fetch_url <url> <destino> : descarga reanudable (si el destino parcial existe, continúa)
 fetch_url() {
   local url=$1 dest=$2
   if ! curl -L --fail --silent --show-error --retry 3 --retry-delay 3 -A "$UA" -C - -o "$dest" "$url"; then
@@ -97,7 +77,6 @@ fetch_url() {
   fi
 }
 
-# check_hash <archivo> <esperado> <verify> <id> <campo> : 0 si coincide (o si se está fijando)
 check_hash() {
   local file=$1 want=$2 verify=$3 id=$4 field=$5 got
   got=$(sha_of "$file")
@@ -113,7 +92,6 @@ check_hash() {
   echo "ERROR: $id: $field esperado $want, obtenido $got"; return 1
 }
 
-# ── 1. Fuentes reales ─────────────────────────────────────────────────────────────────────
 echo "→ fuentes reales ($SPEC)"
 n=0; downloaded=0; skipped=0; bytes_dl=0
 while IFS= read -r -d '' id && IFS= read -r -d '' url && IFS= read -r -d '' key \
@@ -126,7 +104,7 @@ while IFS= read -r -d '' id && IFS= read -r -d '' url && IFS= read -r -d '' key 
     skipped=$(( skipped + 1 )); continue
   fi
   if [[ -s "$final" && "$verify" == warn && -n "$want_final" ]]; then
-    skipped=$(( skipped + 1 )); continue      # render regenerable: ya existe, no se vuelve a bajar
+    skipped=$(( skipped + 1 )); continue
   fi
   t=$SECONDS
   if [[ -n "$member" ]]; then
@@ -169,9 +147,6 @@ print(f"   fijados {n} hashes en {spec_path}")
 PY
 fi
 
-# ── 2. Variantes derivadas ────────────────────────────────────────────────────────────────
-# -fflags +bitexact y -map_metadata -1: sin versión del codificador ni fechas en el archivo, para
-# que dos corridas con la misma versión de ffmpeg den el mismo resultado.
 echo "→ variantes derivadas (ffmpeg $(ffmpeg -version | head -1 | cut -d' ' -f3))"
 nd=0
 while IFS= read -r -d '' key && IFS= read -r -d '' from && IFS= read -r -d '' nin; do
@@ -192,7 +167,6 @@ while IFS= read -r -d '' key && IFS= read -r -d '' from && IFS= read -r -d '' ni
 done < <(spec_stream derived)
 echo "   $nd derivados"
 
-# ── 3. Casos límite (se regeneran siempre: son copias o recortes baratos) ─────────────────
 echo "→ casos límite"
 ne=0
 while IFS= read -r -d '' key && IFS= read -r -d '' recipe && IFS= read -r -d '' from \

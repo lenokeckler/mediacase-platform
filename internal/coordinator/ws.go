@@ -10,8 +10,6 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// QueueDepthSnapshot holds the count of pending messages per priority (summed across pools)
-// and per pool (summed across priorities).
 type QueueDepthSnapshot struct {
 	High   int            `json:"high"`
 	Normal int            `json:"normal"`
@@ -19,16 +17,14 @@ type QueueDepthSnapshot struct {
 	ByPool map[string]int `json:"by_pool"`
 }
 
-// SystemSnapshot is what gets sent to the dashboard every second.
 type SystemSnapshot struct {
 	Workers    interface{}        `json:"workers"`
 	Jobs       interface{}        `json:"jobs"`
 	QueueDepth QueueDepthSnapshot `json:"queue_depth"`
 	Stats      interface{}        `json:"stats"`
-	ByCase     interface{}        `json:"by_case"` // casos abiertos con sus sub-tareas por estado
+	ByCase     interface{}        `json:"by_case"`
 }
 
-// Hub manages all active WebSocket connections.
 type Hub struct {
 	mu      sync.Mutex
 	clients map[*websocket.Conn]struct{}
@@ -40,7 +36,6 @@ func NewHub() *Hub {
 	}
 }
 
-// ServeWS is the HTTP handler for GET /ws.
 func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	websocket.Handler(func(conn *websocket.Conn) {
 		h.mu.Lock()
@@ -49,7 +44,6 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("[ws] client connected, total: %d", h.clientCount())
 
-		// Block until the client disconnects.
 		buf := make([]byte, 128)
 		for {
 			_, err := conn.Read(buf)
@@ -65,7 +59,6 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 	}).ServeHTTP(w, r)
 }
 
-// Broadcast sends a snapshot to all connected clients.
 func (h *Hub) Broadcast(snap SystemSnapshot) {
 	data, err := json.Marshal(snap)
 	if err != nil {
@@ -84,8 +77,6 @@ func (h *Hub) clientCount() int {
 	return len(h.clients)
 }
 
-// StartBroadcastLoop starts the goroutine that pushes updates every second.
-// snapshotFn is a function that builds the current system snapshot.
 func (h *Hub) StartBroadcastLoop(snapshotFn func() SystemSnapshot) {
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)

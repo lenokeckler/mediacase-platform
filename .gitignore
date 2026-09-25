@@ -66,3 +66,19 @@ bin/
 
 # estado local de Vagrant (ids de las VMs, llaves ssh)
 infra/vagrant/.vagrant/
+
+/scratch/
+/cmd/generate_manifest/
+/scripts/screenshot.py
+/package-lock.json
+/docs/plan/
+/docs/checklist-rubrica.md
+/docker-compose.yml
+/Dockerfile.*
+/nginx.conf
+/.dockerignore
+/Makefile
+/docs/entrega/HECHOS_*.md
+/docs/entrega/CONVENCIONES.md
+/docs/entrega/diagramas/lucid/con_titulo/
+__pycache__/

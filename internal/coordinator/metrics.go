@@ -1,10 +1,3 @@
-// Métricas Prometheus del coordinador (consigna: "monitoreo de recursos: CPU, memoria,
-// carga de trabajo por worker, estado de nodos, sub-tareas activas o en espera").
-//
-// Los workers remotos no exponen ningún puerto (abren ellos la conexión hacia el coordinador),
-// así que Prometheus no puede scrapearlos: el coordinador re-exporta lo que recibe por el
-// heartbeat de cada uno. Todo lo demás sale de la base y de Redis en el momento del scrape
-// (un Collector, no gauges cacheados: así un worker que se fue deja de aparecer solo).
 package coordinator
 
 import (
@@ -32,7 +25,7 @@ var (
 	descWorkerMem = prometheus.NewDesc(metricsPrefix+"worker_mem_percent",
 		"Memoria usada del host de cada worker (0-100), según su último heartbeat", []string{"worker", "role"}, nil)
 	descWorkerMemBytes = prometheus.NewDesc(metricsPrefix+"worker_mem_bytes",
-		"Memoria del host de cada worker en bytes", []string{"worker", "role", "kind"}, nil) // kind = used | total
+		"Memoria del host de cada worker en bytes", []string{"worker", "role", "kind"}, nil)
 	descWorkerDisk = prometheus.NewDesc(metricsPrefix+"worker_disk_percent",
 		"Uso del disco de trabajo de cada worker (0-100)", []string{"worker", "role"}, nil)
 	descWorkerGPU = prometheus.NewDesc(metricsPrefix+"worker_gpu_percent",
@@ -55,21 +48,17 @@ var (
 		"Casos abiertos (queued, processing o retrying)", nil, nil)
 )
 
-// CaseDuration es el histograma de duración de los casos (creación → cierre); lo observa el
-// coordinador cuando el barrier cierra un caso.
 var CaseDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name:    metricsPrefix + "case_duration_seconds",
 	Help:    "Duración de cada caso desde que se creó hasta que el barrier lo cerró",
-	Buckets: prometheus.ExponentialBuckets(5, 2, 11), // 5 s … ~1.4 h
+	Buckets: prometheus.ExponentialBuckets(5, 2, 11),
 }, []string{"status"})
 
-// JobsResolved cuenta sub-tareas resueltas (para calcular throughput con rate()).
 var JobsResolved = promauto.NewCounterVec(prometheus.CounterOpts{
 	Name: metricsPrefix + "jobs_resolved_total",
 	Help: "Sub-tareas que llegaron a completed o failed",
 }, []string{"status", "pool"})
 
-// ObserveCaseClosed registra la duración de un caso recién cerrado.
 func ObserveCaseClosed(status string, createdAt, closedAt time.Time) {
 	if closedAt.IsZero() {
 		closedAt = time.Now()
@@ -77,7 +66,6 @@ func ObserveCaseClosed(status string, createdAt, closedAt time.Time) {
 	CaseDuration.WithLabelValues(status).Observe(closedAt.Sub(createdAt).Seconds())
 }
 
-// collector lee registry, base y cola en cada scrape.
 type collector struct {
 	registry *Registry
 	queue    *queue.Queue
@@ -165,8 +153,6 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 
 var registerOnce sync.Once
 
-// MetricsHandler registra el collector del coordinador (una sola vez) y devuelve el handler
-// de /metrics.
 func MetricsHandler(registry *Registry, q *queue.Queue, database *sql.DB) http.Handler {
 	registerOnce.Do(func() {
 		prometheus.MustRegister(&collector{registry: registry, queue: q, db: database})

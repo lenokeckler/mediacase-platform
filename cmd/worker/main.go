@@ -1,5 +1,3 @@
-// cmd/worker/main.go
-// Nodo worker: pool de goroutines, integración FFmpeg, upload a MinIO, métricas.
 package main
 
 import (
@@ -26,21 +24,16 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// ── Configuración ────────────────────────────────────────────────────────────
-
 type workerConfig struct {
 	workerID       string
-	role           string // video | audio | metadata | all
+	role           string
 	coordinatorURL string
-	poolSize       int  // capacidad: sub-tareas simultáneas
-	poolAuto       bool // true si poolSize salió del hardware (WORKER_POOL_SIZE=auto)
+	poolSize       int
+	poolAuto       bool
 }
 
-// Pools de workers (deben coincidir con internal/cases.PoolFor).
 var allPools = []string{"video", "audio", "metadata"}
 
-// RoleCapabilities traduce el rol a los pools que atiende. Un rol desconocido o vacío
-// se trata como genérico ("all"): mejor procesar de más que quedarse ocioso por un typo.
 func RoleCapabilities(role string) []string {
 	switch role {
 	case "video", "audio", "metadata":
@@ -68,19 +61,16 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-// ── Tipos de mensajes ────────────────────────────────────────────────────────
-
 type jobAssignment struct {
 	JobID      string             `json:"id"`
 	FilePath   string             `json:"file_path"`
 	Operation  string             `json:"operation"`
-	Target     string             `json:"target"` // formato de salida decidido por el coordinador
-	Width      int                `json:"width"`  // ancho de miniatura
+	Target     string             `json:"target"`
+	Width      int                `json:"width"`
 	Priority   int                `json:"priority"`
-	Enrichment *models.Enrichment `json:"enrichment,omitempty"` // recursos asociados (enrich_*)
+	Enrichment *models.Enrichment `json:"enrichment,omitempty"`
 }
 
-// wsMsg es el mensaje del canal con el coordinador (misma forma que en internal/coordinator).
 type wsMsg struct {
 	Type   string      `json:"type"`
 	Job    *models.Job `json:"job,omitempty"`
@@ -96,12 +86,10 @@ type progressUpdate struct {
 	ErrorMsg  string `json:"error,omitempty"`
 }
 
-// ── Worker ───────────────────────────────────────────────────────────────────
-
 type worker struct {
-	hardware *monitoring.Collector // telemetría del nodo (Administrador de tareas)
+	hardware *monitoring.Collector
 	cfg      workerConfig
-	instance string // aleatorio por proceso: le dice al coordinador si somos un arranque nuevo
+	instance string
 	storage  *storage.MinIOClient
 	jobCh    chan jobAssignment
 	wg       sync.WaitGroup
@@ -156,14 +144,6 @@ func (w *worker) startPool(ctx context.Context) {
 	}
 }
 
-// ── Handlers HTTP ────────────────────────────────────────────────────────────
-
-// ── Canal con el coordinador ─────────────────────────────────────────────────
-// El worker abre la conexión hacia el coordinador y la mantiene viva; las sub-tareas
-// llegan por ahí. Nunca escucha un puerto para recibir trabajo, así que funciona detrás
-// de cualquier router o firewall sin configurar nada.
-
-// streamLoop mantiene el canal abierto. Si se cae, reintenta con espera creciente (1 s → 30 s).
 func (w *worker) streamLoop(ctx context.Context) {
 	wsURL := strings.Replace(strings.Replace(w.cfg.coordinatorURL, "https://", "wss://", 1), "http://", "ws://", 1)
 	wsURL += "/workers/" + w.cfg.workerID + "/stream"
@@ -195,7 +175,6 @@ func (w *worker) streamLoop(ctx context.Context) {
 	}
 }
 
-// serveStream atiende un canal ya abierto hasta que se cierre.
 func (w *worker) serveStream(ctx context.Context, conn *websocket.Conn) {
 	var sendMu sync.Mutex
 	send := func(m wsMsg) {
@@ -205,7 +184,7 @@ func (w *worker) serveStream(ctx context.Context, conn *websocket.Conn) {
 			log.Printf("[stream] envío falló: %v", err)
 		}
 	}
-	// Cerrar el socket cuando el worker se apaga, para que Receive retorne.
+
 	go func() {
 		<-ctx.Done()
 		conn.Close()
@@ -236,8 +215,6 @@ func (w *worker) serveStream(ctx context.Context, conn *websocket.Conn) {
 	}
 }
 
-// ── Handlers HTTP (solo diagnóstico) ─────────────────────────────────────────
-
 func (w *worker) handleHealth(rw http.ResponseWriter, _ *http.Request) {
 	w.mu.Lock()
 	active := w.active
@@ -251,18 +228,14 @@ func (w *worker) handleHealth(rw http.ResponseWriter, _ *http.Request) {
 	})
 }
 
-// ── Procesamiento ────────────────────────────────────────────────────────────
-
 func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	log.Printf("[job %s] inicio — op=%s file=%s", job.JobID, job.Operation, job.FilePath)
 
 	w.reportProgress(job.JobID, 0, string(models.StatusRunning), "", "")
 
-	// FilePath es la clave del objeto en el bucket de entradas. Se baja a un directorio
-	// temporal propio del job (así dos jobs sobre el mismo archivo no se pisan) y se borra al final.
 	inDir := filepath.Join(os.TempDir(), "mediacase-in", job.JobID)
-	os.RemoveAll(inDir)       // restos de un proceso anterior que murió con esta sub-tarea en vuelo
-	defer os.RemoveAll(inDir) // también si la descarga falla a medias
+	os.RemoveAll(inDir)
+	defer os.RemoveAll(inDir)
 	localInput, dlErr := w.storage.Download(ctx, storage.DatasetBucket, job.FilePath, inDir)
 	if dlErr != nil {
 		if w.shuttingDown(ctx, job.JobID) {
@@ -281,13 +254,11 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 		w.reportProgress(job.JobID, pct, string(models.StatusRunning), "", "")
 	}
 
-	// El destino lo decidió el coordinador (routing); si un coordinador viejo no lo manda, el
-	// default de cada operación.
 	target := job.Target
 	opErr = multimedia.CheckInput(localInput)
 	switch {
 	case opErr != nil:
-		// entrada vacía o ilegible: no vale la pena llamar a ffmpeg
+
 	case job.Operation == string(models.OpConvert):
 		if target == "" {
 			target = "mp4"
@@ -347,13 +318,8 @@ func (w *worker) processJob(ctx context.Context, job jobAssignment) {
 	w.reportProgress(job.JobID, 100, string(models.StatusCompleted), url, "")
 }
 
-// shuttingDown distingue "la sub-tarea falló" de "nos están apagando a mitad de la sub-tarea".
-// En el segundo caso NO se reporta fallo: el coordinador la re-encola cuando reciba la
-// despedida (unregister) o cuando detecte el proceso nuevo / la ausencia de heartbeat.
 func (w *worker) shuttingDown(ctx context.Context, jobID string) bool {
-	// Al cerrar la consola, Windows mata a ffmpeg y avisa al worker en el mismo instante; el
-	// fallo de ffmpeg puede llegar unos microsegundos ANTES de que el contexto quede cancelado.
-	// Se espera un momento antes de decidir que el fallo es real.
+
 	if ctx.Err() == nil {
 		select {
 		case <-ctx.Done():
@@ -365,8 +331,6 @@ func (w *worker) shuttingDown(ctx context.Context, jobID string) bool {
 	return true
 }
 
-// unregister avisa al coordinador que este proceso se va, para que re-encole lo que tenía
-// asignado de inmediato en vez de esperar a que venza el heartbeat. Best-effort.
 func (w *worker) unregister() {
 	url := fmt.Sprintf("%s/workers/%s/unregister", w.cfg.coordinatorURL, w.cfg.workerID)
 	body, _ := json.Marshal(map[string]string{"instance": w.instance})
@@ -380,13 +344,8 @@ func (w *worker) unregister() {
 	log.Printf("[shutdown] coordinador avisado; sus sub-tareas vuelven a la cola")
 }
 
-// apiClient: todas las llamadas HTTP al coordinador con plazo. Sin él, un coordinador saturado
-// dejaba colgado el heartbeat 30 s o más y el worker terminaba expulsado aunque estuviera vivo.
 var apiClient = &http.Client{Timeout: 10 * time.Second}
 
-// Cuánto insiste el worker en entregar un resultado terminal (completed/failed) si el
-// coordinador no responde. Coincide con la ventana en que el coordinador da por vencida una
-// sub-tarea en running sin noticias (reclaimStuckJobs, 15 min).
 const terminalReportRetry = 15 * time.Minute
 
 func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg string) {
@@ -405,11 +364,9 @@ func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg
 	}
 	log.Printf("[progress] POST falló para job %s: %v", jobID, err)
 	if status != string(models.StatusCompleted) && status != string(models.StatusFailed) {
-		return // un avance perdido no importa; el siguiente lo reemplaza
+		return
 	}
-	// El resultado de una sub-tarea NO se puede perder: si el coordinador está reiniciando, la
-	// sub-tarea quedaría en assigned/running para siempre. Se reintenta en segundo plano (el
-	// slot del pool queda libre) hasta que conteste o se agote la ventana.
+
 	go func() {
 		deadline := time.Now().Add(terminalReportRetry)
 		for wait := 2 * time.Second; time.Now().Before(deadline); wait = min(wait*2, 30*time.Second) {
@@ -423,7 +380,6 @@ func (w *worker) reportProgress(jobID string, pct int, status, resultURL, errMsg
 	}()
 }
 
-// postReport envía un reporte y devuelve error si no hubo respuesta 2xx.
 func postReport(url string, body []byte, status, jobID string) error {
 	resp, err := apiClient.Post(url, "application/json", bytes.NewReader(body)) //nolint:gosec
 	if err != nil {
@@ -436,18 +392,16 @@ func postReport(url string, body []byte, status, jobID string) error {
 	return nil
 }
 
-// ── Registro y heartbeat ─────────────────────────────────────────────────────
-
 func (w *worker) register() error {
 	host, _ := os.Hostname()
 	payload := map[string]interface{}{
 		"id":           w.cfg.workerID,
 		"instance":     w.instance,
-		"hostname":     host, // solo informativo: el coordinador ya no necesita alcanzar al worker
+		"hostname":     host,
 		"role":         w.cfg.role,
 		"capabilities": RoleCapabilities(w.cfg.role),
-		"capacity":     w.cfg.poolSize,        // sub-tareas simultáneas: el planificador reparte en proporción
-		"hardware":     w.hardware.Hardware(), // CPU, RAM total, GPUs: lo fijo del nodo
+		"capacity":     w.cfg.poolSize,
+		"hardware":     w.hardware.Hardware(),
 	}
 	body, _ := json.Marshal(payload)
 	resp, err := apiClient.Post(
@@ -483,7 +437,7 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 				"cpu_percent": m.CPUPercent,
 				"mem_percent": m.MemPercent,
 				"active_jobs": active,
-				"metrics":     m, // CPU, memoria, disco y GPUs: lo variable, cada segundo
+				"metrics":     m,
 			}
 			body, _ := json.Marshal(payload)
 			url := fmt.Sprintf("%s/workers/%s/heartbeat", w.cfg.coordinatorURL, w.cfg.workerID)
@@ -493,7 +447,7 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 				continue
 			}
 			resp.Body.Close()
-			// El coordinador se reinició y ya no nos conoce: volver a registrarse.
+
 			if resp.StatusCode == http.StatusNotFound {
 				log.Printf("[heartbeat] el coordinador no nos reconoce; re-registrando")
 				if err := w.register(); err != nil {
@@ -503,8 +457,6 @@ func (w *worker) heartbeatLoop(ctx context.Context) {
 		}
 	}
 }
-
-// ── main ─────────────────────────────────────────────────────────────────────
 
 func main() {
 	cfg := loadConfig()
@@ -535,7 +487,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go w.hardware.Run(ctx) // muestreo cada segundo; el heartbeat lee la última muestra
+	go w.hardware.Run(ctx)
 	w.startPool(ctx)
 
 	for i := 0; i < 10; i++ {
@@ -548,14 +500,12 @@ func main() {
 	}
 
 	go w.heartbeatLoop(ctx)
-	go w.streamLoop(ctx) // canal saliente: por aquí llegan las sub-tareas
+	go w.streamLoop(ctx)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", w.handleHealth)
 	mux.Handle("/metrics", promhttp.Handler())
 
-	// Puerto de diagnóstico (/health, /metrics). Es opcional: el trabajo llega por el canal
-	// saliente. Si el puerto está ocupado (p. ej. dos workers en la misma máquina), se sigue sin él.
 	diagAddr := getEnv("WORKER_DIAG_ADDR", ":8090")
 	srv := &http.Server{
 		Addr:         diagAddr,

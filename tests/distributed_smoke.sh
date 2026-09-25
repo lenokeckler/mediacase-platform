@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-# Hito Fase 0: el coordinador (host) asigna un job y lo completa un worker en OTRA maquina.
-#
-# Requiere:
-#   - docker compose -f docker-compose.infra.yml up -d
-#   - coordinador nativo corriendo (scripts/run-coordinator.ps1)
-#   - el worker del host (node1) APAGADO, para forzar que lo tome un nodo remoto
-#   - al menos un worker remoto conectado (otra PC via /connect, o una VM de Vagrant)
-#   - una entrada subida a MinIO como dataset/<KEY>  (ver tests/upload_input.sh)
-#
-# Uso:  bash tests/distributed_smoke.sh [KEY] [OPERACION]
 set -euo pipefail
 COORD="${COORDINATOR_URL:-http://localhost:8080}"
 KEY="${1:-prueba.mp4}"
