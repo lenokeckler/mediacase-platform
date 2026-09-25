@@ -20,7 +20,7 @@ Qué evidencia hay de cada rubro de la consigna v2.0 y dónde está. Escala 0-5 
 | El caso es la unidad de trabajo (no "etiqueta sobre archivos idénticos") | ✅ | routing por tipo dentro del caso, barrier, estado agregado, reporte consolidado |
 | Casos homogéneos **y** heterogéneos | ✅ | por construcción en el dataset (`session` s1/s2 vs s3/s4); `ingest cases --group-by session` da 12 y 12 |
 | Generación manual y automática de casos | ✅ | dashboard/CLI · `ingest cases --group-by event\|session\|batch\|user\|folder\|type\|tier` |
-| Dataset 400-600 archivos, audio + video, formatos y tamaños variados, metadatos | ✅ | 492 archivos, 13 formatos, 3 niveles medidos, `manifest.json` v2; `docs/dataset.md` |
+| Dataset 400-600 archivos, audio + video, formatos y tamaños variados, metadatos | ✅ | 542 archivos (102 reales con licencia libre, 8 límite), 28 formatos, 3 niveles medidos, 11 casos de prueba, `manifest.json` v3; `docs/dataset.md` |
 | Estados por sub-tarea (6) y por caso (7); `completed` ⟺ todas OK; `partially_completed` ⟺ alguna falló | ✅ | `internal/models`, `internal/cases/barrier.go`, `docs/architecture.md` §4 |
 | Reporte consolidado con los 6 elementos mínimos | ✅ | `docs/api.md` |
 | Mínimo 3 nodos worker en entidades separadas, comunicación por red | ✅ tres máquinas con IP propia: host + 2 VMs Vagrant, `HITO OK` 2026-09-11; ⏳ laptops físicas del equipo (7.4) | `docs/informe-pruebas.md` §7 |

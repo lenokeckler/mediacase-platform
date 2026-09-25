@@ -22,7 +22,7 @@ pruebas de 20 casos concurrentes (412 sub-tareas, 14 GB de entrada) necesitan lo
 laptop, y lo que se mide —colas por pool, barrier, redistribución, reportes— no cambia con la
 ubicación física del proceso. La prueba de red real está en §7.
 
-Dataset: 492 archivos, 14.33 GB, en MinIO (`docs/dataset.md`).
+Dataset: 492 archivos, 14.33 GB, en MinIO (versión 2, la vigente en la fecha de estas pruebas; la versión 3 actual tiene 542 archivos con material real, ver `docs/dataset.md`).
 
 ## 2. Carga por lotes y concurrencia
 

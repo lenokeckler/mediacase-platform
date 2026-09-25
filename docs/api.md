@@ -218,7 +218,7 @@ Un worker sin heartbeat por 15 s se expulsa y sus sub-tareas se re-encolan (el c
 | `GET /dataset` | lista el bucket: `[{key, size_bytes, type, last_modified, format?, tier?, source?, duration_s?, event?, session?, license?, note?}]` (lo usa el dashboard para elegir archivos) |
 | `GET /dataset/test-cases` | los casos de prueba ya armados en el manifest (campo `test_cases`, v3): `[{id, name, description?, kind, files:[{key, operation?, target?, width?, enrichment?}]}]`; `[]` si el manifest no define ninguno |
 
-Para el dataset completo (492 archivos, 14 GB) es más práctico `bin/ingest upload` (reanudable);
+Para el dataset completo (542 archivos, 16.5 GB) es más práctico `bin/ingest upload` (reanudable);
 también sube el manifest al bucket como `dataset/.manifest.json` (objeto interno: no aparece en
 `GET /dataset`, que oculta claves que empiezan con `.`). Los campos opcionales de `GET /dataset`
 salen de ese manifest (o, si el bucket todavía no lo tiene, del archivo local `DATASET_MANIFEST`,

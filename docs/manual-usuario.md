@@ -60,7 +60,7 @@ detalle (id completo, archivo, caso, tiempos, reintentos, URL del resultado o er
 1. En **Casos**, botón **+ Nuevo caso**.
 2. Elegir los archivos. Hay dos maneras, combinables:
    - **Subir** archivos desde su computadora (video, audio o imágenes; varios a la vez).
-   - **Elegir del dataset**: los archivos que ya están en el sistema (los 492 del dataset de prueba).
+   - **Elegir del dataset**: los archivos que ya están en el sistema (los 542 del dataset de prueba).
 3. Nombre del caso y prioridad (1-10; 8 o más va a la cola alta).
 4. Por cada archivo el formulario muestra lo que el coordinador va a hacer, como `mkv → MP4`. No
    hay que tocar nada, pero se puede cambiar la **operación** y el **formato de salida**:

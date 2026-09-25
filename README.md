@@ -97,10 +97,13 @@ Guía paso a paso, avisos de Windows 11 y diagnóstico en
 
 ## Dataset
 
-492 archivos sintéticos (250 video, 172 audio, 70 imágenes; 13 formatos; 310 livianos < 5 MB,
-140 medianos 20-50 MB, 42 pesados 150-400 MB; 14.3 GB) con metadatos de agrupación (evento,
-sesión, lote, usuario). Se genera con `bash dataset/scripts/generate_dataset.sh` (~1 h,
-reproducible) y se sube con `bin/ingest upload`. Composición y criterios en
+542 archivos, 16.5 GB (265 video, 200 audio, 77 imágenes; 28 formatos; 323 livianos, 171
+medianos, 48 pesados): 432 sintéticos, 102 reales con licencia libre (Blender Foundation, NASA,
+Wikimedia Commons, Internet Archive; créditos en [`dataset/CREDITS.md`](dataset/CREDITS.md)) y 8
+archivos límite (truncado, vacío, extensiones engañosas). Cada archivo lleva metadatos de agrupación
+(evento, sesión, lote, usuario) y hay 11 casos de prueba en `dataset/test_cases.json`. Se arma con
+`bash dataset/scripts/generate_dataset.sh` (sintéticos) y `bash dataset/scripts/fetch_real.sh`
+(reales y límite), y se sube con `bin/ingest upload`. Composición y criterios en
 [`docs/dataset.md`](docs/dataset.md).
 
 ## Pruebas
