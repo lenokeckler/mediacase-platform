@@ -2,8 +2,8 @@
 set -euo pipefail
 COORD="${COORDINATOR_URL:-http://localhost:8080}"
 VIDEO_WORKER="${VIDEO_WORKER:-node1}"
-AUDIO_WORKER="${AUDIO_WORKER:-node2}"
-META_WORKER="${META_WORKER:-node3}"
+AUDIO_WORKER="${AUDIO_WORKER:-merge-breaker}"
+META_WORKER="${META_WORKER:-disruptor-specialist}"
 export PYTHONIOENCODING=utf-8
 py() { python -c "import sys,json; d=json.load(sys.stdin); print($1)"; }
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

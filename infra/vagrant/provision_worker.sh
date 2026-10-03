@@ -41,7 +41,8 @@ WantedBy=multi-user.target
 UNIT
 
 systemctl daemon-reload
-systemctl enable --now mediacase-worker
+systemctl enable mediacase-worker
+systemctl restart mediacase-worker
 sleep 2
 systemctl --no-pager --lines=5 status mediacase-worker || true
 echo "provision OK: ${WORKER_ID} (${WORKER_ROLE}) → ${COORDINATOR_HOST}"

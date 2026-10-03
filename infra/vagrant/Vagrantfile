@@ -4,8 +4,8 @@ Vagrant.configure("2") do |config|
   config.vm.boot_timeout = 900
 
   nodes = {
-    "node2" => { ip: "192.168.56.101", role: "audio",    mem: 1536, cpus: 2 },
-    "node3" => { ip: "192.168.56.102", role: "metadata", mem: 1024, cpus: 1 },
+    "node2" => { worker: "merge-breaker",        ip: "192.168.56.101", role: "audio",    mem: 1536, cpus: 2 },
+    "node3" => { worker: "disruptor-specialist", ip: "192.168.56.102", role: "metadata", mem: 1024, cpus: 1 },
   }
 
   nodes.each do |name, n|
@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
         vb.cpus   = n[:cpus]
       end
       node.vm.provision "shell", path: "provision_worker.sh",
-        env: { "WORKER_ID" => name, "WORKER_ROLE" => n[:role] }
+        env: { "WORKER_ID" => n[:worker], "WORKER_ROLE" => n[:role] }
     end
   end
 end
