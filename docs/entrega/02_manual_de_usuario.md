@@ -21,9 +21,8 @@ El sistema tiene tres tipos de pieza que conviene distinguir desde el inicio:
 Este manual está dirigido a dos lectores. El primero es quien opera node-1: enciende y apaga el sistema, envía casos y lee reportes (secciones 3 a 7). El segundo es quien presta una computadora para procesar: solo necesita la sección 8. La sección 9 cubre el uso por línea de comandos y la 10 reúne los problemas comunes con su solución.
 
 :::figura Figura 1. Vista general del dashboard de MediaCase
-Qué debe verse: el dashboard completo en la pestaña Casos, con la barra lateral desplegada (logo, secciones Casos, Monitor e Historial, accesos "Conectar esta PC" y "Compartir", indicador "En vivo" y botón de tema), la lista de casos con varios estados distintos (completado, parcial, procesando) y el botón "+ Nuevo caso" arriba a la derecha.
-Cómo obtenerla: encender el sistema con MediaCase.bat, enviar dos o tres casos de prueba desde el formulario y capturar mientras uno sigue procesando.
-Tema sugerido: oscuro. Captura existente que sirve como referencia: docs/img/dashboard-casos-carga.png.
+Imagen: docs/img/casos-lista.png
+Nota: Captura del 3 de octubre de 2026. Lista de casos a los 30 s de enviar los 11 casos de prueba, con casos en cola, procesando y completados.
 :::
 
 \pagebreak
@@ -65,7 +64,7 @@ Tabla 1. Direcciones del sistema
 
 ## 3.1 Encender node-1
 
-En la carpeta raíz del repositorio, haga doble clic en **`MediaCase.bat`**. Se abre una consola titulada "MediaCase - node-1" que muestra cada paso con una flecha `==>`:
+En la carpeta raíz del repositorio, haga doble clic en **`MediaCase.bat`**. Se abre una consola titulada "MediaCase - encendiendo node-1" que muestra cada paso con una flecha `==>`:
 
 1. **Docker Desktop.** Si Docker no está corriendo, el lanzador lo abre y espera hasta que responda. La primera vez tarda cerca de un minuto; el límite es de 3 minutos.
 2. **Infraestructura.** Levanta los contenedores de Postgres, Redis, MinIO, Prometheus y Grafana con `docker compose`. Los datos de sesiones anteriores se conservan.
@@ -78,9 +77,8 @@ Al final la consola muestra un resumen con la dirección local, la dirección qu
 > No cierre las dos ventanas minimizadas del coordinador y del worker. Si las cierra, el sistema se detiene. Para apagar, use MediaCase-detener.bat.
 
 :::figura Figura 2. Consola del lanzador MediaCase.bat al terminar
-Qué debe verse: la consola de Windows titulada "MediaCase - node-1" con los pasos "==> Docker Desktop", "==> Infraestructura (Postgres, Redis, MinIO, Prometheus, Grafana)", "==> Red", "==> Coordinador y worker local" y "==> Dashboard" en celeste, sus mensajes en verde ("Docker listo", "contenedores arriba", "esta maquina en la red: ...", "coordinador en http://localhost:8080") y el resumen final con "node-1 encendido." y la línea "Para otras PCs (WiFi)".
-Cómo obtenerla: con el sistema apagado, doble clic en MediaCase.bat y capturar la consola cuando aparece "Presione una tecla para continuar".
-Tema sugerido: el de la consola por defecto.
+Imagen: docs/img/manual-lanzador.png
+Nota: Captura del 3 de octubre de 2026. La ventana se titula "MediaCase - encendiendo node-1" y espera una tecla al terminar.
 :::
 
 Si el coordinador ya estaba corriendo, el lanzador no abre otro y lo avisa en amarillo. Lo mismo ocurre con el worker local. Por eso puede ejecutar `MediaCase.bat` de nuevo sin riesgo.
@@ -143,9 +141,8 @@ Muestra todas las sub-tareas del sistema con sus columnas Sub-tarea, Archivo, Op
 Un clic en una fila despliega el detalle: identificador completo, archivo, caso al que pertenece, inicio, fin, reintentos (hechos y máximo permitido), el error completo si falló y la dirección del resultado si terminó.
 
 :::figura Figura 3. Historial con el detalle de una sub-tarea fallida desplegado
-Qué debe verse: la sección Historial con el filtro "fallidas" activo y una fila desplegada que muestra Id completo, Archivo (por ejemplo edge_truncado.mp4), Caso, Inicio, Fin, Reintentos y el Error completo con el motivo de ffmpeg.
-Cómo obtenerla: enviar el caso de prueba "Casos límite y fallos", esperar a que cierre, abrir Historial, elegir "fallidas" y hacer clic en la fila de edge_truncado.mp4.
-Tema sugerido: claro.
+Imagen: docs/img/manual-historial-fallida.png
+Nota: Captura del 3 de octubre de 2026. Filtro "fallidas" con la fila de `edge_truncado.mp4` desplegada.
 :::
 
 ## 4.5 Tema claro y oscuro
@@ -153,9 +150,8 @@ Tema sugerido: claro.
 Todas las pantallas funcionan en los dos temas. El tema oscuro resulta más cómodo para dejar el Monitor abierto en una pantalla durante una demostración; el claro se lee mejor en capturas impresas.
 
 :::figura Figura 4. El Monitor en tema claro
-Qué debe verse: la sección Monitor en tema claro con al menos una tarjeta de nodo, las colas por pool y la tarjeta Compartir.
-Cómo obtenerla: abrir http://localhost:8080/?theme=light#monitor.
-Captura existente que sirve: docs/img/dashboard-monitor-claro.png.
+Imagen: docs/img/monitor-claro.png
+Nota: Captura del 3 de octubre de 2026. Monitor en tema claro con tres nodos ocupados.
 :::
 
 \pagebreak
@@ -165,9 +161,8 @@ Captura existente que sirve: docs/img/dashboard-monitor-claro.png.
 En la sección **Casos**, haga clic en **+ Nuevo caso**. Se abre el panel "Nuevo caso" encima de la lista. Para cerrarlo sin enviar, use la ✕ de la esquina.
 
 :::figura Figura 5. Formulario de nuevo caso vacío
-Qué debe verse: el panel "Nuevo caso" con los campos "Nombre del caso" (con el texto de ejemplo "p. ej. boda-garcia, sesion-3, lote-2026-09") y "Prioridad", la zona "Subir desde esta PC" con su selector de archivos y la zona "Elegir del dataset (542)" con el buscador, los filtros Tipo, Formato, Tamaño y Origen, los botones de selección masiva y el selector "Cargar caso de prueba". El botón "Enviar caso (0 archivos)" aparece deshabilitado.
-Cómo obtenerla: sección Casos, botón "+ Nuevo caso", o abrir http://localhost:8080/#nuevo.
-Tema sugerido: oscuro.
+Imagen: docs/img/manual-formulario-vacio.png
+Nota: Captura del 3 de octubre de 2026.
 :::
 
 ## 5.1 Nombre y prioridad
@@ -214,9 +209,8 @@ Puede activar varias opciones del mismo grupo (por ejemplo MP4 y MKV a la vez) y
 Un procedimiento común para un caso heterogéneo: active el filtro Video y Pesado, presione **Marcar todo lo filtrado**, cambie a Audio y Liviano, marque algunos con arrastre, y así sucesivamente. La selección se conserva al cambiar de filtro.
 
 :::figura Figura 6. Selección por arrastre con filtros activos
-Qué debe verse: la zona "Elegir del dataset" con los filtros Tipo "Video" y Origen "Real" activos, el contador mostrando algo como "30 de 542 · 8 elegidos", y un bloque de 6 a 8 filas contiguas marcadas (resaltadas) producto de un arrastre.
-Cómo obtenerla: abrir el formulario, activar Video y Real, y arrastrar el mouse sobre las casillas de varias filas seguidas; capturar con el mouse todavía sobre la última fila.
-Tema sugerido: oscuro.
+Imagen: docs/img/manual-seleccion-arrastre.png
+Nota: Captura del 3 de octubre de 2026. Filtros Video y Real activos; las filas marcadas salieron de un solo arrastre.
 :::
 
 ## 5.4 Cargar un caso de prueba
@@ -242,9 +236,8 @@ Tabla 4. Casos de prueba incluidos
 Después de cargarlo puede modificar cualquier fila o agregar más archivos antes de enviar.
 
 :::figura Figura 7. Caso de prueba cargado en el formulario
-Qué debe verse: el formulario con el nombre "Película abierta en varios formatos" ya escrito y la lista "Archivos del caso (12)" agrupada en videos, audios e imágenes, cada fila con su operación y formato de salida (por ejemplo "mkv → MP4", "mp4 → MP3").
-Cómo obtenerla: en el formulario, "Cargar caso de prueba" → "Película abierta en varios formatos · heterogéneo · 12 archivos".
-Tema sugerido: oscuro.
+Imagen: docs/img/manual-caso-prueba-cargado.png
+Nota: Captura del 3 de octubre de 2026. Caso de prueba "Película abierta en varios formatos" cargado con sus operaciones y formatos de salida.
 :::
 
 ## 5.5 Operación y formato de salida por archivo
@@ -278,9 +271,8 @@ Tabla 5. Operaciones disponibles por tipo de archivo
 **Aplicar a todo un tipo.** Cuando un grupo tiene más de un archivo, en su encabezado aparece el botón **Aplicar a todos los videos**, **Aplicar a todos los audios** o **Aplicar a todas las imágenes**. El botón copia la operación, el formato de salida y el ancho del **primer** archivo del grupo a los demás. Si ese formato no sirve para algún archivo (por ejemplo, copiar "MKV" a un archivo que ya es `.mkv`), ese archivo vuelve al formato automático.
 
 :::figura Figura 8. Archivos del caso agrupados por tipo con operaciones distintas
-Qué debe verse: la lista "Archivos del caso" con tres grupos (videos, audios, imágenes), el botón "Aplicar a todos los videos" en el encabezado del grupo de videos, una fila de video con "extraer audio" y salida "mp4 → FLAC", y una fila de imagen con "miniatura", salida WebP y el selector de ancho en 640 px.
-Cómo obtenerla: elegir tres videos, dos audios y dos imágenes del dataset; cambiar la operación del primer video a "extraer audio" y la de una imagen a WebP con 640 px.
-Tema sugerido: claro.
+Imagen: docs/img/manual-archivos-por-tipo.png
+Nota: Captura del 3 de octubre de 2026. El primer video cambiado a extraer audio en FLAC y la imagen PNG a miniatura WebP de 640 px.
 :::
 
 ## 5.6 Enriquecer un audio o un video
@@ -309,9 +301,8 @@ Formatos que admiten enriquecimiento: mp3, flac, ogg y m4a en audio; mp4 y mkv e
 La letra que usted escriba queda en la etiqueta de letras del archivo, que leen reproductores como VLC o foobar2000 y la mayoría de los teléfonos.
 
 :::figura Figura 9. Editor de recursos asociados desplegado
-Qué debe verse: una fila de audio (por ejemplo un .flac) con la operación "enriquecer" y, debajo, el recuadro "Recursos asociados" con el subtítulo "Se integran dentro del audio · portada con la forma de onda · se conserva el FLAC sin recodificar", los campos Título, Artista, Álbum / evento, Fecha, Comentario y Letra (con algunas líneas de letra escritas) y el botón "Aplicar a todos" en la esquina.
-Cómo obtenerla: elegir dos audios FLAC del dataset, cambiar ambos a "enriquecer", llenar Artista y Letra en el primero.
-Tema sugerido: oscuro.
+Imagen: docs/img/manual-editor-enriquecer.png
+Nota: Captura del 3 de octubre de 2026. Dos audios FLAC con la operación enriquecer; el primero con Artista y Letra escritos.
 :::
 
 ## 5.7 Enviar
@@ -333,9 +324,8 @@ Haga clic en un caso de la lista para abrir su detalle. En la cabecera verá el 
 Debajo está la tabla de sub-tareas con las columnas Archivo, Tipo, Operación, Pool, Estado, Progreso, Worker, Inicio, Duración y Resultado. La tabla se actualiza sola mientras el caso está abierto. La columna Operación muestra el cambio de formato (por ejemplo `mkv → MP4`) seguido del nombre de la operación. La barra de progreso avanza según lo que informa ffmpeg: es índigo mientras corre, verde al completar y roja si falla.
 
 :::figura Figura 10. Detalle de un caso heterogéneo en ejecución
-Qué debe verse: el detalle de un caso en estado "procesando", con la línea "sub-tareas 5/12 resueltas", varias sub-tareas en "en ejecución" con barras de progreso a distintos porcentajes, otras "completada" con el enlace "Descargar" y otras "pendiente". Debe distinguirse la columna Pool (video, audio, metadata) y la columna Worker.
-Cómo obtenerla: enviar el caso de prueba "Película abierta en varios formatos" y capturar a los 30 o 40 segundos.
-Tema sugerido: oscuro.
+Imagen: docs/img/caso-heterogeneo-en-ejecucion.png
+Nota: Captura del 3 de octubre de 2026. Caso a los 31 s, con 10 de 12 sub-tareas resueltas y dos conversiones en ejecución en `node1`.
 :::
 
 ## 6.2 Estados
@@ -376,9 +366,8 @@ Junto a algunos valores de la tabla aparecen etiquetas pequeñas:
 - **portada**, **N etiquetas** y **letra** o **descripción** (en sub-tareas de enriquecer): resumen de lo que se integró en el archivo. El cursor encima muestra los valores.
 
 :::figura Figura 11. Detalle del caso "Casos límite y fallos" con avisos y fallos
-Qué debe verse: el detalle del caso en estado "parcial", con el chip "⚠ aviso" en las filas de los archivos con extensión engañosa (mp3 con .mp4, mkv con .mp4, png con .jpg) y el recuadro de la nota visible al pasar el cursor sobre uno de ellos; también las tres filas "fallida" con su motivo en rojo (moov atom not found, archivo vacío (0 bytes), Invalid data found when processing input).
-Cómo obtenerla: enviar el caso de prueba "Casos límite y fallos" (tarda unos 17 s), abrir su detalle y dejar el cursor sobre un chip "⚠ aviso".
-Tema sugerido: claro.
+Imagen: docs/img/caso-tc06-avisos.png
+Nota: Captura del 3 de octubre de 2026. El recuadro bajo el chip de la fila de `edge_mp3_con_extension_mp4.mp4` es la nota que aparece al pasar el cursor.
 :::
 
 ## 6.4 Reporte consolidado
@@ -392,9 +381,8 @@ Cuando el caso cierra, arriba de la tabla aparece el recuadro **Reporte consolid
 La tabla de sub-tareas sigue debajo con el inicio, la duración y el worker de cada una. El botón **Reporte (JSON)** abre el reporte completo en una pestaña nueva, con los tiempos exactos de inicio y fin del caso y de cada sub-tarea, el worker responsable, el resultado o el error de cada archivo y los archivos agrupados por tipo y operación. El mismo reporte queda guardado en MinIO en `results/cases/<id>/report.json`.
 
 :::figura Figura 12. Reporte consolidado de un caso completado
-Qué debe verse: el detalle de un caso en estado "completado" con el recuadro "Reporte consolidado", su línea de resumen, los bloques por tipo y operación (por ejemplo "audio · enriquecer → FLAC: 12 ok") y "duración total"; debajo, la tabla con todas las sub-tareas "completada" y el enlace "Descargar" en cada una.
-Cómo obtenerla: enviar el caso de prueba "Álbum clásico enriquecido" (unos 48 s) y abrirlo al cerrar.
-Tema sugerido: oscuro.
+Imagen: docs/img/manual-reporte-consolidado.png
+Nota: Captura del 3 de octubre de 2026. Caso de prueba "Álbum clásico enriquecido", 12 de 12 completadas.
 :::
 
 ## 6.5 Descargar resultados
@@ -431,24 +419,20 @@ Hay una tarjeta por cada máquina conectada, parecida a la pestaña Rendimiento 
 - Un bloque por cada **GPU** (la integrada y la dedicada, si hay dos) con su nombre, porcentaje, VRAM usada y temperatura cuando el equipo la informa.
 - Al pie, **"N de M cupos ocupados"** y el porcentaje de disco.
 
-Los **cupos** son cuántas sub-tareas procesa ese nodo a la vez. El worker los calcula al arrancar según su hardware: un cupo por cada 2 hilos del procesador y por cada 2 GB de RAM aproximadamente, lo que alcance primero, entre 1 y 8. Una laptop de 12 hilos y 15 GB tiene 6 cupos; una máquina virtual de 2 hilos tiene 1. El worker de node-1 tiene 4 fijos, porque comparte la máquina con la base de datos, la cola y el almacenamiento. El coordinador reparte el trabajo en proporción a los cupos libres de cada nodo, de modo que una máquina más grande recibe más.
+Los **cupos** son cuántas sub-tareas procesa ese nodo a la vez. El worker los calcula al arrancar según su hardware: un cupo por cada 2 hilos del procesador y por cada 2 GB de RAM aproximadamente, lo que alcance primero, entre 1 y 8. Una laptop de 12 hilos y 15 GB tiene 6 cupos; una máquina virtual de 2 hilos tiene 1. El worker de node-1 tiene 4 fijos, porque comparte la máquina con la base de datos, la cola y el almacenamiento, y las VM de Vagrant tienen 2 fijos (`WORKER_POOL_SIZE=2` en su aprovisionamiento), como se ve en la Figura 13. El coordinador reparte el trabajo en proporción a los cupos libres de cada nodo, de modo que una máquina más grande recibe más.
 
 Lo que una máquina no puede medir aparece como "no disponible", nunca como un cero. Las GPU se muestran como información del equipo: la codificación de video se hace en el procesador (x264), no en la tarjeta gráfica.
 
 Un clic en una tarjeta abre la **vista ampliada del nodo**: gráficas grandes de los últimos 5 minutos con promedio y máximo, los datos completos del equipo (sistema, procesador, memoria, disco, pools, "Capacidad: N sub-tareas a la vez") y la tabla "Sub-tareas en este nodo" con su archivo, operación, estado, progreso y si llegó por afinidad o por ayuda. Se cierra con **Cerrar (Esc)**, con la tecla Esc o con un clic afuera.
 
 :::figura Figura 13. Tarjetas de nodo con cupos ocupados
-Qué debe verse: la sección "Nodos y rendimiento" con al menos dos tarjetas en estado "ocupado", cada una con su CPU arriba de 50 %, memoria, al menos una GPU, y al pie "3 de 4 cupos ocupados" en node1 y "4 de 6 cupos ocupados" en otra PC.
-Cómo obtenerla: conectar una segunda PC con el ZIP de /connect, enviar el caso de prueba "Caso mixto grande (40 archivos)" y capturar a los 20 o 30 segundos.
-Captura existente que sirve como referencia: docs/img/monitor-3-nodos-vagrant.png (tres nodos, anterior a los cupos) y docs/img/dashboard-nodo-rendimiento.png (una tarjeta con dos GPU).
-Tema sugerido: oscuro.
+Imagen: docs/img/monitor-3-nodos.png
+Nota: Captura del 3 de octubre de 2026. Tres nodos con todos sus cupos ocupados: `node1` 4 de 4, `merge-breaker` 2 de 2 y `disruptor-specialist` 2 de 2.
 :::
 
 :::figura Figura 14. Vista ampliada de un nodo
-Qué debe verse: el recuadro modal de node1 con los datos Sistema, Procesador, Memoria, Disco de trabajo, Pools, Sub-tareas activas y "Capacidad: 4 sub-tareas a la vez", las gráficas grandes de CPU y Memoria con los ejes "-5 min" a "ahora", y la tabla "Sub-tareas en este nodo" con al menos dos filas, una de ellas con el chip "ayuda".
-Cómo obtenerla: durante un caso grande, clic en la tarjeta de node1 en el Monitor.
-Captura existente que sirve como referencia: docs/img/dashboard-monitor-rendimiento.png.
-Tema sugerido: oscuro.
+Imagen: docs/img/monitor-detalle-nodo.png
+Nota: Captura del 3 de octubre de 2026. Vista ampliada de `node1` con 2.5 minutos de historia y cuatro conversiones de video en curso.
 :::
 
 ## 7.3 Colas por pool
@@ -466,10 +450,8 @@ La tarjeta **Compartir este coordinador** tiene dos filas. **Mismo WiFi** muestr
 **Casos activos** muestra una barra por cada caso abierto con sus sub-tareas por color: verde listas, índigo en ejecución, ámbar en espera y rojo fallidas, más el conteo en texto. Un clic en un caso lo abre en la sección Casos. **Sub-tareas en curso** lista lo pendiente, asignado o en ejecución, con archivo, pool, worker y progreso.
 
 :::figura Figura 15. Colas por pool y casos activos bajo carga
-Qué debe verse: la tarjeta "Colas por pool" con la barra de video mayor que las demás y el chip de carga, y debajo "Casos activos" con tres o más casos y sus barras de colores.
-Cómo obtenerla: ejecutar bin\ingest load --cases 20 --concurrency 5 --group-by session y capturar el Monitor a los 30 segundos.
-Captura existente que sirve: docs/img/dashboard-monitor-casos-activos.png.
-Tema sugerido: oscuro.
+Imagen: docs/img/monitor-colas-casos-activos.png
+Nota: Captura del 3 de octubre de 2026. Con los 11 casos de prueba abiertos: 114 sub-tareas en espera, la mayoría de metadata.
 :::
 
 \pagebreak
@@ -513,21 +495,18 @@ Se abre una ventana de consola. En las primeras líneas verá "=== MediaCase Wor
 En unos segundos la máquina aparece en el Monitor de node-1, con el nombre de la computadora, y empieza a recibir trabajo.
 
 :::figura Figura 16. Página de conexión /connect
-Qué debe verse: la página "Conectar esta PC como worker" con el logo, el recuadro "¿Qué va a procesar esta PC?" con las cuatro opciones (Todo marcada), los botones "Descargar para Windows" y "Descargar para Linux", la lista de tres pasos y la nota final con la dirección del coordinador.
-Cómo obtenerla: abrir http://<ip-de-node-1>:8080/connect desde otra computadora de la red.
-Tema sugerido: el único disponible (la página no tiene tema oscuro).
+Imagen: docs/img/connect.png
+Nota: Captura del 3 de octubre de 2026.
 :::
 
 :::figura Figura 17. Ventana del worker en Windows conectado y procesando
-Qué debe verse: la consola de start-worker.bat con las líneas "=== MediaCase Worker ===", "ID=... | rol=all ... | capacidad=6 (según el hardware) | coordinator=http://...:8080", "[register] registrado como ...", "[stream] canal abierto con ..." y varias líneas "[assign] job ... aceptado" y "[job ...] COMPLETADO".
-Cómo obtenerla: en una segunda PC, descargar el ZIP de /connect, desbloquearlo, descomprimirlo, doble clic en start-worker.bat y enviar un caso desde node-1.
-Tema sugerido: el de la consola por defecto.
+Imagen: docs/img/manual-worker-consola.png
+Nota: Captura del 3 de octubre de 2026. Worker del ZIP con rol Todo registrado como `leno`, con tres conversiones de audio completadas. El aviso del puerto 8090 aparece porque otro worker de la misma PC ya lo usa y no afecta el trabajo.
 :::
 
 :::figura Figura 18. Opción Desbloquear en las propiedades del ZIP
-Qué debe verse: la ventana Propiedades del ZIP descargado, pestaña General, con la sección Seguridad y la casilla "Desbloquear" marcada.
-Cómo obtenerla: clic derecho en el ZIP recién descargado → Propiedades.
-Tema sugerido: el de Windows por defecto.
+Imagen: docs/img/manual-zip-desbloquear.png
+Nota: Captura del 3 de octubre de 2026.
 :::
 
 ### Smart App Control
@@ -566,9 +545,8 @@ El ZIP descargado por el túnel ya viene configurado para usarlo, sin nada que e
 Algunas redes bloquean la salida hacia Cloudflare. El WiFi del TEC es una de ellas. En ese caso el chip pasa a "error" y la tarjeta muestra el motivo y una sugerencia: encienda **Cloudflare WARP** (o una VPN) en node-1 y vuelva a intentar. Desde una red doméstica o con datos del celular funciona directo. Si falta `cloudflared` en node-1, el botón aparece deshabilitado y la tarjeta muestra el comando para instalarlo.
 
 :::figura Figura 19. Tarjeta Compartir con el túnel abierto
-Qué debe verse: la tarjeta "Compartir este coordinador" con la fila "Mismo WiFi" y su dirección, y la fila "Otra red (túnel)" con el chip "abierto", la dirección https://....trycloudflare.com/connect, el botón "Copiar" y el botón rojo "Cerrar túnel".
-Cómo obtenerla: Monitor → "Publicar en internet" desde una red que no bloquee Cloudflare, o con WARP encendido.
-Captura existente que sirve: docs/img/dashboard-compartir-tunel.png (y docs/img/dashboard-compartir-tunel-bloqueado.png para el caso de error).
+Imagen: docs/img/manual-compartir-tunel.png
+Nota: Captura del 3 de octubre de 2026. Túnel abierto desde una red doméstica; la dirección cambia cada vez que se abre.
 :::
 
 ## 8.7 Desconectar una computadora

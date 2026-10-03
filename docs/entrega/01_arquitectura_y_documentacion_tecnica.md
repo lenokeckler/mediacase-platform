@@ -294,8 +294,8 @@ Tabla 4. Pools, operaciones y perfil de costo
 | Pool | Operaciones | Perfil de costo | Nodo afín en el despliegue |
 |---|---|---|---|
 | `video` | `convert`, `extract_audio` | CPU intensivo y sostenido; un video pesado tarda minutos | node-1, la máquina más potente (6 núcleos, 12 hilos) |
-| `audio` | `convert_audio` | CPU moderado, de segundos a un minuto | node2 (VM de 2 vCPU) |
-| `metadata` | `thumbnail`, `metadata`, `enrich_audio`, `enrich_video` | liviano, en general pocos segundos | node3 (VM de 1 vCPU) |
+| `audio` | `convert_audio` | CPU moderado, de segundos a un minuto | node2 (VM de 2 vCPU, worker `merge-breaker`) |
+| `metadata` | `thumbnail`, `metadata`, `enrich_audio`, `enrich_video` | liviano, en general pocos segundos | node3 (VM de 1 vCPU, worker `disruptor-specialist`) |
 
 Todos los streams comparten el consumer group `workers`. El coordinador lee con `XREADGROUP` pidiendo los tres streams de un pool en orden `high`, `normal`, `low`, de modo que dentro de un pool se atiende primero la prioridad alta: es una planificación multinivel por prioridad. Una vez entregada la sub-tarea, el coordinador confirma el mensaje (`XACK`) y lo borra del stream (`XDEL`). Un mensaje leído y no confirmado queda en la lista de pendientes del grupo y no se pierde si el coordinador se reinicia. La profundidad de cada cola se obtiene de `XINFO GROUPS` (entradas no entregadas más entregadas sin confirmar), y es la cifra que muestran el dashboard (`queue_depth.by_pool`) y Grafana.
 
@@ -348,9 +348,8 @@ A eso se suma la capacidad por hardware. Un número fijo de sub-tareas por nodo 
 La codificación por GPU (NVENC, QSV, AMF) queda fuera por decisión explícita. Depende del modelo de la tarjeta y de los drivers de cada máquina, y un fallo de ese tipo durante una demostración no se puede diagnosticar a tiempo; con x264 en CPU todas las máquinas producen el mismo resultado. El worker sí detecta y reporta sus GPU (nombre, VRAM, uso), y el Monitor las muestra, lo que deja preparado un rol `video-gpu` con receta propia como trabajo futuro.
 
 :::figura Figura 6. Monitor con tres nodos de roles distintos
-Qué debe verse: pestaña Monitor del dashboard con las tarjetas de node1 (rol video), node2 (rol audio) y node3 (rol metadata), cada una con su CPU, memoria y el texto "N de M cupos ocupados", y la tabla de colas por pool.
-Cómo obtenerla: encender node-1 con MediaCase.bat, ejecutar vagrant up node2 y luego vagrant up node3 en infra/vagrant, enviar el caso de prueba tc11 desde "Cargar caso de prueba" y capturar a los 20 s.
-Captura existente que sirve: docs/img/monitor-3-nodos-vagrant.png (11 de setiembre).
+Imagen: docs/img/monitor-3-nodos.png
+Nota: Captura del 3 de octubre de 2026. Los tres nodos durante la corrida de los 11 casos de prueba: `node1` con rol video en la laptop, `merge-breaker` con rol audio en la VM `node2` y `disruptor-specialist` con rol metadata en la VM `node3`.
 :::
 
 \pagebreak
@@ -439,9 +438,8 @@ Tabla 7. Métricas que expone el coordinador
 `GET /stats` agrega, además de los conteos por estado, la lista `by_case`: cada caso abierto con sus sub-tareas pendientes, en ejecución, completadas y fallidas. Es lo que la consigna llama sub-tareas activas o en espera agrupadas por caso.
 
 :::figura Figura 7. Tablero de Grafana durante una carga de 20 casos concurrentes
-Qué debe verse: tablero MediaCase en Grafana con los paneles de CPU por worker cerca de 100 %, la profundidad de la cola del pool video por encima de 150 sub-tareas y los casos por estado pasando de processing a completed.
-Cómo obtenerla: con los tres nodos encendidos, ejecutar bin/ingest load --cases 20 --concurrency 5 --group-by session --wait y abrir http://localhost:3001 a los pocos minutos, con rango de 30 min.
-Captura existente que sirve: docs/img/grafana-carga-20-casos.png.
+Imagen: docs/img/grafana-carga-20-casos.png
+Nota: Captura del 11 de setiembre de 2026. Carga de 20 casos concurrentes con `bin/ingest load`.
 :::
 
 ## 10.3 Tolerancia a fallos
@@ -477,8 +475,8 @@ Tabla 9. Nodos del despliegue
 | Nodo | Máquina | Qué corre | Red |
 |---|---|---|---|
 | node-1 | laptop Windows 11 (Ryzen 7, 6 núcleos y 12 hilos, 15 GB) | Docker Desktop con PostgreSQL, Redis, MinIO, Prometheus y Grafana; coordinador y worker `node1` (rol video, capacidad 4) como procesos nativos | IP de la LAN; `192.168.56.1` hacia las VMs |
-| node2 | VM Ubuntu 24.04 en VirtualBox, creada con Vagrant (2 vCPU, 1.5 GB) | worker de rol audio bajo systemd, sin Docker | `192.168.56.101`, red host-only |
-| node3 | VM Ubuntu 24.04 (1 vCPU, 1 GB) | worker de rol metadata bajo systemd | `192.168.56.102`, red host-only |
+| node2 | VM Ubuntu 24.04 en VirtualBox, creada con Vagrant (2 vCPU, 1.5 GB) | worker `merge-breaker`, rol audio, bajo systemd, sin Docker | `192.168.56.101`, red host-only |
+| node3 | VM Ubuntu 24.04 (1 vCPU, 1 GB) | worker `disruptor-specialist`, rol metadata, bajo systemd | `192.168.56.102`, red host-only |
 | Laptops y PCs | cualquier Windows o Linux en la misma red | worker descargado de `/connect` | WiFi o cable |
 | PC en otra red | cualquier Windows o Linux | worker descargado por el túnel | internet, por Cloudflare |
 
@@ -512,9 +510,8 @@ Un `docker compose up` en una sola máquina no cumple el requisito de distribuci
 El sistema se ha ejecutado con esta topología en varias configuraciones: una PC Windows ajena al equipo conectada por WiFi con el ZIP de `/connect` (10 de setiembre); node-1 con las dos VMs de Vagrant, donde `tests/pools_scenario.sh` terminó con `HITO OK` y cada sub-tarea corrió en el nodo de su pool (11 de setiembre); un worker en una VM Arch Linux y otro conectado desde fuera de la red por el túnel (11 de setiembre); tres laptops físicas (`lila`, `node1` y `ugarte_16`) que resolvieron 2 093 sub-tareas completadas y 25 fallidas (11 de setiembre); y node-1 con una PC nueva de capacidad automática 6 (25 de setiembre). El detalle está en el informe de pruebas, sección 7.
 
 :::figura Figura 9. Monitor con tres laptops físicas conectadas
-Qué debe verse: pestaña Monitor con las tarjetas de lila, node1 y ugarte_16, cada una con su hostname, sistema operativo y CPU en uso, y el contador de sub-tareas completadas del sistema.
-Cómo obtenerla: es la captura tomada durante la prueba del 11 de setiembre con node-1 en la IP 172.24.87.192; la prueba no se repite.
-Captura existente que sirve: ninguna en docs/img. La imagen existe fuera del repositorio y debe copiarse como docs/img/monitor-3-laptops-fisicas.png.
+Imagen: docs/img/monitor-3-laptops-fisicas.png
+Nota: Captura del 11 de setiembre de 2026. Prueba con tres laptops físicas en la misma red WiFi: `lila`, `node1` y `ugarte_16`, con 2093 sub-tareas completadas y 25 fallidas acumuladas.
 :::
 
 ## 11.2 Requisitos
@@ -551,14 +548,13 @@ Desde cualquier computadora de la red se abre `http://<ip-de-node-1>:8080/connec
 En Windows 11 hay dos avisos conocidos: Smart App Control bloquea el ejecutable sin firma, y conviene abrir las propiedades del ZIP y marcar "Desbloquear" antes de descomprimirlo para evitar el aviso de archivo descargado de internet. El manual de usuario los explica paso a paso.
 
 :::figura Figura 10. Página /connect del coordinador
-Qué debe verse: la página "Conectar esta PC" con el formulario "¿Qué va a procesar esta PC?", las cuatro opciones de rol con Todo marcada como recomendada y los botones Descargar para Windows y Descargar para Linux.
-Cómo obtenerla: con node-1 encendido, abrir http://localhost:8080/connect en el navegador y capturar la ventana completa.
-Captura existente que sirve: ninguna en docs/img; hay que tomarla.
+Imagen: docs/img/connect.png
+Nota: Captura del 3 de octubre de 2026. Página servida por el coordinador en `http://<ip-de-node-1>:8080/connect`.
 :::
 
 ## 11.5 Nodos virtuales con Vagrant
 
-Las VMs node2 y node3 se definen en `infra/vagrant/Vagrantfile` (imagen `bento/ubuntu-24.04`, NAT más red host-only). El aprovisionamiento (`provision_worker.sh`) instala ffmpeg con apt, copia el binario `bin/worker-linux-amd64` por la carpeta compartida, escribe `/etc/mediacase/worker.env` apuntando a `192.168.56.1` e instala el servicio `mediacase-worker` bajo systemd con `Restart=always`, que relanza el worker cada 3 s si muere o si el coordinador todavía no está.
+Las VMs node2 y node3 se definen en `infra/vagrant/Vagrantfile`, que también fija el nombre con que cada worker se registra (`merge-breaker` y `disruptor-specialist`), con la imagen `bento/ubuntu-24.04` y NAT más red host-only. El aprovisionamiento (`provision_worker.sh`) instala ffmpeg con apt, copia el binario `bin/worker-linux-amd64` por la carpeta compartida, escribe `/etc/mediacase/worker.env` apuntando a `192.168.56.1` e instala el servicio `mediacase-worker` bajo systemd con `Restart=always`, que relanza el worker cada 3 s si muere o si el coordinador todavía no está. Al final reinicia el servicio, así que `vagrant provision` aplica de una vez el binario y el nombre nuevos.
 
 ```bash
 cd infra/vagrant

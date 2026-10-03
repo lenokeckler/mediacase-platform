@@ -41,6 +41,8 @@ Tabla 2. Nodos y hardware utilizados en las pruebas
 | `lila` | PC con Windows 11 de otra persona, mismo WiFi (`172.24.84.218`) | Worker descargado desde `/connect` | 10 y 11 set |
 | `ugarte_16` | PC física prestada por una persona ajena al equipo | Worker en la prueba de tres laptops y en la de afinidad y ayuda | 11 set |
 | `node2` y `node3` (Vagrant) | VM Ubuntu Server 24.04: `node2` con 2 vCPU y 1.5 GB (`192.168.56.101`), `node3` con 1 vCPU y 1 GB (`192.168.56.102`) | Worker de audio y worker de metadata bajo systemd, sin Docker | 11 set |
+| `merge-breaker` y `disruptor-specialist` | Las mismas VM `node2` y `node3`, con el worker registrado con otro nombre | Worker de audio y worker de metadata en la corrida de los 11 casos y en las capturas del dashboard | 3 oct |
+| `leno` | Worker del ZIP de `/connect` corrido en `node1`, rol Todo, 6 cupos automáticos | Captura de la consola del worker de Windows | 3 oct |
 | `archlinux` | VM Arch Linux en VirtualBox, red NAT, kernel 7.2.3, ffmpeg 9.0.1, 8.6 GB de RAM visibles | Worker Linux instalado siguiendo solo el manual | 11 set |
 | `remoto` | Worker del ZIP conectado por un túnel de Cloudflare | Worker desde otra red | 11 set |
 | `node1-video`, `node1-audio`, `node1-metadata` | Workers locales en `node1`, uno por pool | Casos de prueba curados | 25 set |
@@ -50,7 +52,7 @@ Las cargas de 20 casos concurrentes del 11 de setiembre (412 sub-tareas y 14 GB 
 
 ## 2.2 Red
 
-Se usaron cuatro configuraciones de red. En el WiFi de la universidad, `node1` tuvo las direcciones `172.24.83.164` (10 de setiembre) y `172.24.87.192` (11 de setiembre, prueba de tres laptops). Las VM de Vagrant usan la red host-only de VirtualBox, `192.168.56.0/24`, con `node1` en `192.168.56.1`. La VM de Arch usa NAT y ve al host como `10.0.2.2`. El worker remoto llegó por dos túneles rápidos de Cloudflare (uno al puerto 8080 del coordinador y otro al 9000 de MinIO); como el WiFi de la universidad bloquea el puerto 7844 que usa `cloudflared`, el túnel se abrió con Cloudflare WARP activo en `node1`.
+Se usaron cuatro configuraciones de red. En el WiFi de la universidad, `node1` tuvo las direcciones `172.24.83.164` (10 de setiembre) y `172.24.87.192` (11 de setiembre, prueba de tres laptops). Las VM de Vagrant usan la red host-only de VirtualBox, `192.168.56.0/24`, con `node1` en `192.168.56.1`. La VM de Arch usa NAT y ve al host como `10.0.2.2`. El worker remoto llegó por dos túneles rápidos de Cloudflare (uno al puerto 8080 del coordinador y otro al 9000 de MinIO); como el WiFi de la universidad bloquea el puerto 7844 que usa `cloudflared`, el túnel se abrió con Cloudflare WARP activo en `node1`. Las capturas y la corrida del 3 de octubre se hicieron en una red doméstica, con `node1` en `192.168.88.39`; en esa red el túnel abre sin WARP.
 
 En todos los casos los workers se comunican con el coordinador por HTTP (registro) y por un canal WebSocket saliente (asignaciones, progreso y resultados), y con MinIO por S3 para bajar las entradas y subir los resultados. Ningún worker toca PostgreSQL ni Redis.
 
@@ -146,21 +148,18 @@ Una segunda carga de 10 casos (197 sub-tareas) cerró 10 de 10 `completed`. El h
 La concurrencia dentro de un caso se vio en el caso de la sesión `clase-s4`, de 39 archivos: sus sub-tareas corrieron al mismo tiempo en los tres pools. Entre casos, con los 20 casos abiertos, el monitoreo reportó 10 sub-tareas en ejecución y 369 en espera repartidas entre los 20 casos (`/stats.by_case`). La tarjeta "Casos activos" del Monitor muestra ese mismo agrupamiento.
 
 :::figura Figura 1. Monitor durante la carga de 20 casos
-Qué debe verse: pestaña Monitor del dashboard con la tarjeta "Casos activos" listando al menos 15 casos abiertos, cada uno con sus sub-tareas en ejecución y en espera; el panel de colas por pool con la cola de video bastante mayor que la de audio y la de metadata; las tarjetas de los workers con la CPU cerca del 100 %.
-Cómo obtenerla: con la infraestructura, el coordinador y un worker por pool encendidos, correr `bin/ingest load --cases 20 --concurrency 5 --group-by session` y capturar el Monitor entre el minuto 2 y el 5.
-Captura existente que sirve: docs/img/dashboard-monitor-casos-activos.png (11 set, 15 casos abiertos).
+Imagen: docs/img/dashboard-monitor-casos-activos.png
+Nota: Captura del 11 de setiembre de 2026. Monitor durante la carga de 20 casos, con 15 casos abiertos.
 :::
 
 :::figura Figura 2. Lista de casos al inicio de la carga
-Qué debe verse: pestaña Casos con los 20 casos `carga-01` a `carga-20`, uno por sesión, creados en el mismo segundo, unos en cola y otros procesando, con su cantidad de sub-tareas (de 5 a 39) y la duración en curso.
-Cómo obtenerla: capturar la pestaña Casos a los 2 o 3 minutos de lanzar la carga de la Figura 1.
-Captura existente que sirve: docs/img/dashboard-casos-carga.png (11 set).
+Imagen: docs/img/dashboard-casos-carga.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 :::figura Figura 3. Grafana durante la carga de 20 casos
-Qué debe verse: tablero MediaCase de Grafana con la CPU de los tres workers al 100 %, la cola de video subiendo cerca de 380 y bajando de forma lineal durante unos 25 minutos, la cola de metadata vaciándose en 2 minutos, las sub-tareas activas por pool estables en 8, 4 y 4, y los casos abiertos bajando de 20 a 0.
-Cómo obtenerla: abrir `http://localhost:3001` durante la carga de la Figura 1, rango de 30 minutos.
-Captura existente que sirve: docs/img/grafana-carga-20-casos.png (11 set).
+Imagen: docs/img/grafana-carga-20-casos.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 # 6. Tiempos por sub-tarea y por caso
@@ -244,10 +243,17 @@ Tabla 11. Resultado de los casos de prueba (25 set)
 Diez de los once casos cerraron `completed` y el tc06 cerró `partially_completed`, que es el resultado esperado para ese caso. El tc01 y el tc05 cerraron primero `partially_completed` por el defecto de dimensiones impares (defecto 16 de la Tabla 19); tras la corrección se reenviaron y cerraron `completed`. El tc07 es el más largo: incluye la conversión de 6 minutos de video 4K a 60 fps, que superó los 15 minutos de procesamiento sin que el barrido de sub-tareas vencidas la interrumpiera (defecto 21).
 
 :::figura Figura 4. Lista de casos con los 11 casos de prueba cerrados
-Qué debe verse: pestaña Casos del dashboard con los 11 casos tc01 a tc11, diez con el estado completado y tc06 con el estado parcial, la cantidad de sub-tareas y la duración de cada uno.
-Cómo obtenerla: `bin/ingest cases --test-cases all` con un worker por pool conectado; capturar la lista cuando cierre tc07 (unos 15 minutos).
-Captura existente que sirve: ninguna del 25 set; la Figura 2 muestra el mismo tipo de vista durante la carga del 11 set.
+Imagen: docs/img/informe-11-casos-cerrados.png
+Nota: Captura del 3 de octubre de 2026. Corrida de los 11 casos a la vez sobre tres nodos (sección 6.3): nueve `completed` y dos `partially_completed`, tc06 por diseño y tc07 por una descarga interrumpida.
 :::
+
+## 6.6 Corrida con tres nodos del 3 de octubre
+
+El 3 de octubre los 11 casos se enviaron a la vez con `bin/ingest cases --test-cases all` sobre tres nodos: `node1` (rol video, 4 cupos), `merge-breaker` en la VM `node2` (rol audio, 2 vCPU, 2 cupos) y `disruptor-specialist` en la VM `node3` (rol metadata, 1 vCPU, 2 cupos). A diferencia de la corrida del 25 de setiembre, los once casos compitieron por los mismos cupos al mismo tiempo.
+
+Nueve casos cerraron `completed` y dos `partially_completed`. El tc06 cerró parcial por diseño, con sus 3 archivos dañados. El tc07 cerró con 11 de 12: la descarga de `real_bbb_480p.mov` (237.7 MB) desde MinIO hacia `disruptor-specialist`, la VM de 1 GB, se cortó con "unexpected EOF" cuando la laptop estaba casi sin memoria libre (0.6 GB medidos minutos antes, con Docker, las dos VM y el navegador abiertos). De las 155 sub-tareas, `node1` hizo 132, `disruptor-specialist` 14 y `merge-breaker` 9; 37 se asignaron por afinidad y 118 por ayuda. Las VM tienen 1 y 2 vCPU, así que `node1` liberaba sus cupos mucho antes y el planificador le pasó la mayor parte del trabajo de los otros pools.
+
+Los casos chicos cerraron en segundos (tc03 en 15 s, tc10 en 17 s, tc09 en 24 s) y el tc01 en 87 s. Los que dependían del pool de metadata esperaron detrás de hasta 66 sub-tareas en cola y tardaron entre 13 y 15 minutos (tc02, tc04, tc05 y tc06). El tc11 cerró 40 de 40 en 10 min 55 s y el tc07 fue el último, con 25 min 32 s, por la conversión 4K de la Figura 19.
 
 # 7. Distribución entre nodos
 
@@ -256,9 +262,8 @@ Captura existente que sirve: ninguna del 25 set; la Figura 2 muestra el mismo ti
 El 11 de setiembre en la noche se corrió la prueba con tres computadoras físicas en la misma red WiFi: `node1` (laptop del equipo, coordinador en `172.24.87.192`), `lila` (Windows 11) y `ugarte_16` (PC prestada por una persona ajena al equipo). Al terminar la sesión la base de datos registraba 2 093 sub-tareas completadas y 25 fallidas. Esta prueba cumple el requisito de al menos tres nodos worker en entidades de ejecución separadas, comunicadas solo por red.
 
 :::figura Figura 5. Monitor con tres laptops físicas conectadas
-Qué debe verse: pestaña Monitor con las tarjetas de `lila`, `node1` y `ugarte_16` conectadas al mismo tiempo, cada una con su nombre de equipo, rol, CPU y sub-tareas activas, y el contador acumulado de 2 093 sub-tareas completadas y 25 fallidas.
-Cómo obtenerla: la captura del 11 set existe pero no está en el repositorio (quedó como `docs/image.png` sin versionar). Debe copiarse a `docs/img/monitor-3-laptops-fisicas.png` e insertarse aquí.
-Captura existente que sirve: la del 11 set mencionada, fuera del repositorio.
+Imagen: docs/img/monitor-3-laptops-fisicas.png
+Nota: Captura del 11 de setiembre de 2026. Fotografía de la pantalla de `node1` durante la prueba con tres laptops físicas.
 :::
 
 ## 7.2 Primera PC externa: lila
@@ -281,9 +286,8 @@ Tabla 12. Resultado de `pools_scenario.sh` con Vagrant (11 set)
 El resumen del reporte fue "de 4 archivos: 1 audio convertido, 1 miniatura generada, 1 video convertido, 1 audio extraído". Durante el despliegue aparecieron dos problemas de entorno. Con Hyper-V activo en el host, VirtualBox tarda unos 6 minutos en arrancar Ubuntu, más que los 300 s que Vagrant espera por defecto, así que `boot_timeout` se subió a 900 s. Además, dos comandos `vagrant` en paralelo fallan en Windows con `powershell_error`, por lo que los nodos se levantan de uno en uno.
 
 :::figura Figura 6. Monitor con node1 y las dos VM de Vagrant
-Qué debe verse: pestaña Monitor con `node3` (metadata), `node2` (audio) y `node1` (video), cada tarjeta con su rol, sus pools y su dirección, y el caso de `pools_scenario.sh` cerrado.
-Cómo obtenerla: `vagrant up node2` y luego `vagrant up node3` en `infra/vagrant`, encender `node1` con `MediaCase.bat` y correr `bash tests/pools_scenario.sh`.
-Captura existente que sirve: docs/img/monitor-3-nodos-vagrant.png (11 set).
+Imagen: docs/img/monitor-3-nodos-vagrant.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 ## 7.4 Arch Linux y worker desde otra red
@@ -291,9 +295,8 @@ Captura existente que sirve: docs/img/monitor-3-nodos-vagrant.png (11 set).
 A las 18:39 del 11 de setiembre se instaló un worker en la VM de Arch Linux siguiendo solo el manual: `curl` del ZIP de Linux a `http://10.0.2.2:8080/download/worker?os=linux`, `unzip` y `bash start-worker.sh`. Con `node2` y `node3` apagadas, recibió el caso `hito-arch` (dos audios, una imagen y un video) y lo cerró `completed` 4 de 4 en 7 s: `convert_audio` en 2.7 s y 0.5 s, `thumbnail` en 0.4 s y `convert` en 3.3 s. Al reiniciar el coordinador, el worker registró "canal cerrado; reconectando" y "canal abierto" 5 s después.
 
 :::figura Figura 7. Monitor con el worker de Arch Linux
-Qué debe verse: tarjeta del nodo `archlinux` conectada, con su sistema operativo, CPU y memoria, y el caso `hito-arch` cerrado 4 de 4.
-Cómo obtenerla: iniciar la VM de Arch, correr `bash start-worker.sh` desde el ZIP de Linux y enviar un caso con dos audios, una imagen y un video.
-Captura existente que sirve: docs/img/monitor-worker-arch.png (11 set).
+Imagen: docs/img/monitor-worker-arch.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 A las 18:21 del mismo día se probó un worker desde fuera de la red local. `scripts/tunnel.ps1` abrió dos túneles de Cloudflare, uno hacia el coordinador y otro hacia MinIO. Por la URL del túnel el dashboard y `GET /api/workers` respondieron 200, el ZIP de Windows (85 MB) se descargó completo y su `worker.env` salió con `COORDINATOR_URL` en `https`, `MINIO_ENDPOINT` apuntando al túnel de MinIO y `MINIO_USE_SSL=true`. El worker `remoto` se registró por `wss://`. Con el worker de video local apagado se envió el caso `hito-tunel`.
@@ -311,9 +314,8 @@ El caso cerró `completed` 3 de 3 en 20.2 s. Todo el tráfico de `remoto` (canal
 El túnel también se abre desde el dashboard (Monitor, tarjeta Compartir). Con WARP encendido, "Publicar en internet" dio el estado abierto en 6 s y "Cerrar túnel" dejó cero procesos `cloudflared`. Con WARP apagado, en el WiFi de la universidad, el coordinador desistió a los 45 s, terminó los procesos y mostró un mensaje que atribuye el fallo al bloqueo del puerto 7844 y sugiere encender WARP.
 
 :::figura Figura 8. Worker remoto conectado por el túnel
-Qué debe verse: Monitor con la tarjeta del worker `remoto` conectada por `wss://` junto a `node2`, y el caso `hito-tunel` cerrado 3 de 3 con dos sub-tareas en `remoto`.
-Cómo obtenerla: `scripts/tunnel.ps1` (o Monitor, Compartir, Publicar en internet), descargar el ZIP desde la URL del túnel en otra máquina, arrancarlo y enviar el caso con el worker de video local apagado.
-Capturas existentes que sirven: docs/img/monitor-worker-por-tunel.png; para la tarjeta Compartir, docs/img/dashboard-compartir-tunel.png (abierto) y docs/img/dashboard-compartir-tunel-bloqueado.png (red que bloquea el puerto 7844).
+Imagen: docs/img/monitor-worker-por-tunel.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 ## 7.5 Distribución por pools, afinidad y ayuda
@@ -354,10 +356,9 @@ Tabla 15. Reparto del tc11 entre dos nodos de distinta capacidad (25 set)
 
 El caso cerró `completed` 40 de 40 en 132 s, sin ningún rechazo por pool lleno. `pc-nueva` recibió más trabajo que su proporción de cupos (60 %). Las reglas del planificador son consistentes con ese resultado, porque a igual fracción ocupada gana el nodo de más capacidad y después el de menos CPU, y `node1` también atiende la infraestructura; la causa exacta no se midió por separado. La prueba unitaria del reparto proporcional confirma el comportamiento básico: una ráfaga de 10 sub-tareas con capacidades 8 y 2 se reparte 8 y 2.
 
-:::figura Figura 9. Monitor con cupos ocupados durante el tc11
-Qué debe verse: pestaña Monitor con dos tarjetas, `node1` con "4 de 4 cupos ocupados" y `pc-nueva` con "6 de 6 cupos ocupados", la cola del caso con sub-tareas en espera y, en el detalle de cada nodo, la línea "Capacidad: N sub-tareas a la vez".
-Cómo obtenerla: conectar una segunda PC con el ZIP de `/connect` (opción "Todo"), enviar `bin/ingest cases --test-cases tc11` y capturar a los 20 o 30 s.
-Captura existente que sirve: ninguna.
+:::figura Figura 9. Monitor con los cupos ocupados en tres nodos
+Imagen: docs/img/monitor-3-nodos.png
+Nota: Captura del 3 de octubre de 2026. Durante la corrida de los 11 casos: `node1` 4 de 4 cupos, `merge-breaker` y `disruptor-specialist` 2 de 2 cada una.
 :::
 
 # 8. Casos heterogéneos
@@ -371,9 +372,8 @@ Un caso heterogéneo mezcla tipos de contenido y operaciones en una sola solicit
 El tc01 toma Big Buck Bunny en mp4, m4v, mov, flv, 3gp, mpg, webm VP9, mkv AV1 y gif, y le aplica cinco operaciones: `convert`, `extract_audio`, `thumbnail`, `convert_audio` y `metadata`. Las 12 sub-tareas se repartieron entre los tres pools: 7 en `node1-video`, 4 en `node1-metadata` y 1 en `node1-audio`. El caso cerró `completed` en 168 s. En la primera corrida cerró `partially_completed`: la versión de 360p del archivo real mide 640×359 píxeles y libx264 exige ancho y alto pares. Ese defecto no aparecía con los archivos sintéticos, que tienen dimensiones redondas.
 
 :::figura Figura 10. Detalle del caso tc01 cerrado
-Qué debe verse: detalle del caso tc01 con las 12 sub-tareas, cada fila con el archivo de origen, la operación y el destino (por ejemplo "mkv a MP4"), el pool, el worker, el 100 % de progreso y los tiempos de inicio y fin; arriba, el estado completado y el reporte consolidado con los grupos por operación.
-Cómo obtenerla: Casos, Nuevo caso, "Cargar caso de prueba", tc01, Enviar; capturar al cerrar (unos 3 minutos).
-Captura existente que sirve: ninguna.
+Imagen: docs/img/informe-tc01-cerrado.png
+Nota: Captura del 3 de octubre de 2026. Corrida con tres nodos: 12 de 12 en 87 s, repartidas entre `node1`, `disruptor-specialist` y `merge-breaker`.
 :::
 
 ## 8.3 tc04: un solo nodo que ayuda con todo
@@ -381,9 +381,8 @@ Captura existente que sirve: ninguna.
 El tc04 (voz hablada: `convert_audio` y `metadata` sobre mp3, ogg, aac, opus, wav de 8 kHz y m4a) se corrió con un solo worker conectado, `node1` en rol video. Ninguna de sus 12 sub-tareas pertenece al pool de video. Con pools estrictos, el caso habría esperado en la cola hasta que se conectara un worker de audio o de metadata. Con el planificador de afinidad y ayuda, `node1` tomó las 12 por ayuda y el caso cerró `completed` en 26 s. El detalle del caso marca cada una de esas sub-tareas con el chip "ayuda". El tc10 (14 miniaturas) se comportó igual: 14 sub-tareas por ayuda en 23 s.
 
 :::figura Figura 11. Detalle del tc04 con sub-tareas tomadas por ayuda
-Qué debe verse: detalle del caso tc04 con las 12 sub-tareas en `node1`, cada una con el chip "ayuda", pool audio o metadata, y el estado completado del caso.
-Cómo obtenerla: dejar conectado solo el worker de video de `node1`, cargar tc04 desde el formulario y capturar al cerrar.
-Captura existente que sirve: ninguna.
+Imagen: docs/img/informe-tc04-ayuda.png
+Nota: Captura del 3 de octubre de 2026. Con `node1` como único worker conectado, en rol video: las 12 sub-tareas llevan el chip ayuda.
 :::
 
 ## 8.4 tc11: 40 archivos enrutados por el coordinador
@@ -418,15 +417,14 @@ Los tres fallos son los esperados y el reporte guarda el motivo de cada uno. El 
 También se probó una subida desde la PC: un MP3 renombrado "grabación subida.mp4" se enrutó a `convert_audio` a FLAC con el aviso de extensión engañosa, y el nombre conservó la tilde.
 
 :::figura Figura 12. Detalle del caso tc06 con avisos y fallos
-Qué debe verse: detalle del caso tc06 en estado parcial, con las 3 filas fallidas mostrando su motivo ("moov atom not found", "archivo vacío (0 bytes)", "Invalid data found") y las 3 filas con el chip "aviso", una de ellas con el tooltip abierto que muestra la nota de enrutamiento; la fila del MP3 renombrado debe mostrar el pool de audio y el destino FLAC.
-Cómo obtenerla: cargar tc06 desde el formulario, esperar el cierre (17 s) y pasar el cursor sobre un chip de aviso antes de capturar.
-Captura existente que sirve: ninguna.
+Imagen: docs/img/caso-tc06-avisos.png
+Nota: Captura del 3 de octubre de 2026. El recuadro bajo el chip de la fila de `edge_mp3_con_extension_mp4.mp4` es la nota de enrutamiento que aparece al pasar el cursor.
 :::
 
 :::figura Figura 13. Reporte consolidado de tc06 en JSON
-Qué debe verse: el archivo `results/cases/<id>/report.json` del tc06 abierto en un visor, con el estado `partially_completed`, los tiempos de creación y cierre, los grupos por tipo y operación, el campo de error de las 3 sub-tareas fallidas, la `routing_note` de las extensiones engañosas y el resumen agregado.
-Cómo obtenerla: `GET /api/cases/<id>/report` o el botón de descarga del reporte en el detalle del caso.
-Captura existente que sirve: ninguna.
+Imagen: docs/img/informe-tc06-reporte-json-1.png
+Imagen: docs/img/informe-tc06-reporte-json-2.png
+Nota: Captura del 3 de octubre de 2026. `results/cases/<id>/report.json` abierto en un visor de JSON, en dos partes. Las sub-tareas sin fallo ni aviso quedan plegadas en una línea; el contenido no cambia.
 :::
 
 ## 9.2 Caso heterogéneo con archivo corrupto
@@ -450,7 +448,7 @@ Tabla 17. Cronología de la caída de un worker (11 set)
 | t ≈ 25 s | `tmp-video` toma las dos sub-tareas |
 | t = 51 s | El caso cierra `completed`, 8 de 8, sin fallidas; las dos sub-tareas figuran con `worker_id = tmp-video` |
 
-La prueba se repitió el 10 de setiembre en hardware real con `lila`. En la primera variante se cerró la ventana del worker a mitad de 4 conversiones: el worker se despidió del coordinador, las 4 sub-tareas se reencolaron en el mismo segundo, el caso pasó a `retrying`, el worker se reabrió 13 s después y el caso cerró `completed` 4 de 4 sin fallidas. En la segunda variante, sin despedida, el coordinador lo expulsó por falta de heartbeat a los 27 s y el resultado fue el mismo.
+El 3 de octubre se repitió con `node1` como único worker: con 4 conversiones en curso se terminó su proceso con `taskkill`, el coordinador lo expulsó y a los 19 s el caso `caida-de-worker` estaba en `retrying` con las 4 sub-tareas otra vez en pendiente; al volver `node1` las tomó y el caso cerró `completed` 4 de 4 (Figura 15). La prueba se repitió el 10 de setiembre en hardware real con `lila`. En la primera variante se cerró la ventana del worker a mitad de 4 conversiones: el worker se despidió del coordinador, las 4 sub-tareas se reencolaron en el mismo segundo, el caso pasó a `retrying`, el worker se reabrió 13 s después y el caso cerró `completed` 4 de 4 sin fallidas. En la segunda variante, sin despedida, el coordinador lo expulsó por falta de heartbeat a los 27 s y el resultado fue el mismo.
 
 :::diagrama Figura 14. Estados de un caso durante la caída de un worker
 ```mermaid
@@ -465,9 +463,9 @@ stateDiagram-v2
 :::
 
 :::figura Figura 15. Caso en retrying tras la caída de un worker
-Qué debe verse: detalle del caso `fallo-worker` con el estado reintentando, las dos sub-tareas del worker caído otra vez en pendiente o asignadas a `tmp-video`, y el Monitor sin la tarjeta de `node1`; en una segunda imagen, el mismo caso completado 8 de 8.
-Cómo obtenerla: `bash tests/failure_scenario.sh` con la infraestructura, el coordinador y `node1` encendidos; capturar entre los segundos 22 y 30 después de la caída y otra vez al cierre.
-Captura existente que sirve: ninguna del dashboard; la Figura 18 muestra la misma redistribución en Grafana.
+Imagen: docs/img/informe-caida-retrying.png
+Imagen: docs/img/informe-caida-completado.png
+Nota: Captura del 3 de octubre de 2026. Arriba, el caso `caida-de-worker` 19 s después de terminar el proceso de `node1` con `taskkill`: las 4 sub-tareas volvieron a pendiente. Abajo, el mismo caso cerrado 4 de 4 al volver `node1`.
 :::
 
 ## 9.5 Caída simultánea del coordinador y de los workers
@@ -476,12 +474,11 @@ El 25 de setiembre se probó la caída del coordinador y de un worker al mismo t
 
 ## 9.6 Procesos ffmpeg huérfanos en Windows
 
-Al terminar un worker con `taskkill /F`, sus procesos ffmpeg seguían vivos y mantenían abierto el archivo de entrada. El reintento de la sub-tarea en el mismo equipo fallaba con "Access is denied". El worker entra ahora en un Job Object de Windows con la bandera `KILL_ON_JOB_CLOSE`, de modo que el sistema operativo termina todos sus procesos hijos cuando el worker muere, y además limpia la carpeta de la sub-tarea antes de bajar la entrada. En la verificación, 5 procesos ffmpeg en ejecución pasaron a 0 al matar el worker.
+Al terminar un worker con `taskkill /F`, sus procesos ffmpeg seguían vivos y mantenían abierto el archivo de entrada. El reintento de la sub-tarea en el mismo equipo fallaba con "Access is denied". El worker entra ahora en un Job Object de Windows con la bandera `KILL_ON_JOB_CLOSE`, de modo que el sistema operativo termina todos sus procesos hijos cuando el worker muere, y además limpia la carpeta de la sub-tarea antes de bajar la entrada. En la verificación del 25 de setiembre, 5 procesos ffmpeg en ejecución pasaron a 0 al matar el worker; la Figura 16 repite la prueba el 3 de octubre con 4.
 
 :::figura Figura 16. Procesos ffmpeg antes y después de matar el worker
-Qué debe verse: dos salidas de `Get-Process ffmpeg` (o el Administrador de tareas), la primera con 5 procesos ffmpeg bajo el worker y la segunda, tras `taskkill /F` al worker, sin ningún proceso ffmpeg.
-Cómo obtenerla: enviar un caso con al menos 5 conversiones de video mediano, ejecutar `Get-Process ffmpeg`, terminar el worker con `taskkill /F /PID <pid>` y repetir la consulta.
-Captura existente que sirve: ninguna.
+Imagen: docs/img/informe-ffmpeg-huerfanos.png
+Nota: Captura del 3 de octubre de 2026. Cuatro procesos ffmpeg con prioridad BelowNormal bajo el worker; después de `taskkill /F` no queda ninguno.
 :::
 
 ## 9.7 Sobresuscripción de CPU
@@ -503,9 +500,9 @@ Durante la carga de 20 casos, Grafana mostró la saturación panel por panel: CP
 La telemetría de hardware se contrastó con el Administrador de tareas de Windows el 11 de setiembre a las 20:48, con el caso `demo-rendimiento` en curso. En `node1` el Monitor mostró CPU al 69 %, RAM de 14.1 de 15.3 GB, la GPU AMD Radeon 740M al 4 % con 393 MB de VRAM y la NVIDIA RTX 4050 al 0 % con 4 MB de 5.8 GB y 42 °C, los mismos valores del Administrador de tareas en ese momento. En la VM `archlinux` mostró CPU al 96 % mientras convertía `pesado.mp4`, RAM de 0.4 de 8.6 GB y disco al 8 %; su adaptador de video virtual aparece como "no disponible" porque el kernel no expone su uso. La codificación usa x264 en CPU: el worker reporta las GPU, pero no las usa para codificar.
 
 :::figura Figura 17. Telemetría por nodo bajo carga
-Qué debe verse: Monitor con dos nodos ocupados, `archlinux` con CPU al 96 % y `node1` con sus dos GPU, la memoria usada e instalada, el disco y las gráficas de los últimos 60 s; en el detalle del nodo, las gráficas de 5 minutos.
-Cómo obtenerla: enviar un caso con varios videos medianos con dos workers conectados y capturar el Monitor y el detalle de un nodo.
-Capturas existentes que sirven: docs/img/dashboard-monitor-rendimiento.png y docs/img/dashboard-nodo-rendimiento.png (11 set).
+Imagen: docs/img/dashboard-monitor-rendimiento.png
+Imagen: docs/img/dashboard-nodo-rendimiento.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 ## 10.2 Redistribución tras la caída de un nodo
@@ -513,9 +510,8 @@ Capturas existentes que sirven: docs/img/dashboard-monitor-rendimiento.png y doc
 Con la carga en curso, a las 08:41 del 11 de setiembre se levantó `node4` (video) y a las 08:43 se mató `node1`. En el panel "Sub-tareas activas por worker", `node1` cayó a 0 y `node4` se mantuvo en 4. El coordinador reencoló las 6 sub-tareas que `node1` tenía en curso (el registro dice "reclaimed job … from dead worker node1") y `node4` las procesó. `node1` se relanzó a las 08:45 y volvió a recibir trabajo. Nadie intervino sobre el coordinador.
 
 :::figura Figura 18. Redistribución del pool de video tras la caída de node1
-Qué debe verse: Grafana con el panel de sub-tareas activas por worker: la serie de `node1` cae a 0 a las 08:43, la de `node4` se mantiene en 4, y `node1` vuelve a las 08:45; la cola de video sigue bajando sin interrupción.
-Cómo obtenerla: durante una carga, levantar un segundo worker de video, esperar 2 minutos, terminar `node1` y relanzarlo 2 minutos después.
-Captura existente que sirve: docs/img/grafana-redistribucion-caida-node1.png (11 set).
+Imagen: docs/img/grafana-redistribucion-caida-node1.png
+Nota: Captura del 11 de setiembre de 2026.
 :::
 
 ## 10.3 Cupos y reparto proporcional
@@ -523,9 +519,9 @@ Captura existente que sirve: docs/img/grafana-redistribucion-caida-node1.png (11
 El reparto por fracción ocupada (sección 7.6) es la forma en que el sistema reacciona a la heterogeneidad de las máquinas. Un nodo lleno no recibe más sub-tareas, que esperan en la cola hasta que se libere un cupo en cualquier nodo compatible. La afinidad con el pool se mantiene hasta la mitad de la capacidad del nodo afín; a partir de ahí ayuda el nodo proporcionalmente más libre. En el tc07, con el pool de video ocupado por las conversiones pesadas, 3 de las 12 sub-tareas se ejecutaron por ayuda en otros workers.
 
 :::figura Figura 19. Progreso de la conversión 4K en tc07
-Qué debe verse: detalle del caso tc07 con la fila de `real_nasa_atlas_v_4k.mp4` en ejecución y la barra de progreso en un valor intermedio que avanza de forma continua (no en 100 % desde el inicio), junto con otras sub-tareas de video en espera y las 3 marcadas con "ayuda".
-Cómo obtenerla: cargar tc07 desde el formulario y capturar entre los minutos 5 y 10; repetir la captura unos minutos después para mostrar el avance.
-Captura existente que sirve: ninguna.
+Imagen: docs/img/informe-tc07-progreso-1.png
+Imagen: docs/img/informe-tc07-progreso-2.png
+Nota: Captura del 3 de octubre de 2026. La conversión de `real_nasa_atlas_v_4k.mp4` en `node1` a las 11:12 (27 %) y a las 11:19 (55 %).
 :::
 
 # 11. Throughput

@@ -9,6 +9,8 @@ II Semestre 2026 · Proyecto Programado I (consigna v2.0).
 
 **Equipo:** Magdaleno Gómez Díaz · Jennifer Yajaira López Miranda · Jonathan Sancho Loaiza
 
+<p align="center"><img src="docs/img/monitor-3-nodos.png" alt="Monitor con tres nodos procesando los casos de prueba" width="100%"></p>
+
 ---
 
 ## Qué es
@@ -24,6 +26,31 @@ tipo de archivo) o heterogéneo (video + audio + imágenes, tres operaciones en 
 Lo que importa aquí no es la interfaz sino lo del curso: procesos y estados, planificación por
 prioridad y por pool, colas, concurrencia, sincronización con barrier, comunicación por red entre
 nodos, y monitoreo con balanceo de carga.
+
+## Capturas
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/img/caso-heterogeneo-en-ejecucion.png" alt="Caso heterogéneo en ejecución"><br><sub><b>Caso heterogéneo en ejecución.</b> Doce sub-tareas de video, audio e imagen repartidas en tres pools y tres nodos.</sub></td>
+    <td width="50%" valign="top"><img src="docs/img/manual-reporte-consolidado.png" alt="Reporte consolidado"><br><sub><b>Reporte consolidado.</b> Al cerrar el caso, el barrier genera el resumen agrupado por tipo, operación y formato.</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/img/manual-formulario-vacio.png" alt="Formulario de nuevo caso"><br><sub><b>Nuevo caso.</b> Subir archivos o elegirlos del dataset de 542 con filtros, selección por arrastre y casos de prueba.</sub></td>
+    <td valign="top"><img src="docs/img/caso-tc06-avisos.png" alt="Casos límite con avisos y fallos"><br><sub><b>Casos límite.</b> Extensiones engañosas enrutadas por su contenido real y archivos dañados con el error de ffmpeg.</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/img/monitor-detalle-nodo.png" alt="Vista ampliada de un nodo"><br><sub><b>Vista de un nodo.</b> CPU, memoria y GPU de los últimos 5 minutos, cupos y sub-tareas en curso.</sub></td>
+    <td valign="top"><img src="docs/img/monitor-colas-casos-activos.png" alt="Colas por pool y casos activos"><br><sub><b>Colas y casos activos.</b> Sub-tareas en espera por pool y avance de cada caso abierto.</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/img/monitor-3-laptops-fisicas.png" alt="Tres laptops físicas conectadas"><br><sub><b>Tres laptops físicas.</b> lila, node1 y ugarte_16 en la misma red WiFi, 11 de setiembre.</sub></td>
+    <td valign="top"><img src="docs/img/grafana-carga-20-casos.png" alt="Grafana durante una carga de 20 casos"><br><sub><b>Grafana.</b> CPU por worker, profundidad de las colas y casos por estado durante 20 casos concurrentes.</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/img/connect.png" alt="Página para conectar una PC"><br><sub><b>Conectar una PC.</b> El coordinador sirve el worker listo para Windows o Linux; basta descomprimir y hacer doble clic.</sub></td>
+    <td valign="top"><img src="docs/img/manual-compartir-tunel.png" alt="Compartir el coordinador por túnel"><br><sub><b>Desde otra red.</b> Un clic abre un túnel de Cloudflare y da la dirección para sumar workers por internet.</sub></td>
+  </tr>
+</table>
 
 ## Arquitectura en diez líneas
 
@@ -74,7 +101,8 @@ scripts\run-worker.ps1                              # 3. worker local de video (
 - **Cualquier PC de la red**: abrir `http://<ip-de-node-1>:8080/connect`, descargar el ZIP de su
   sistema, descomprimir, doble clic en `start-worker.bat` (o `bash start-worker.sh`). Aparece en
   el dashboard en segundos. Rol y tamaño del pool se cambian en `worker.env`.
-- **VMs node-2 y node-3** (Vagrant + VirtualBox, en node-1): `cd infra/vagrant && vagrant up`;
+- **VMs node-2 y node-3** (Vagrant + VirtualBox, en node-1; sus workers se registran como
+  `merge-breaker` y `disruptor-specialist`): `cd infra/vagrant && vagrant up`;
   tras recompilar, `bash redeploy.sh`.
 - **Desde otra red**: en el dashboard, Monitor → **Compartir → "Publicar en internet"**: el
   coordinador abre dos túneles de Cloudflare (8080 y 9000) y muestra la URL `https://…/connect` para

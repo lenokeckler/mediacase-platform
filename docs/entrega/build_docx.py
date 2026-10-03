@@ -20,6 +20,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parent.parent
 OUT_DIR = HERE / "salida"
 DIAGRAM_DIR = HERE / "diagramas"
 TEMPLATE = HERE / "plantilla_portada.docx"
@@ -411,6 +412,18 @@ def build_document(src_name, renderer):
         add_inline(p2, m.group(3), base_italic=True)
         para_format(p2, align=WD_ALIGN_PARAGRAPH.LEFT, first_line=Cm(0), after=4, keep_next=True)
 
+    def add_picture(png):
+        from PIL import Image
+        with Image.open(png) as im:
+            wpx, hpx = im.size
+        width = min(MAX_IMAGE_WIDTH, Cm(wpx / 2 * 0.0264583))
+        max_h = Cm(19)
+        if width * hpx / wpx > max_h:
+            width = int(max_h * wpx / hpx)
+        p = new_par()
+        para_format(p, align=WD_ALIGN_PARAGRAPH.CENTER, first_line=Cm(0), spacing=1.0, after=6)
+        p.add_run().add_picture(str(png), width=width)
+
     pending_table_caption = None
     while i < len(lines):
         line = lines[i]
@@ -463,16 +476,18 @@ def build_document(src_name, renderer):
                     for old in DIAGRAM_DIR.glob(f"{stem}_{diagram_no:02d}_*.png"):
                         old.unlink()
                     renderer.render(code, png)
-                from PIL import Image
-                with Image.open(png) as im:
-                    wpx, hpx = im.size
-                width = min(MAX_IMAGE_WIDTH, Cm(wpx / 2 * 0.0264583))
-                max_h = Cm(19)
-                if width * hpx / wpx > max_h:
-                    width = int(max_h * wpx / hpx)
-                p = new_par()
-                para_format(p, align=WD_ALIGN_PARAGRAPH.CENTER, first_line=Cm(0), spacing=1.0, after=6)
-                p.add_run().add_picture(str(png), width=width)
+                add_picture(png)
+                continue
+            images = [REPO / b.split(":", 1)[1].strip() for b in block if b.strip().startswith("Imagen:")]
+            notes = [b.split(":", 1)[1].strip() for b in block if b.strip().startswith("Nota:")]
+            if images and all(img.exists() for img in images):
+                for img in images:
+                    add_picture(img)
+                for note in notes:
+                    q = new_par()
+                    set_run_font(q.add_run("Nota. "), size=10.5, italic=True)
+                    add_inline(q, note, size=10.5)
+                    para_format(q, align=WD_ALIGN_PARAGRAPH.LEFT, first_line=Cm(0), spacing=1.15, after=10)
             else:
                 t = d.add_table(rows=1, cols=1)
                 move_table(t)
