@@ -215,7 +215,7 @@ def setup_styles(d):
             del fonts.attrib[qn(attr)]
     st.paragraph_format.line_spacing = 1.5
     st.paragraph_format.space_after = Pt(0)
-    for name, align, italic in (("Heading 1", WD_ALIGN_PARAGRAPH.CENTER, False),
+    for name, align, italic in (("Heading 1", WD_ALIGN_PARAGRAPH.LEFT, False),
                                 ("Heading 2", WD_ALIGN_PARAGRAPH.LEFT, False),
                                 ("Heading 3", WD_ALIGN_PARAGRAPH.LEFT, True)):
         h = d.styles[name]
@@ -249,21 +249,17 @@ def setup_page(d):
         s.page_width, s.page_height = LETTER
         s.left_margin = s.right_margin = s.top_margin = s.bottom_margin = MARGIN
         s.different_first_page_header_footer = True
-        header = s.header
-        header.is_linked_to_previous = False
-        hp = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-        for r in list(hp.runs):
-            r._r.getparent().remove(r._r)
-        hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        add_field(hp, "PAGE", "2")
-        s.first_page_header.is_linked_to_previous = False
-        for hf in (s.first_page_header, s.footer, s.first_page_footer):
+        for hf in (s.header, s.first_page_header, s.footer, s.first_page_footer):
             hf.is_linked_to_previous = False
             for fp in hf.paragraphs:
                 for r in list(fp.runs):
                     r._r.getparent().remove(r._r)
                 for fld in fp._p.findall(qn("w:fldSimple")):
                     fp._p.remove(fld)
+        footer = s.footer
+        fp = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+        fp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        add_field(fp, "PAGE", "2")
 
 def fill_cover(d, meta):
     ps = d.paragraphs
@@ -390,7 +386,7 @@ def build_document(src_name, renderer):
     h.style = d.styles["TOC Heading"] if "TOC Heading" in [s.name for s in d.styles] else d.styles["Heading 1"]
     h.text = ""
     set_run_font(h.add_run("Índice"), bold=True)
-    para_format(h, align=WD_ALIGN_PARAGRAPH.CENTER, first_line=Cm(0))
+    para_format(h, align=WD_ALIGN_PARAGRAPH.LEFT, first_line=Cm(0))
     toc = new_par()
     para_format(toc, align=WD_ALIGN_PARAGRAPH.LEFT, first_line=Cm(0))
     add_field(toc, 'TOC \\o "1-2" \\h \\z \\u', "Actualice el índice: clic derecho → Actualizar campo.")
