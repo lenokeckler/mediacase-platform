@@ -16,7 +16,7 @@ de este informe son del 2026-09-11 salvo donde se indica.
 | w-video, w-audio, w-meta | misma laptop | tres workers del ZIP con roles distintos | hito de pools del 2026-09-10 |
 
 Para la rúbrica de "3 nodos worker en entidades separadas" el despliegue final usa las VMs de
-Vagrant (node2, node3 con IP propia) y las laptops del equipo (Fase 7); las corridas de carga de
+Vagrant (node2, node3 con IP propia) y tres laptops físicas en la misma red (sección 7); las corridas de carga de
 este informe se hicieron con los tres workers como procesos separados en node-1 porque las
 pruebas de 20 casos concurrentes (412 sub-tareas, 14 GB de entrada) necesitan los 12 hilos de la
 laptop, y lo que se mide —colas por pool, barrier, redistribución, reportes— no cambia con la
@@ -26,7 +26,7 @@ Dataset: 492 archivos, 14.33 GB, en MinIO (versión 2, la vigente en la fecha de
 
 ## 2. Carga por lotes y concurrencia
 
-`bin/ingest load --cases 20 --concurrency 5 --group-by session --wait` (hito de la Fase 5,
+`bin/ingest load --cases 20 --concurrency 5 --group-by session --wait` (script de hito
 `tests/monitoring_scenario.sh`):
 
 | Métrica | Valor |
@@ -41,7 +41,7 @@ Dataset: 492 archivos, 14.33 GB, en MinIO (versión 2, la vigente en la fecha de
 | Throughput sostenido | 12-18 sub-tareas/min con las tres colas ocupadas; hasta 40/min al arrancar, cuando entran las livianas |
 
 Una segunda carga de 10 casos (`--cases 10`, 197 sub-tareas) cerró 10/10 `completed`. La misma
-carga desde el dataset con `--group-by session --limit 10` (hito de la Fase 4,
+carga desde el dataset con `--group-by session --limit 10` (script de hito
 `tests/dataset_scenario.sh`): 10 casos, 197 sub-tareas, todas `completed`, todas con `worker_id`.
 
 Concurrencia **intra-caso**: un caso de 39 archivos (`session=clase-s4`) tuvo sus sub-tareas
@@ -156,7 +156,7 @@ dejarlos en cola. Las 2 fallidas son `hito_corrupto.mp4`, el archivo dañado a p
 
 ### 5.1 Caso heterogéneo con archivo corrupto → `partially_completed`
 
-`tests/case_scenario.sh` (hito de la Fase 1, repetido en modo local y distribuido): un caso con un
+`tests/case_scenario.sh` (repetido en modo local y distribuido): un caso con un
 video, un audio y un archivo de texto renombrado `.mp4`, enviado sin indicar operaciones. El
 coordinador enrutó `convert` / `convert_audio` / `convert`; las dos válidas completaron, la corrupta
 falló con el error de ffmpeg; el barrier cerró el caso como `partially_completed` y el reporte dice
@@ -203,7 +203,7 @@ control deben tener prioridad sobre los de cómputo.
 
 ### 5.5 Cancelación
 
-Desde el dashboard (hito de la Fase 3) y por API: un caso en cola se cancela con sus sub-tareas
+Desde el dashboard (guion `tests/ui_case_flow.md`) y por API: un caso en cola se cancela con sus sub-tareas
 `pending` → `cancelled` y reporte inmediato; uno a medio procesar deja terminar las sub-tareas en
 ejecución pero no cambia más de estado. Los dos casos `cancelled` de la ventana de §3 son esas
 pruebas.
@@ -332,8 +332,11 @@ mismas series salen por `/metrics` a Grafana (paneles nuevos de GPU, VRAM y memo
 
 ![Monitor con dos nodos bajo carga: archlinux al 96 % y node1 con sus dos GPUs](img/dashboard-monitor-rendimiento.png)
 
-**Laptops del equipo (Jennifer y Jonathan)**: pendiente, Task 7.4. Se anotará aquí el mismo escenario
-con los roles repartidos entre las tres laptops físicas.
+**Tres laptops físicas**: el 11 de setiembre en la noche se conectaron `lila`, `node1` y `ugarte_16`
+en la misma red WiFi, con el coordinador en `172.24.87.192`. Al terminar la sesión la base de datos
+registraba 2 093 sub-tareas completadas y 25 fallidas.
+
+![Monitor con tres laptops físicas conectadas: lila, node1 y ugarte_16](img/monitor-3-laptops-fisicas.png)
 
 ## 8. Throughput
 

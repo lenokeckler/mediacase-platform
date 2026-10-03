@@ -1,4 +1,4 @@
-# Hito Fase 3 — todo el flujo de un caso desde el navegador
+# Hito: todo el flujo de un caso desde el navegador
 
 Guion manual. Cada paso deja una captura en `docs/img/` (evidencia para el informe).
 Ejecutado el 2026-09-11 en la laptop de Leno (coordinador nativo, `http://localhost:8080`),
