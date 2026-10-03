@@ -135,10 +135,10 @@ el pool como **preferencia**: primero un nodo del pool (afinidad); si está ocup
 (RAM ≥ 90 % o CPU ≥ 95 % según sus métricas) y hay otro nodo libre, ese ayuda. Dos corridas:
 
 **`demo-mixto-18`** (6 videos, 6 audios, 4 imágenes + 2 extracciones de audio; nodos: `node1` rol
-video en la laptop, `ugarte_16` rol `all` en una PC prestada por una persona ajena al equipo). Caso `completed` 18/18 en
+video en la laptop, `ugarte_16` rol `all` en la PC de un compañero). Caso `completed` 18/18 en
 70 s: las 8 sub-tareas de video se repartieron entre los dos nodos por menos carga (`node1` 5,
 `ugarte_16` 3); audio y miniaturas fueron todas a `ugarte_16` porque en ese momento el modo era
-estricto y `node1` no tenía esos pools: la laptop quedó ociosa mientras `ugarte_16` hacía 13. Ese
+estricto y `node1` no tenía esos pools: la laptop quedó ociosa mientras el compañero hacía 13. Ese
 fue el disparador del cambio.
 
 **`demo-formatos`** (10 sub-tareas con destinos explícitos: `mkv → WEBM`, `mov → MKV`,
