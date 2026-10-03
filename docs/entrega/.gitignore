@@ -1,3 +1,6 @@
 # Intermedios de Mermaid: build_docx.py los regenera
 diagramas/_m_*.mmd
 diagramas/*_??????????.png
+
+# Solo se entregan los PDF; los Word son el paso intermedio de build_docx.py
+salida/*.docx

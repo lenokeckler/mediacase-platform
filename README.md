@@ -183,7 +183,7 @@ docs/                   arquitectura, API, manual de usuario, dataset, informe d
 | [`docs/api.md`](docs/api.md) | todos los endpoints con ejemplos reales |
 | [`docs/dataset.md`](docs/dataset.md) | composición, criterios de agrupación, volumen, uso |
 | [`docs/informe-pruebas.md`](docs/informe-pruebas.md) | carga, distribución, casos heterogéneos, fallos, saturación y redistribución, hardware real |
-| [`docs/entrega/salida/`](docs/entrega/salida/) | documentos de entrega en Word y PDF: arquitectura, manual de usuario e informe de pruebas |
+| [`docs/entrega/salida/`](docs/entrega/salida/) | documentos de entrega en PDF: [arquitectura](docs/entrega/salida/01_arquitectura_y_documentacion_tecnica.pdf), [manual de usuario](docs/entrega/salida/02_manual_de_usuario.pdf) e [informe de pruebas](docs/entrega/salida/03_informe_de_pruebas.pdf) |
 
 ## Estado del proyecto
 
