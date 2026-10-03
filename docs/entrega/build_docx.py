@@ -38,7 +38,7 @@ MAX_IMAGE_WIDTH = Cm(16)
 PLACEHOLDER_HEIGHT = Cm(5.5)
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
-DELIVERY_DATE = "25 de setiembre de 2026"
+DELIVERY_DATE = "7 de octubre de 2026"
 
 P_TIPO, P_TITULO, P_SUBTITULO, P_FECHA = 11, 12, 13, 27
 
