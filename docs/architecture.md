@@ -307,11 +307,11 @@ flowchart TB
       V[worker-video nativo]
     end
     subgraph vb["VirtualBox (Vagrant) en node-1"]
-      N2[node-2 Ubuntu 24.04 · 192.168.56.101<br/>worker-audio, systemd]
-      N3[node-3 Ubuntu 24.04 · 192.168.56.102<br/>worker-metadata, systemd]
+      N2[node-2 Ubuntu 24.04 · 192.168.56.101<br/>merge-breaker, audio, systemd]
+      N3[node-3 Ubuntu 24.04 · 192.168.56.102<br/>disruptor-specialist, metadata, systemd]
     end
-    L1[Laptop Jennifer<br/>ZIP Linux/Windows desde /connect]
-    L2[Laptop Jonathan<br/>ZIP desde /connect]
+    L1[PC lila · Windows 11<br/>ZIP desde /connect]
+    L2[PC ugarte_16 · Windows 11<br/>ZIP desde /connect]
   end
   T[cloudflared quick tunnel<br/>https://xxx.trycloudflare.com]
   X[PC en otra red<br/>worker vía wss://]
@@ -322,7 +322,8 @@ flowchart TB
 
 Mínimo de la consigna: **3 nodos worker en entidades de ejecución separadas** con comunicación por
 red. Lo cubren node-1 (host) + node-2 y node-3 (VMs con IP propia, sin Docker, binario estático bajo
-systemd), y se amplía con las laptops del equipo y cualquier PC que abra `/connect`. Con un solo
+systemd), y se amplía con PC físicas de la misma red, como `lila` y `ugarte_16` en la prueba de tres laptops
+del 11 de setiembre, o cualquier PC que abra `/connect`. Con un solo
 comando (`docker compose up`) **no** se cumple: el compose de `docker-compose.infra.yml` levanta
 solo la infraestructura de node-1, no los workers.
 
